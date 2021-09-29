@@ -2,7 +2,7 @@ DC ?= docker-compose
 
 .PHONY: start
 start: stop
-	$(DC) up
+	$(DC) up --build
 
 .PHONY: stop
 stop:
@@ -10,4 +10,7 @@ stop:
 
 .PHONY: start-db
 start-db: stop
-	$(DC) up -d db
+	$(DC) up db
+
+start-api: stop
+	$(DC) up api --build
