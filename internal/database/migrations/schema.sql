@@ -47,3 +47,39 @@ CREATE TABLE IF NOT EXISTS InvitedArtist (
     travel_expenses MONEY,
     confirmation    confirmation
 );
+
+CREATE TABLE IF NOT EXISTS Artwork (
+    id                  SERIAL PRIMARY KEY,
+    title               VARCHAR,
+    artist_id           SERIAL REFERENCES Artist,
+    synopsis_en         VARCHAR,
+    synopsis_ger        VARCHAR,
+    picture_1           VARCHAR,
+    picture_2           VARCHAR,
+    picture_3           VARCHAR,
+    material_demands    VARCHAR,
+    insurance_amount    MONEY,
+    sales_val           MONEY,
+    height              FLOAT,
+    length              FLOAT,
+    width               FLOAT,
+    weight              FLOAT,
+    category            VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS ArtworkEventLocation (
+    artwork_id          SERIAL REFERENCES Artwork,
+    event_id            SERIAL REFERENCES Event,
+    location_id         SERIAL REFERENCES Location,
+    by_post             BOOLEAN,
+    by_spedition        BOOLEAN,
+    is_collected        BOOLEAN,
+    is_built_onsite     BOOLEAN,
+    is_built_by_artist  BOOLEAN,
+    address_id          SERIAL REFERENCES Location,
+    packaging           VARCHAR,
+    material            VARCHAR,
+    no_pieces           INTEGER,
+    size                FLOAT,
+    pub_agreement       VARCHAR 
+);
