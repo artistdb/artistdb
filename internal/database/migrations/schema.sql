@@ -1,70 +1,66 @@
 CREATE DATABASE main;
 
-CREATE TYPE pronouns AS ENUM ('they', 'he', 'she');
-
 CREATE TABLE IF NOT EXISTS Artist (
     id              SERIAL PRIMARY KEY,
-    first_name      VARCHAR NOT NULL,
-    last_name       VARCHAR NOT NULL,
-    artist_name     VARCHAR,
-    pronouns        pronouns,
-    date_of_birth   TIMESTAMP,
-    place_of_birth  VARCHAR,
-    nationality     VARCHAR,
-    language        VARCHAR,
-    facebook        VARCHAR,
-    instagram       VARCHAR,
-    bandcamp        VARCHAR,
-    bio_ger         VARCHAR,
-    bio_en          VARCHAR
+    first_name      TEXT NOT NULL,
+    last_name       TEXT NOT NULL,
+    artist_name     TEXT,
+    pronouns        TEXT,
+    date_of_birth   TIMESTAMPTZ,
+    place_of_birth  TEXT,
+    nationality     TEXT,
+    language        TEXT,
+    facebook        TEXT,
+    instagram       TEXT,
+    bandcamp        TEXT,
+    bio_ger         TEXT,
+    bio_en          TEXT
 );
 
 CREATE TABLE IF NOT EXISTS Location (
     id              SERIAL PRIMARY KEY,
-    name            VARCHAR NOT NULL,
-    country         VARCHAR,
-    zip             VARCHAR,
-    city            VARCHAR,
-    street          VARCHAR,
-    picture         VARCHAR,
-    description     VARCHAR,
-    lat             VARCHAR,
-    lon             VARCHAR
+    name            TEXT NOT NULL,
+    country         TEXT,
+    zip             TEXT,
+    city            TEXT,
+    street          TEXT,
+    picture         TEXT,
+    description     TEXT,
+    lat             TEXT,
+    lon             TEXT
 );
 
 CREATE TABLE IF NOT EXISTS Event (
     id              SERIAL PRIMARY KEY,
-    name            VARCHAR,
-    date            TIMESTAMP,
+    name            TEXT,
+    date            TIMESTAMPTZ,
     location        SERIAL REFERENCES Location
 );
-
-CREATE TYPE confirmation AS ENUM ('not confirmed', 'confirmed');
 
 CREATE TABLE IF NOT EXISTS InvitedArtist (
     artist_id       SERIAL REFERENCES Artist,
     event_id        SERIAL REFERENCES Event,
     travel_expenses MONEY,
-    confirmation    confirmation
+    confirmation    TEXT
 );
 
 CREATE TABLE IF NOT EXISTS Artwork (
     id                  SERIAL PRIMARY KEY,
-    title               VARCHAR,
+    title               TEXT,
     artist_id           SERIAL REFERENCES Artist,
-    synopsis_en         VARCHAR,
-    synopsis_ger        VARCHAR,
-    picture_1           VARCHAR,
-    picture_2           VARCHAR,
-    picture_3           VARCHAR,
-    material_demands    VARCHAR,
+    synopsis_en         TEXT,
+    synopsis_ger        TEXT,
+    picture_1           TEXT,
+    picture_2           TEXT,
+    picture_3           TEXT,
+    material_demands    TEXT,
     insurance_amount    MONEY,
     sales_val           MONEY,
     height              FLOAT,
     length              FLOAT,
     width               FLOAT,
     weight              FLOAT,
-    category            VARCHAR
+    category            TEXT
 );
 
 CREATE TABLE IF NOT EXISTS ArtworkEventLocation (
@@ -77,9 +73,9 @@ CREATE TABLE IF NOT EXISTS ArtworkEventLocation (
     is_built_onsite     BOOLEAN,
     is_built_by_artist  BOOLEAN,
     address_id          SERIAL REFERENCES Location,
-    packaging           VARCHAR,
-    material            VARCHAR,
+    packaging           TEXT,
+    material            TEXT,
     no_pieces           INTEGER,
     size                FLOAT,
-    pub_agreement       VARCHAR 
+    pub_agreement       TEXT 
 );
