@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS Location (
 CREATE TABLE IF NOT EXISTS Event (
     id              SERIAL PRIMARY KEY,
     name            TEXT,
-    date            TIMESTAMPTZ,
+    start_time            TIMESTAMPTZ,
     location        SERIAL REFERENCES Location
 );
 
