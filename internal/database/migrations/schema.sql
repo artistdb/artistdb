@@ -64,18 +64,18 @@ CREATE TABLE IF NOT EXISTS Artwork (
 );
 
 CREATE TABLE IF NOT EXISTS ArtworkEventLocation (
-    artwork_id          SERIAL REFERENCES Artwork,
-    event_id            SERIAL REFERENCES Event,
-    location_id         SERIAL REFERENCES Location,
-    by_post             BOOLEAN,
-    by_spedition        BOOLEAN,
-    is_collected        BOOLEAN,
-    is_built_onsite     BOOLEAN,
-    is_built_by_artist  BOOLEAN,
-    address_id          SERIAL REFERENCES Location,
-    packaging           TEXT,
-    material            TEXT,
-    no_pieces           INTEGER,
-    size                FLOAT,
-    pub_agreement       TEXT 
+    artwork_id                      SERIAL REFERENCES Artwork,
+    event_id                        SERIAL REFERENCES Event,
+    location_id                     SERIAL REFERENCES Location,
+    will_be_sent_by_post            BOOLEAN,
+    will_be_sent_by_spedition       BOOLEAN,
+    is_collected_after_exhibition   BOOLEAN,                                -- whether artist picks up items themself after the fact
+    is_built_onsite                 BOOLEAN,                                -- whether item comes prebuilt or not
+    is_built_by_artist              BOOLEAN,
+    shipping_address_id             SERIAL REFERENCES Location,             -- place where the artwork is shipped from to the event
+    packaging                       TEXT,
+    material                        TEXT,
+    no_pieces                       INTEGER,
+    size                            FLOAT,
+    pub_agreement                   TEXT 
 );
