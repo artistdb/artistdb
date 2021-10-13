@@ -36,13 +36,19 @@ func main() {
 
 	logger := zap.L().With(zap.String("component", "main"))
 
-	db, err := database.NewDatabase(ctx, getEnv(envConnString, ""))
+	connString := getEnv(envConnString, "")
+
+	db, err := database.NewDatabase(ctx, connString)
 	if err != nil {
 		logger.Fatal("setting up database connection failed", zap.Error(err))
 	}
 
 	if err := db.Ready(ctx); err != nil {
 		logger.Fatal("database not ready", zap.Error(err))
+	}
+
+	if err := db.CreateTables(connString); err != nil {
+		logger.Fatal("creating tables failed")
 	}
 
 	logger.Info("database initialized")
