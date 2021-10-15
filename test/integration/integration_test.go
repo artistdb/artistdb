@@ -17,10 +17,19 @@ func setup(t *testing.T, ctx context.Context) (*database.Database, *pgx.Conn, fu
 	connString := os.Getenv("TEST_DB_CONN_STRING")
 	require.NotEmpty(t, connString)
 
-	db, err := database.NewDatabase(ctx, connString)
-	require.NoError(t, err)
+	var (
+		db  *database.Database
+		err error
+	)
 
-	require.NoError(t, db.Ready(ctx))
+	// Wait for the database to come up.
+	do := func() bool {
+		db, err = database.NewDatabase(ctx, connString)
+		return err == nil && db.Ready(ctx) == nil
+	}
+
+	// Wait for the database to be ready. This might take some time in CI.
+	require.Eventuallyf(t, do, 30*time.Second, 500*time.Millisecond, "database didn't come up")
 
 	require.NoError(t, db.CreateTables(connString))
 
