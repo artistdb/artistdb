@@ -43,6 +43,8 @@ func main() {
 		logger.Fatal("setting up database connection failed", zap.Error(err))
 	}
 
+	defer db.Close()
+
 	if err := db.Ready(ctx); err != nil {
 		logger.Fatal("database not ready", zap.Error(err))
 	}

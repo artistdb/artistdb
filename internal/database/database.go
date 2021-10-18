@@ -2,8 +2,10 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
@@ -30,4 +32,14 @@ func NewDatabase(ctx context.Context, connString string) (*Database, error) {
 // Ready returns nil if a connection to the database can be established.
 func (db *Database) Ready(ctx context.Context) error {
 	return db.conn.Ping(ctx)
+}
+
+func (db *Database) Close() {
+	db.conn.Close()
+}
+
+func rollbackAndLogError(ctx context.Context, tx pgx.Tx) {
+	if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
+		zap.L().Error("close failed", zap.Error(err))
+	}
 }

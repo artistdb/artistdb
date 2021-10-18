@@ -2,8 +2,15 @@ version: '3.7'
 
 services:
   api:
-    build: .
+    image: obitech/go-build-tools
+    working_dir: /app
+    volumes:
+      - ".:/app"
+      - type: bind  # share host's go cache
+        source: "${GOPATH}/pkg"
+        target: "/build/pkg"
     restart: unless-stopped
+    command: reflex -s -r "\\.(go|yaml)$$" -- go run .
     environment:
       - DB_CONN_STRING=postgres://postgres:postgres@db?sslmode=disable
     ports:
