@@ -39,6 +39,5 @@ test-integration:
 .PHONY: test-local
 test-local: stop test
 	$(DC) up -d db
-	sleep 5 # Wait for DB
 	make test-integration
 	$(DC) down
