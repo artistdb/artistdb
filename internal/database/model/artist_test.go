@@ -49,7 +49,7 @@ func TestWrapPronouns(t *testing.T) {
 	}
 }
 
-func TestWrapPronouns1(t *testing.T) {
+func TestUnwrapPronouns(t *testing.T) {
 	tt := []struct {
 		name  string
 		dbVal string
@@ -64,17 +64,17 @@ func TestWrapPronouns1(t *testing.T) {
 			want:  []string{"she"},
 		},
 		{
-			name:  "double pronouns are appended",
+			name:  "double pronouns are unwrapped",
 			dbVal: "she|her",
 			want:  []string{"she", "her"},
 		},
 		{
-			name:  "tripple pronouns are appended",
+			name:  "tripple pronouns are unwrapped",
 			dbVal: "she|her|him",
 			want:  []string{"she", "her", "him"},
 		},
 		{
-			name:  "empty strings are appended too",
+			name:  "empty strings are unwrapped too",
 			dbVal: "she|her|him|",
 			want:  []string{"she", "her", "him", ""},
 		},
