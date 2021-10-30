@@ -2,15 +2,18 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/obitech/artist-db/internal/database"
+	"github.com/obitech/artist-db/internal/database/model"
 )
 
 func setup(t *testing.T, ctx context.Context) (*database.Database, *pgx.Conn, func(t *testing.T)) {
@@ -45,6 +48,14 @@ func setup(t *testing.T, ctx context.Context) (*database.Database, *pgx.Conn, fu
 	}
 
 	return db, conn, teardown
+}
+
+func toString(s *string) string {
+	if s == nil {
+		return ""
+	}
+
+	return *s
 }
 
 func Test_TablesExistsIntegration(t *testing.T) {
@@ -96,5 +107,140 @@ func Test_TablesExistsIntegration(t *testing.T) {
 		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableInvitedArtists).Scan(&exists))
 
 		assert.True(t, exists)
+	})
+}
+
+func Test_ArtistsIntegration(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	db, conn, teardown := setup(t, ctx)
+	defer teardown(t)
+
+	artists := []*model.Artist{
+		{
+			ID:         uuid.New().String(),
+			FirstName:  "first",
+			LastName:   "last",
+			ArtistName: "artist",
+			Pronouns:   []string{"she", "her"},
+			Origin: model.Origin{
+				DateOfBirth:  time.Time{},
+				PlaceOfBirth: "de",
+				Nationality:  "de",
+			},
+			Language: "de",
+			Socials: model.Socials{
+				Instagram: "foo",
+				Facebook:  "bar",
+				Bandcamp:  "baz",
+			},
+			BioGerman:  "alfred",
+			BioEnglish: "biolek",
+		},
+		{
+			ID:         uuid.New().String(),
+			FirstName:  "first2",
+			LastName:   "last2",
+			ArtistName: "artist2",
+			Pronouns:   []string{"he", "her", "him"},
+			Origin: model.Origin{
+				DateOfBirth:  time.Time{}.Add(time.Hour),
+				PlaceOfBirth: "en",
+				Nationality:  "en",
+			},
+			Language: "en",
+			Socials: model.Socials{
+				Instagram: "foo2",
+				Facebook:  "bar2",
+				Bandcamp:  "baz2",
+			},
+			BioGerman:  "alfred2",
+			BioEnglish: "biolek2",
+		},
+	}
+
+	t.Run("inserting single artist works", func(t *testing.T) {
+		require.NoError(t, db.UpsertArtists(ctx, artists[0]))
+
+		t.Run("verify", func(t *testing.T) {
+			stmt := fmt.Sprintf(`SELECT id from %s WHERE id=$1`, database.TableArtists)
+
+			var id string
+			require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id))
+
+			assert.Equal(t, artists[0].ID, id)
+		})
+
+		t.Run("cleanup", func(t *testing.T) {
+			stmt := fmt.Sprintf(`DELETE FROM %s WHERE id=$1`, database.TableArtists)
+
+			_, err := conn.Exec(ctx, stmt, artists[0].ID)
+			require.NoError(t, err)
+
+			stmt = fmt.Sprintf(`SELECT id from %s WHERE id=$1`, database.TableArtists)
+
+			var id string
+			require.Error(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id))
+			assert.Empty(t, id, "")
+		})
+	})
+
+	t.Run("inserting multiple artists works", func(t *testing.T) {
+		require.NoError(t, db.UpsertArtists(ctx, artists...))
+
+		t.Run("verify", func(t *testing.T) {
+			stmt := fmt.Sprintf(`SELECT id, artist_name, pronouns from %s WHERE id=$1`, database.TableArtists)
+
+			var (
+				id       string
+				name     *string
+				pronouns []string
+			)
+
+			t.Run("artist0", func(t *testing.T) {
+				require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id, &name, &pronouns))
+				assert.Equal(t, artists[0].ID, id)
+
+				require.NotNil(t, name)
+				assert.Equal(t, artists[0].ArtistName, toString(name))
+
+				require.NotNil(t, pronouns)
+				assert.NotEmpty(t, pronouns)
+				assert.Len(t, pronouns, 2)
+				assert.Equal(t, pronouns, artists[0].Pronouns)
+			})
+
+			t.Run("artist1", func(t *testing.T) {
+				require.NoError(t, conn.QueryRow(ctx, stmt, artists[1].ID).Scan(&id, &name, &pronouns))
+				assert.Equal(t, artists[1].ID, id)
+
+				require.NotNil(t, name)
+				assert.Equal(t, artists[1].ArtistName, toString(name))
+
+				require.NotNil(t, pronouns)
+				assert.NotEmpty(t, pronouns)
+				assert.Len(t, pronouns, 3)
+				assert.Equal(t, pronouns, artists[1].Pronouns)
+			})
+		})
+
+		t.Run("updating existing artist works", func(t *testing.T) {
+			artists[0].ArtistName = "pee.age"
+
+			require.NoError(t, db.UpsertArtists(ctx, artists...))
+
+			stmt := fmt.Sprintf(`SELECT id, artist_name from %s WHERE id=$1`, database.TableArtists)
+
+			var (
+				id   string
+				name *string
+			)
+			require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id, &name))
+			assert.Equal(t, artists[0].ID, id)
+
+			require.NotNil(t, name)
+			assert.Equal(t, artists[0].ArtistName, toString(name))
+		})
 	})
 }
