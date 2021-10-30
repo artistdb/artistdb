@@ -36,8 +36,15 @@ test-integration:
 	TEST_DB_CONN_STRING="$(TEST_DB_CONN_STRING)" \
 	$(GO) test -count=1 -v ./test/integration
 
+.PHONY: test-e2e
+test-e2e:
+	$(GO) test -count=1 -v ./test/e2e
+
 .PHONY: test-local
 test-local: stop test
 	GOPATH=$$(go env GOPATH) $(DC) up -d db
 	make test-integration
+	$(DC) down
+	$(DC) up -d
+	make test-e2e
 	$(DC) down
