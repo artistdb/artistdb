@@ -1,27 +1,14 @@
 package model
 
 import (
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-// NewArtist returns an artist with an initialized
+// NewArtist returns an artist with an initialized ID.
 func NewArtist() *Artist {
 	return &Artist{ID: uuid.New().String()}
-}
-
-func WrapPronouns(pronouns []string) string {
-	return strings.Join(pronouns, "|")
-}
-
-func UnwrapPronouns(dbValue string) []string {
-	if len(dbValue) == 0 {
-		return nil
-	}
-
-	return strings.Split(dbValue, "|")
 }
 
 // Artist represents an artist who is able to participate on an Event with some

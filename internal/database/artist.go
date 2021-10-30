@@ -78,20 +78,20 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 			artist_name=$14`, TableArtists)
 
 	if _, err := tx.Exec(ctx, stmt,
-		artist.ID,                           // $1
-		artist.FirstName,                    // $2
-		artist.LastName,                     // $3
-		model.WrapPronouns(artist.Pronouns), // $4
-		artist.Origin.DateOfBirth.UTC(),     // $5
-		artist.Origin.PlaceOfBirth,          // $6
-		artist.Origin.Nationality,           // $7
-		artist.Language,                     // $8
-		artist.Socials.Facebook,             // $9
-		artist.Socials.Instagram,            // $10
-		artist.Socials.Bandcamp,             // $11
-		artist.BioGerman,                    // $12
-		artist.BioEnglish,                   // $13
-		artist.ArtistName,                   // $14
+		artist.ID,                       // $1
+		artist.FirstName,                // $2
+		artist.LastName,                 // $3
+		artist.Pronouns,                 // $4
+		artist.Origin.DateOfBirth.UTC(), // $5
+		artist.Origin.PlaceOfBirth,      // $6
+		artist.Origin.Nationality,       // $7
+		artist.Language,                 // $8
+		artist.Socials.Facebook,         // $9
+		artist.Socials.Instagram,        // $10
+		artist.Socials.Bandcamp,         // $11
+		artist.BioGerman,                // $12
+		artist.BioEnglish,               // $13
+		artist.ArtistName,               // $14
 	); err != nil {
 		return err
 	}

@@ -190,23 +190,39 @@ func Test_ArtistsIntegration(t *testing.T) {
 		require.NoError(t, db.UpsertArtists(ctx, artists...))
 
 		t.Run("verify", func(t *testing.T) {
-			stmt := fmt.Sprintf(`SELECT id, artist_name from %s WHERE id=$1`, database.TableArtists)
+			stmt := fmt.Sprintf(`SELECT id, artist_name, pronouns from %s WHERE id=$1`, database.TableArtists)
 
 			var (
-				id   string
-				name *string
+				id       string
+				name     *string
+				pronouns []string
 			)
-			require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id, &name))
-			assert.Equal(t, artists[0].ID, id)
 
-			require.NotNil(t, name)
-			assert.Equal(t, artists[0].ArtistName, toString(name))
+			t.Run("artist0", func(t *testing.T) {
+				require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id, &name, &pronouns))
+				assert.Equal(t, artists[0].ID, id)
 
-			require.NoError(t, conn.QueryRow(ctx, stmt, artists[1].ID).Scan(&id, &name))
-			assert.Equal(t, artists[1].ID, id)
+				require.NotNil(t, name)
+				assert.Equal(t, artists[0].ArtistName, toString(name))
 
-			require.NotNil(t, name)
-			assert.Equal(t, artists[1].ArtistName, toString(name))
+				require.NotNil(t, pronouns)
+				assert.NotEmpty(t, pronouns)
+				assert.Len(t, pronouns, 2)
+				assert.Equal(t, pronouns, artists[0].Pronouns)
+			})
+
+			t.Run("artist1", func(t *testing.T) {
+				require.NoError(t, conn.QueryRow(ctx, stmt, artists[1].ID).Scan(&id, &name, &pronouns))
+				assert.Equal(t, artists[1].ID, id)
+
+				require.NotNil(t, name)
+				assert.Equal(t, artists[1].ArtistName, toString(name))
+
+				require.NotNil(t, pronouns)
+				assert.NotEmpty(t, pronouns)
+				assert.Len(t, pronouns, 3)
+				assert.Equal(t, pronouns, artists[1].Pronouns)
+			})
 		})
 
 		t.Run("updating existing artist works", func(t *testing.T) {

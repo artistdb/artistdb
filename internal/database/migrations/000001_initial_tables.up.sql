@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS artists (
                                       first_name      TEXT NOT NULL,
                                       last_name       TEXT NOT NULL,
                                       artist_name     TEXT,
-                                      pronouns        TEXT,
+                                      pronouns        TEXT[],
                                       date_of_birth   TIMESTAMPTZ,
                                       place_of_birth  TEXT,
                                       nationality     TEXT,
