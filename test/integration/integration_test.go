@@ -50,7 +50,7 @@ func setup(t *testing.T, ctx context.Context) (*database.Database, *pgx.Conn, fu
 	return db, conn, teardown
 }
 
-func pToString(s *string) string {
+func toString(s *string) string {
 	if s == nil {
 		return ""
 	}
@@ -200,13 +200,13 @@ func Test_ArtistsIntegration(t *testing.T) {
 			assert.Equal(t, artists[0].ID, id)
 
 			require.NotNil(t, name)
-			assert.Equal(t, artists[0].ArtistName, pToString(name))
+			assert.Equal(t, artists[0].ArtistName, toString(name))
 
 			require.NoError(t, conn.QueryRow(ctx, stmt, artists[1].ID).Scan(&id, &name))
 			assert.Equal(t, artists[1].ID, id)
 
 			require.NotNil(t, name)
-			assert.Equal(t, artists[1].ArtistName, pToString(name))
+			assert.Equal(t, artists[1].ArtistName, toString(name))
 		})
 
 		t.Run("updating existing artist works", func(t *testing.T) {
@@ -224,7 +224,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 			assert.Equal(t, artists[0].ID, id)
 
 			require.NotNil(t, name)
-			assert.Equal(t, artists[0].ArtistName, pToString(name))
+			assert.Equal(t, artists[0].ArtistName, toString(name))
 		})
 	})
 }
