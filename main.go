@@ -3,31 +3,19 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"go.uber.org/zap"
 
+	"github.com/obitech/artist-db/internal/config"
 	"github.com/obitech/artist-db/internal/database"
 	"github.com/obitech/artist-db/internal/server"
 )
 
-const (
-	envLoggingMode = "LOGGING_MODE"
-	envConnString  = "DB_CONN_STRING"
-	envListenAddr  = "LISTEN"
-)
-
-func getEnv(key, fallback string) string {
-	if val, ok := os.LookupEnv(key); ok && val != "" {
-		return val
-	}
-
-	return fallback
-}
-
 func main() {
-	if err := initLogger(getEnv(envLoggingMode, "dev")); err != nil {
+	cfg := config.New()
+
+	if err := initLogger(cfg.LoggingMode); err != nil {
 		log.Fatal(err)
 	}
 
@@ -36,9 +24,7 @@ func main() {
 
 	logger := zap.L().With(zap.String("component", "main"))
 
-	connString := getEnv(envConnString, "")
-
-	db, err := database.NewDatabase(ctx, connString)
+	db, err := database.NewDatabase(ctx, cfg.DbConnectionString)
 	if err != nil {
 		logger.Fatal("setting up database connection failed", zap.Error(err))
 	}
@@ -49,7 +35,7 @@ func main() {
 		logger.Fatal("database not ready", zap.Error(err))
 	}
 
-	if err := db.CreateTables(connString); err != nil {
+	if err := db.CreateTables(cfg.DbConnectionString); err != nil {
 		logger.Fatal("creating tables failed")
 	}
 
@@ -60,10 +46,9 @@ func main() {
 		logger.Fatal("setting up server failed", zap.Error(err))
 	}
 
-	listen := getEnv(envListenAddr, ":8080")
-	logger.Info("Starting http server...", zap.String("listenAddress", listen))
+	logger.Info("Starting HTTP server...", zap.String("listenAddress", cfg.ListenAddress))
 
-	if err := srv.ListenAndServe(listen); err != nil {
+	if err := srv.ListenAndServe(cfg.ListenAddress); err != nil {
 		logger.Error("listen failed", zap.Error(err))
 	}
 }
