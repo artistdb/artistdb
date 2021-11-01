@@ -6,13 +6,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/multierr"
 
 	"github.com/obitech/artist-db/internal/database/model"
 )
 
-var ErrNotFound = errors.New("resource not found")
+var (
+	ErrNotFound    = errors.New("resource not found")
+	ErrInvalidUUID = errors.New("id must be valid UUID")
+)
 
 // UpsertArtists creates or updates one or more artists in the database.
 // Multiple artists are inserted in the same transaction
@@ -104,6 +108,10 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 
 // GetArtistByID retrieves an Artist by ID, or an ErrNotFound.
 func (db *Database) GetArtistByID(ctx context.Context, id string) (*model.Artist, error) {
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, ErrInvalidUUID
+	}
+
 	stmt := fmt.Sprintf(`
 		SELECT 
 				first_name,

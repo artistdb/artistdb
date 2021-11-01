@@ -214,8 +214,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 			artist, err := db.GetArtistByID(ctx, "foo")
 			require.Error(t, err)
 
-			assert.False(t, errors.Is(err, database.ErrNotFound), err.Error())
-			assert.Contains(t, err.Error(), "invalid input syntax for type uuid")
+			assert.True(t, errors.Is(err, database.ErrInvalidUUID), err.Error())
 			assert.Nil(t, artist)
 		})
 
