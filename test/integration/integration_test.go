@@ -51,14 +51,6 @@ func setup(t *testing.T, ctx context.Context) (*database.Database, *pgx.Conn, fu
 	return db, conn, teardown
 }
 
-func toString(s *string) string {
-	if s == nil {
-		return ""
-	}
-
-	return *s
-}
-
 func Test_TablesExistsIntegration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
