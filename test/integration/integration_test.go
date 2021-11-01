@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -205,6 +206,25 @@ func Test_ArtistsIntegration(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, artists[0], artist)
 			assert.Equal(t, "pee.age", artist.ArtistName)
+		})
+	})
+
+	t.Run("retrieving non-existent artist throws error", func(t *testing.T) {
+		t.Run("invalid ID throws error", func(t *testing.T) {
+			artist, err := db.GetArtistByID(ctx, "foo")
+			require.Error(t, err)
+
+			assert.False(t, errors.Is(err, database.ErrNotFound), err.Error())
+			assert.Contains(t, err.Error(), "invalid input syntax for type uuid")
+			assert.Nil(t, artist)
+		})
+
+		t.Run("unknown ID thwrows error", func(t *testing.T) {
+			artist, err := db.GetArtistByID(ctx, uuid.New().String())
+			require.Error(t, err)
+
+			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
+			assert.Nil(t, artist)
 		})
 	})
 }
