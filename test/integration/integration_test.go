@@ -160,16 +160,14 @@ func Test_ArtistsIntegration(t *testing.T) {
 		},
 	}
 
-	t.Run("inserting single artist works", func(t *testing.T) {
+	t.Run("inserting and retrieving single artist works", func(t *testing.T) {
 		require.NoError(t, db.UpsertArtists(ctx, artists[0]))
 
 		t.Run("verify", func(t *testing.T) {
-			stmt := fmt.Sprintf(`SELECT id from %s WHERE id=$1`, database.TableArtists)
+			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			require.NoError(t, err)
 
-			var id string
-			require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id))
-
-			assert.Equal(t, artists[0].ID, id)
+			assert.Equal(t, artists[0], artist)
 		})
 
 		t.Run("cleanup", func(t *testing.T) {
@@ -190,57 +188,23 @@ func Test_ArtistsIntegration(t *testing.T) {
 		require.NoError(t, db.UpsertArtists(ctx, artists...))
 
 		t.Run("verify", func(t *testing.T) {
-			stmt := fmt.Sprintf(`SELECT id, artist_name, pronouns from %s WHERE id=$1`, database.TableArtists)
+			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			require.NoError(t, err)
+			assert.Equal(t, artists[0], artist)
 
-			var (
-				id       string
-				name     *string
-				pronouns []string
-			)
-
-			t.Run("artist0", func(t *testing.T) {
-				require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id, &name, &pronouns))
-				assert.Equal(t, artists[0].ID, id)
-
-				require.NotNil(t, name)
-				assert.Equal(t, artists[0].ArtistName, toString(name))
-
-				require.NotNil(t, pronouns)
-				assert.NotEmpty(t, pronouns)
-				assert.Len(t, pronouns, 2)
-				assert.Equal(t, pronouns, artists[0].Pronouns)
-			})
-
-			t.Run("artist1", func(t *testing.T) {
-				require.NoError(t, conn.QueryRow(ctx, stmt, artists[1].ID).Scan(&id, &name, &pronouns))
-				assert.Equal(t, artists[1].ID, id)
-
-				require.NotNil(t, name)
-				assert.Equal(t, artists[1].ArtistName, toString(name))
-
-				require.NotNil(t, pronouns)
-				assert.NotEmpty(t, pronouns)
-				assert.Len(t, pronouns, 3)
-				assert.Equal(t, pronouns, artists[1].Pronouns)
-			})
+			artist, err = db.GetArtistByID(ctx, artists[1].ID)
+			require.NoError(t, err)
+			assert.Equal(t, artists[1], artist)
 		})
 
 		t.Run("updating existing artist works", func(t *testing.T) {
 			artists[0].ArtistName = "pee.age"
-
 			require.NoError(t, db.UpsertArtists(ctx, artists...))
 
-			stmt := fmt.Sprintf(`SELECT id, artist_name from %s WHERE id=$1`, database.TableArtists)
-
-			var (
-				id   string
-				name *string
-			)
-			require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id, &name))
-			assert.Equal(t, artists[0].ID, id)
-
-			require.NotNil(t, name)
-			assert.Equal(t, artists[0].ArtistName, toString(name))
+			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			require.NoError(t, err)
+			assert.Equal(t, artists[0], artist)
+			assert.Equal(t, "pee.age", artist.ArtistName)
 		})
 	})
 }
