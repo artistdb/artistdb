@@ -6,7 +6,7 @@ go_packages = $(GO) list ./... | grep -v /test | xargs
 
 .PHONY: start
 start: stop
-	$(DC) up --build
+	GOPATH=$$(go env GOPATH) $(DC) up
 
 .PHONY: stop
 stop:
@@ -14,11 +14,11 @@ stop:
 
 .PHONY: start-db
 start-db: stop
-	$(DC) up db
+	GOPATH=$$(go env GOPATH) $(DC) up db
 
 .PHONY: start-api
 start-api: stop
-	$(DC) up api --build
+	GOPATH=$$(go env GOPATH) $(DC) up api
 
 .PHONY: test
 test:
@@ -38,6 +38,6 @@ test-integration:
 
 .PHONY: test-local
 test-local: stop test
-	$(DC) up -d db
+	GOPATH=$$(go env GOPATH) $(DC) up -d db
 	make test-integration
 	$(DC) down

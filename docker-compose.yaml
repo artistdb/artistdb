@@ -8,11 +8,11 @@ services:
       - ".:/app"
       - type: bind  # share host's go cache
         source: "${GOPATH}/pkg"
-        target: "/build/pkg"
+        target: "/go/pkg"
     restart: unless-stopped
     command: reflex -s -r "\\.(go|yaml)$$" -- go run .
     environment:
-      - DB_CONN_STRING=postgres://postgres:postgres@db?sslmode=disable
+      ADB_CONFIG_FILE: configuration/docker/config.yaml
     ports:
       - "8080:8080"
     depends_on:
