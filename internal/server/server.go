@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
+	"github.com/obitech/artist-db/graph"
+	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/internal/database"
 )
 
@@ -35,7 +39,18 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		r.Get("/health", srv.health)
 	})
 
+	srv.router.Route("/", func(r chi.Router) {
+		r.Post("/query", gqlHandler())
+		r.Get("/playground", playground.Handler("GraphQL playground", "/playground"))
+	})
+
 	return srv, nil
+}
+
+func gqlHandler() http.HandlerFunc {
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+
+	return h.ServeHTTP
 }
 
 // ListenAndServe starts the HTTP server and listens for new requests.
