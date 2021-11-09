@@ -57,7 +57,7 @@ type ComplexityRoot struct {
 	}
 
 	Artwork struct {
-		ArtistID        func(childComplexity int) int
+		Artist          func(childComplexity int) int
 		Category        func(childComplexity int) int
 		Height          func(childComplexity int) int
 		ID              func(childComplexity int) int
@@ -74,12 +74,12 @@ type ComplexityRoot struct {
 	}
 
 	ArtworkEventLocation struct {
-		ArtworkID                  func(childComplexity int) int
-		EventID                    func(childComplexity int) int
+		Artwork                    func(childComplexity int) int
+		Event                      func(childComplexity int) int
 		IsBuiltByArtist            func(childComplexity int) int
 		IsBuiltOnsite              func(childComplexity int) int
 		IsCollectedAfterExhibition func(childComplexity int) int
-		LocationID                 func(childComplexity int) int
+		Location                   func(childComplexity int) int
 		Material                   func(childComplexity int) int
 		NoPieces                   func(childComplexity int) int
 		Packaging                  func(childComplexity int) int
@@ -99,13 +99,14 @@ type ComplexityRoot struct {
 	}
 
 	InvitedArtist struct {
-		ArtistID       func(childComplexity int) int
+		Artist         func(childComplexity int) int
 		Confirmation   func(childComplexity int) int
-		EventID        func(childComplexity int) int
+		Event          func(childComplexity int) int
 		TravelExpenses func(childComplexity int) int
 	}
 
 	Location struct {
+		City        func(childComplexity int) int
 		Country     func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -113,6 +114,7 @@ type ComplexityRoot struct {
 		Lon         func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Picture     func(childComplexity int) int
+		Street      func(childComplexity int) int
 		Zip         func(childComplexity int) int
 	}
 
@@ -226,12 +228,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Artist.Pronouns(childComplexity), true
 
-	case "Artwork.artistID":
-		if e.complexity.Artwork.ArtistID == nil {
+	case "Artwork.artist":
+		if e.complexity.Artwork.Artist == nil {
 			break
 		}
 
-		return e.complexity.Artwork.ArtistID(childComplexity), true
+		return e.complexity.Artwork.Artist(childComplexity), true
 
 	case "Artwork.category":
 		if e.complexity.Artwork.Category == nil {
@@ -324,19 +326,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Artwork.Width(childComplexity), true
 
-	case "ArtworkEventLocation.artworkID":
-		if e.complexity.ArtworkEventLocation.ArtworkID == nil {
+	case "ArtworkEventLocation.artwork":
+		if e.complexity.ArtworkEventLocation.Artwork == nil {
 			break
 		}
 
-		return e.complexity.ArtworkEventLocation.ArtworkID(childComplexity), true
+		return e.complexity.ArtworkEventLocation.Artwork(childComplexity), true
 
-	case "ArtworkEventLocation.eventID":
-		if e.complexity.ArtworkEventLocation.EventID == nil {
+	case "ArtworkEventLocation.event":
+		if e.complexity.ArtworkEventLocation.Event == nil {
 			break
 		}
 
-		return e.complexity.ArtworkEventLocation.EventID(childComplexity), true
+		return e.complexity.ArtworkEventLocation.Event(childComplexity), true
 
 	case "ArtworkEventLocation.isBuiltByArtist":
 		if e.complexity.ArtworkEventLocation.IsBuiltByArtist == nil {
@@ -359,12 +361,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ArtworkEventLocation.IsCollectedAfterExhibition(childComplexity), true
 
-	case "ArtworkEventLocation.locationID":
-		if e.complexity.ArtworkEventLocation.LocationID == nil {
+	case "ArtworkEventLocation.location":
+		if e.complexity.ArtworkEventLocation.Location == nil {
 			break
 		}
 
-		return e.complexity.ArtworkEventLocation.LocationID(childComplexity), true
+		return e.complexity.ArtworkEventLocation.Location(childComplexity), true
 
 	case "ArtworkEventLocation.material":
 		if e.complexity.ArtworkEventLocation.Material == nil {
@@ -457,12 +459,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Event.StartTime(childComplexity), true
 
-	case "InvitedArtist.artistID":
-		if e.complexity.InvitedArtist.ArtistID == nil {
+	case "InvitedArtist.artist":
+		if e.complexity.InvitedArtist.Artist == nil {
 			break
 		}
 
-		return e.complexity.InvitedArtist.ArtistID(childComplexity), true
+		return e.complexity.InvitedArtist.Artist(childComplexity), true
 
 	case "InvitedArtist.confirmation":
 		if e.complexity.InvitedArtist.Confirmation == nil {
@@ -471,12 +473,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InvitedArtist.Confirmation(childComplexity), true
 
-	case "InvitedArtist.eventID":
-		if e.complexity.InvitedArtist.EventID == nil {
+	case "InvitedArtist.event":
+		if e.complexity.InvitedArtist.Event == nil {
 			break
 		}
 
-		return e.complexity.InvitedArtist.EventID(childComplexity), true
+		return e.complexity.InvitedArtist.Event(childComplexity), true
 
 	case "InvitedArtist.travelExpenses":
 		if e.complexity.InvitedArtist.TravelExpenses == nil {
@@ -484,6 +486,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InvitedArtist.TravelExpenses(childComplexity), true
+
+	case "Location.city":
+		if e.complexity.Location.City == nil {
+			break
+		}
+
+		return e.complexity.Location.City(childComplexity), true
 
 	case "Location.country":
 		if e.complexity.Location.Country == nil {
@@ -533,6 +542,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Location.Picture(childComplexity), true
+
+	case "Location.street":
+		if e.complexity.Location.Street == nil {
+			break
+		}
+
+		return e.complexity.Location.Street(childComplexity), true
 
 	case "Location.zip":
 		if e.complexity.Location.Zip == nil {
@@ -593,8 +609,8 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `type Artist {
   id:           ID!
-  firstName:    String
-  lastName:     String
+  firstName:    String!
+  lastName:     String!
   artistName:   String
   pronouns:     [String]
   dateOfBirth:  String
@@ -612,6 +628,8 @@ type Location {
   name:         String!
   country:      String
   zip:          String
+  city:         String
+  street:       String
   picture:      String
   description:  String
   lat:          String
@@ -627,8 +645,8 @@ type Event {
 }
 
 type InvitedArtist {
-  artistID:       Artist
-  eventID:        Event
+  artist:         Artist
+  event:          Event
   travelExpenses: String
   confirmation:   String
 }
@@ -636,24 +654,24 @@ type InvitedArtist {
 type Artwork {
   id:               ID!
   title:            String
-  artistID:         Artist
+  artist:           Artist
   synopsisEN:       String
   synopsisDE:       String
   pictures:         [String]
   materialDemands:  String
   insuranceAmount:  String
   salesVal:         String
-  height:           String
-  length:           String
-  width:            String
-  weight:           String
+  height:           Float
+  length:           Float
+  width:            Float
+  weight:           Float
   category:         String
 }
 
 type ArtworkEventLocation {
-  artworkID:                    Artwork
-  eventID:                      Event
-  locationID:                   Location
+  artwork:                      Artwork
+  event:                        Event
+  location:                     Location
   willBeSentByPost:             Boolean
   willBeSentBySpedition:        Boolean
   isCollectedAfterExhibition:   Boolean
@@ -786,11 +804,14 @@ func (ec *executionContext) _Artist_firstName(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Artist_lastName(ctx context.Context, field graphql.CollectedField, obj *model.Artist) (ret graphql.Marshaler) {
@@ -818,11 +839,14 @@ func (ec *executionContext) _Artist_lastName(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Artist_artistName(ctx context.Context, field graphql.CollectedField, obj *model.Artist) (ret graphql.Marshaler) {
@@ -1212,7 +1236,7 @@ func (ec *executionContext) _Artwork_title(ctx context.Context, field graphql.Co
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Artwork_artistID(ctx context.Context, field graphql.CollectedField, obj *model.Artwork) (ret graphql.Marshaler) {
+func (ec *executionContext) _Artwork_artist(ctx context.Context, field graphql.CollectedField, obj *model.Artwork) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1230,7 +1254,7 @@ func (ec *executionContext) _Artwork_artistID(ctx context.Context, field graphql
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ArtistID, nil
+		return obj.Artist, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1463,9 +1487,9 @@ func (ec *executionContext) _Artwork_height(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*float64)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Artwork_length(ctx context.Context, field graphql.CollectedField, obj *model.Artwork) (ret graphql.Marshaler) {
@@ -1495,9 +1519,9 @@ func (ec *executionContext) _Artwork_length(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*float64)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Artwork_width(ctx context.Context, field graphql.CollectedField, obj *model.Artwork) (ret graphql.Marshaler) {
@@ -1527,9 +1551,9 @@ func (ec *executionContext) _Artwork_width(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*float64)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Artwork_weight(ctx context.Context, field graphql.CollectedField, obj *model.Artwork) (ret graphql.Marshaler) {
@@ -1559,9 +1583,9 @@ func (ec *executionContext) _Artwork_weight(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*float64)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Artwork_category(ctx context.Context, field graphql.CollectedField, obj *model.Artwork) (ret graphql.Marshaler) {
@@ -1596,7 +1620,7 @@ func (ec *executionContext) _Artwork_category(ctx context.Context, field graphql
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ArtworkEventLocation_artworkID(ctx context.Context, field graphql.CollectedField, obj *model.ArtworkEventLocation) (ret graphql.Marshaler) {
+func (ec *executionContext) _ArtworkEventLocation_artwork(ctx context.Context, field graphql.CollectedField, obj *model.ArtworkEventLocation) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1614,7 +1638,7 @@ func (ec *executionContext) _ArtworkEventLocation_artworkID(ctx context.Context,
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ArtworkID, nil
+		return obj.Artwork, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1628,7 +1652,7 @@ func (ec *executionContext) _ArtworkEventLocation_artworkID(ctx context.Context,
 	return ec.marshalOArtwork2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtwork(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ArtworkEventLocation_eventID(ctx context.Context, field graphql.CollectedField, obj *model.ArtworkEventLocation) (ret graphql.Marshaler) {
+func (ec *executionContext) _ArtworkEventLocation_event(ctx context.Context, field graphql.CollectedField, obj *model.ArtworkEventLocation) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1646,7 +1670,7 @@ func (ec *executionContext) _ArtworkEventLocation_eventID(ctx context.Context, f
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.EventID, nil
+		return obj.Event, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1660,7 +1684,7 @@ func (ec *executionContext) _ArtworkEventLocation_eventID(ctx context.Context, f
 	return ec.marshalOEvent2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ArtworkEventLocation_locationID(ctx context.Context, field graphql.CollectedField, obj *model.ArtworkEventLocation) (ret graphql.Marshaler) {
+func (ec *executionContext) _ArtworkEventLocation_location(ctx context.Context, field graphql.CollectedField, obj *model.ArtworkEventLocation) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1678,7 +1702,7 @@ func (ec *executionContext) _ArtworkEventLocation_locationID(ctx context.Context
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LocationID, nil
+		return obj.Location, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2207,7 +2231,7 @@ func (ec *executionContext) _Event_artists(ctx context.Context, field graphql.Co
 	return ec.marshalOInvitedArtist2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐInvitedArtist(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InvitedArtist_artistID(ctx context.Context, field graphql.CollectedField, obj *model.InvitedArtist) (ret graphql.Marshaler) {
+func (ec *executionContext) _InvitedArtist_artist(ctx context.Context, field graphql.CollectedField, obj *model.InvitedArtist) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2225,7 +2249,7 @@ func (ec *executionContext) _InvitedArtist_artistID(ctx context.Context, field g
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ArtistID, nil
+		return obj.Artist, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2239,7 +2263,7 @@ func (ec *executionContext) _InvitedArtist_artistID(ctx context.Context, field g
 	return ec.marshalOArtist2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtist(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InvitedArtist_eventID(ctx context.Context, field graphql.CollectedField, obj *model.InvitedArtist) (ret graphql.Marshaler) {
+func (ec *executionContext) _InvitedArtist_event(ctx context.Context, field graphql.CollectedField, obj *model.InvitedArtist) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2257,7 +2281,7 @@ func (ec *executionContext) _InvitedArtist_eventID(ctx context.Context, field gr
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.EventID, nil
+		return obj.Event, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2456,6 +2480,70 @@ func (ec *executionContext) _Location_zip(ctx context.Context, field graphql.Col
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Zip, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Location_city(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.City, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Location_street(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Street, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3816,8 +3904,14 @@ func (ec *executionContext) _Artist(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "firstName":
 			out.Values[i] = ec._Artist_firstName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "lastName":
 			out.Values[i] = ec._Artist_lastName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "artistName":
 			out.Values[i] = ec._Artist_artistName(ctx, field, obj)
 		case "pronouns":
@@ -3867,8 +3961,8 @@ func (ec *executionContext) _Artwork(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "title":
 			out.Values[i] = ec._Artwork_title(ctx, field, obj)
-		case "artistID":
-			out.Values[i] = ec._Artwork_artistID(ctx, field, obj)
+		case "artist":
+			out.Values[i] = ec._Artwork_artist(ctx, field, obj)
 		case "synopsisEN":
 			out.Values[i] = ec._Artwork_synopsisEN(ctx, field, obj)
 		case "synopsisDE":
@@ -3913,12 +4007,12 @@ func (ec *executionContext) _ArtworkEventLocation(ctx context.Context, sel ast.S
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ArtworkEventLocation")
-		case "artworkID":
-			out.Values[i] = ec._ArtworkEventLocation_artworkID(ctx, field, obj)
-		case "eventID":
-			out.Values[i] = ec._ArtworkEventLocation_eventID(ctx, field, obj)
-		case "locationID":
-			out.Values[i] = ec._ArtworkEventLocation_locationID(ctx, field, obj)
+		case "artwork":
+			out.Values[i] = ec._ArtworkEventLocation_artwork(ctx, field, obj)
+		case "event":
+			out.Values[i] = ec._ArtworkEventLocation_event(ctx, field, obj)
+		case "location":
+			out.Values[i] = ec._ArtworkEventLocation_location(ctx, field, obj)
 		case "willBeSentByPost":
 			out.Values[i] = ec._ArtworkEventLocation_willBeSentByPost(ctx, field, obj)
 		case "willBeSentBySpedition":
@@ -3998,10 +4092,10 @@ func (ec *executionContext) _InvitedArtist(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("InvitedArtist")
-		case "artistID":
-			out.Values[i] = ec._InvitedArtist_artistID(ctx, field, obj)
-		case "eventID":
-			out.Values[i] = ec._InvitedArtist_eventID(ctx, field, obj)
+		case "artist":
+			out.Values[i] = ec._InvitedArtist_artist(ctx, field, obj)
+		case "event":
+			out.Values[i] = ec._InvitedArtist_event(ctx, field, obj)
 		case "travelExpenses":
 			out.Values[i] = ec._InvitedArtist_travelExpenses(ctx, field, obj)
 		case "confirmation":
@@ -4042,6 +4136,10 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Location_country(ctx, field, obj)
 		case "zip":
 			out.Values[i] = ec._Location_zip(ctx, field, obj)
+		case "city":
+			out.Values[i] = ec._Location_city(ctx, field, obj)
+		case "street":
+			out.Values[i] = ec._Location_street(ctx, field, obj)
 		case "picture":
 			out.Values[i] = ec._Location_picture(ctx, field, obj)
 		case "description":

@@ -4,8 +4,8 @@ package model
 
 type Artist struct {
 	ID           string    `json:"id"`
-	FirstName    *string   `json:"firstName"`
-	LastName     *string   `json:"lastName"`
+	FirstName    string    `json:"firstName"`
+	LastName     string    `json:"lastName"`
 	ArtistName   *string   `json:"artistName"`
 	Pronouns     []*string `json:"pronouns"`
 	DateOfBirth  *string   `json:"dateOfBirth"`
@@ -21,24 +21,24 @@ type Artist struct {
 type Artwork struct {
 	ID              string    `json:"id"`
 	Title           *string   `json:"title"`
-	ArtistID        *Artist   `json:"artistID"`
+	Artist          *Artist   `json:"artist"`
 	SynopsisEn      *string   `json:"synopsisEN"`
 	SynopsisDe      *string   `json:"synopsisDE"`
 	Pictures        []*string `json:"pictures"`
 	MaterialDemands *string   `json:"materialDemands"`
 	InsuranceAmount *string   `json:"insuranceAmount"`
 	SalesVal        *string   `json:"salesVal"`
-	Height          *string   `json:"height"`
-	Length          *string   `json:"length"`
-	Width           *string   `json:"width"`
-	Weight          *string   `json:"weight"`
+	Height          *float64  `json:"height"`
+	Length          *float64  `json:"length"`
+	Width           *float64  `json:"width"`
+	Weight          *float64  `json:"weight"`
 	Category        *string   `json:"category"`
 }
 
 type ArtworkEventLocation struct {
-	ArtworkID                  *Artwork  `json:"artworkID"`
-	EventID                    *Event    `json:"eventID"`
-	LocationID                 *Location `json:"locationID"`
+	Artwork                    *Artwork  `json:"artwork"`
+	Event                      *Event    `json:"event"`
+	Location                   *Location `json:"location"`
 	WillBeSentByPost           *bool     `json:"willBeSentByPost"`
 	WillBeSentBySpedition      *bool     `json:"willBeSentBySpedition"`
 	IsCollectedAfterExhibition *bool     `json:"isCollectedAfterExhibition"`
@@ -61,8 +61,8 @@ type Event struct {
 }
 
 type InvitedArtist struct {
-	ArtistID       *Artist `json:"artistID"`
-	EventID        *Event  `json:"eventID"`
+	Artist         *Artist `json:"artist"`
+	Event          *Event  `json:"event"`
 	TravelExpenses *string `json:"travelExpenses"`
 	Confirmation   *string `json:"confirmation"`
 }
@@ -72,6 +72,8 @@ type Location struct {
 	Name        string  `json:"name"`
 	Country     *string `json:"country"`
 	Zip         *string `json:"zip"`
+	City        *string `json:"city"`
+	Street      *string `json:"street"`
 	Picture     *string `json:"picture"`
 	Description *string `json:"description"`
 	Lat         *string `json:"lat"`

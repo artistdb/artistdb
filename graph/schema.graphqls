@@ -1,7 +1,7 @@
 type Artist {
   id:           ID!
-  firstName:    String
-  lastName:     String
+  firstName:    String!
+  lastName:     String!
   artistName:   String
   pronouns:     [String]
   dateOfBirth:  String
@@ -19,6 +19,8 @@ type Location {
   name:         String!
   country:      String
   zip:          String
+  city:         String
+  street:       String
   picture:      String
   description:  String
   lat:          String
@@ -34,8 +36,8 @@ type Event {
 }
 
 type InvitedArtist {
-  artistID:       Artist
-  eventID:        Event
+  artist:         Artist
+  event:          Event
   travelExpenses: String
   confirmation:   String
 }
@@ -43,24 +45,24 @@ type InvitedArtist {
 type Artwork {
   id:               ID!
   title:            String
-  artistID:         Artist
+  artist:           Artist
   synopsisEN:       String
   synopsisDE:       String
   pictures:         [String]
   materialDemands:  String
   insuranceAmount:  String
   salesVal:         String
-  height:           String
-  length:           String
-  width:            String
-  weight:           String
+  height:           Float
+  length:           Float
+  width:            Float
+  weight:           Float
   category:         String
 }
 
 type ArtworkEventLocation {
-  artworkID:                    Artwork
-  eventID:                      Event
-  locationID:                   Location
+  artwork:                      Artwork
+  event:                        Event
+  location:                     Location
   willBeSentByPost:             Boolean
   willBeSentBySpedition:        Boolean
   isCollectedAfterExhibition:   Boolean
