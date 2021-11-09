@@ -37,11 +37,11 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
+		r.Get("/graphql/playground", playground.Handler("GraphQL playground", "/query"))
 	})
 
 	srv.router.Route("/", func(r chi.Router) {
 		r.Post("/query", gqlHandler())
-		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
 	})
 
 	return srv, nil
