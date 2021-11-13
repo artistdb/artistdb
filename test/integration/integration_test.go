@@ -218,4 +218,35 @@ func Test_ArtistsIntegration(t *testing.T) {
 			assert.Nil(t, artist)
 		})
 	})
+
+	t.Run("deleting non-existent artist throws error", func(t *testing.T) {
+		t.Run("invalid ID throws error", func(t *testing.T) {
+			err := db.DeleteArtistByID(ctx, "foo")
+			require.Error(t, err)
+
+			assert.True(t, errors.Is(err, database.ErrInvalidUUID), err.Error())
+		})
+
+		t.Run("unknown ID thwrows error", func(t *testing.T) {
+			err := db.DeleteArtistByID(ctx, uuid.New().String())
+			require.Error(t, err)
+
+			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
+		})
+	})
+
+	t.Run("deleting artist works", func(t *testing.T) {
+		t.Run("delete", func(t *testing.T) {
+			err := db.DeleteArtistByID(ctx, artists[0].ID)
+			require.NoError(t, err)
+		})
+
+		t.Run("validate", func(t *testing.T) {
+			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			require.Error(t, err)
+			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
+
+			assert.Nil(t, artist)
+		})
+	})
 }
