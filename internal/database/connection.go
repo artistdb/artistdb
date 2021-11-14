@@ -102,7 +102,7 @@ func (c *connectionPool) Exec(ctx context.Context, sql string, args ...interface
 	start := time.Now()
 
 	defer func(s time.Time) {
-		metrics.Collector.ObserveCommandDuration(commandQuery, time.Since(s))
+		metrics.Collector.ObserveCommandDuration(commandExec, time.Since(s))
 	}(start)
 
 	return c.pool.Exec(ctx, sql, args...)
