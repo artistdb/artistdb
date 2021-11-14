@@ -6,19 +6,18 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
 
 // Database allows interaction with the underlying Postgres.
 type Database struct {
-	conn   *pgxpool.Pool
+	conn   Connection
 	logger *zap.Logger
 }
 
 // NewDatabase returns a database with an active connection pool.
 func NewDatabase(ctx context.Context, connString string) (*Database, error) {
-	conn, err := pgxpool.Connect(ctx, connString)
+	conn, err := newConnectionPool(ctx, connString)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to DB failed: %w", err)
 	}
