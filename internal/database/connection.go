@@ -18,8 +18,8 @@ const (
 	commandExec  = "exec"
 )
 
-// Connection abstracts a pgx Database connection.
-type Connection interface {
+// connection abstracts a pgx Database connection.
+type connection interface {
 	// Ping checks if the database is reachable.
 	Ping(ctx context.Context) error
 
@@ -39,13 +39,13 @@ type Connection interface {
 	Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)
 }
 
-// connectionPool wraps a pgxpool and implements the Connection interface.
+// connectionPool wraps a pgxpool and implements the connection interface.
 type connectionPool struct {
 	pool *pgxpool.Pool
 }
 
 // newConnectionPool returns a connectionPool.
-func newConnectionPool(ctx context.Context, connString string) (Connection, error) {
+func newConnectionPool(ctx context.Context, connString string) (connection, error) {
 	conn, err := pgxpool.Connect(ctx, connString)
 	if err != nil {
 		return nil, err

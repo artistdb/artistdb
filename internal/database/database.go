@@ -11,7 +11,7 @@ import (
 
 // Database allows interaction with the underlying Postgres.
 type Database struct {
-	conn   Connection
+	conn   connection
 	logger *zap.Logger
 }
 
