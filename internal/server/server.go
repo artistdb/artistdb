@@ -7,6 +7,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/graph"
@@ -42,6 +43,7 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 
 	srv.router.Route("/", func(r chi.Router) {
 		r.Post("/query", gqlHandler())
+		r.Handle("/metrics", promhttp.Handler())
 	})
 
 	return srv, nil

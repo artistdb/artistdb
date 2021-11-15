@@ -4,11 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/multierr"
 
 	"github.com/obitech/artist-db/internal/database/model"
+)
+
+var (
+	ErrNotFound    = errors.New("resource not found")
+	ErrInvalidUUID = errors.New("id must be valid UUID")
 )
 
 // UpsertArtists creates or updates one or more artists in the database.
@@ -94,6 +101,118 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 		artist.ArtistName,               // $14
 	); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// GetArtistByID retrieves an Artist by ID, or an ErrNotFound.
+func (db *Database) GetArtistByID(ctx context.Context, id string) (*model.Artist, error) {
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, ErrInvalidUUID
+	}
+
+	stmt := fmt.Sprintf(`
+		SELECT 
+				first_name,
+				last_name,
+				pronouns,
+				date_of_birth,
+				place_of_birth,
+				nationality,
+				language,
+				facebook,
+				instagram,
+				bandcamp,
+				bio_ger,
+				bio_en,
+				artist_name
+		FROM
+			"%s"
+		WHERE
+			id=$1`, TableArtists,
+	)
+
+	var (
+		firstName   string
+		lastName    string
+		pronouns    []string
+		dob         *time.Time
+		pob         *string
+		nationality *string
+		language    *string
+		facebook    *string
+		instagram   *string
+		bandcamp    *string
+		bioGer      *string
+		bioEn       *string
+		artistName  *string
+	)
+
+	if err := db.conn.QueryRow(ctx, stmt, id).Scan(
+		&firstName,
+		&lastName,
+		&pronouns,
+		&dob,
+		&pob,
+		&nationality,
+		&language,
+		&facebook,
+		&instagram,
+		&bandcamp,
+		&bioGer,
+		&bioEn,
+		&artistName,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+
+		return nil, err
+	}
+
+	return &model.Artist{
+		ID:         id,
+		FirstName:  firstName,
+		LastName:   lastName,
+		ArtistName: toString(artistName),
+		Pronouns:   pronouns,
+		Origin: model.Origin{
+			DateOfBirth:  toTime(dob),
+			PlaceOfBirth: toString(pob),
+			Nationality:  toString(nationality),
+		},
+		Language: toString(language),
+		Socials: model.Socials{
+			Instagram: toString(instagram),
+			Facebook:  toString(facebook),
+			Bandcamp:  toString(bandcamp),
+		},
+		BioGerman:  toString(bioGer),
+		BioEnglish: toString(bioEn),
+	}, nil
+}
+
+// DeleteArtistByID deletes an Artist by ID. Returns ErrNotFound if the Artist
+// did not exist beforehand.
+func (db *Database) DeleteArtistByID(ctx context.Context, id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrInvalidUUID
+	}
+
+	stmt := fmt.Sprintf(`DELETE FROM "%s" WHERE id=$1 RETURNING id`, TableArtists)
+
+	var deletedID string
+	if err := db.conn.QueryRow(ctx, stmt, id).Scan(&deletedID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+
+		return err
+	}
+
+	if deletedID == "" {
+		return ErrNotFound
 	}
 
 	return nil
