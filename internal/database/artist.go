@@ -192,3 +192,28 @@ func (db *Database) GetArtistByID(ctx context.Context, id string) (*model.Artist
 		BioEnglish: toString(bioEn),
 	}, nil
 }
+
+// DeleteArtistByID deletes an Artist by ID. Returns ErrNotFound if the Artist
+// did not exist beforehand.
+func (db *Database) DeleteArtistByID(ctx context.Context, id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrInvalidUUID
+	}
+
+	stmt := fmt.Sprintf(`DELETE FROM "%s" WHERE id=$1 RETURNING id`, TableArtists)
+
+	var deletedID string
+	if err := db.conn.QueryRow(ctx, stmt, id).Scan(&deletedID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+
+		return err
+	}
+
+	if deletedID == "" {
+		return ErrNotFound
+	}
+
+	return nil
+}
