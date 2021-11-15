@@ -1,0 +1,77 @@
+type Artist {
+  id:           ID!
+  firstName:    String!
+  lastName:     String!
+  artistName:   String
+  pronouns:     [String]
+  dateOfBirth:  String
+  placeOfBirth: String
+  nationality:  String
+  language:     String
+  facebook:     String
+  instagram:    String
+  bioGer:       String
+  bioEn:        String
+}
+
+type Location {
+  id:           ID!
+  name:         String!
+  country:      String
+  zip:          String
+  city:         String
+  street:       String
+  picture:      String
+  description:  String
+  lat:          String
+  lon:          String
+}
+
+type Event {
+  id:           ID!
+  name:         String
+  startTime:    String
+  location:     Location
+  artists:      [InvitedArtist]
+}
+
+type InvitedArtist {
+  artist:         Artist
+  event:          Event
+  travelExpenses: String
+  confirmation:   String
+}
+
+type Artwork {
+  id:               ID!
+  title:            String
+  artist:           Artist
+  synopsisEN:       String
+  synopsisDE:       String
+  pictures:         [String]
+  materialDemands:  String
+  insuranceAmount:  String
+  salesVal:         String
+  height:           Float
+  length:           Float
+  width:            Float
+  weight:           Float
+  category:         String
+}
+
+type ArtworkEventLocation {
+  artwork:                      Artwork
+  event:                        Event
+  location:                     Location
+  willBeSentByPost:             Boolean
+  willBeSentBySpedition:        Boolean
+  isCollectedAfterExhibition:   Boolean
+  isBuiltOnsite:                Boolean
+  isBuiltByArtist:              Boolean
+  shippingAddress:              Location
+  packaging:                    String
+  material:                     String
+  noPieces:                     Int
+  size:                         Float
+  pubAgreement:                 String
+}

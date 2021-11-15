@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	// "github.com/obitech/artist-db/graph"
+	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/internal/database"
 )
 
@@ -34,10 +38,21 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
+		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
 		r.Handle("/metrics", promhttp.Handler())
 	})
 
+	srv.router.Route("/", func(r chi.Router) {
+		r.Handle("/query", gqlHandler())
+	})
+
 	return srv, nil
+}
+
+func gqlHandler() http.HandlerFunc {
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{}))
+
+	return h.ServeHTTP
 }
 
 // ListenAndServe starts the HTTP server and listens for new requests.

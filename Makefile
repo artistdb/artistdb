@@ -20,6 +20,11 @@ start-db: stop
 start-api: stop
 	GOPATH=$$(go env GOPATH) $(DC) up api
 
+.PHONY: gen-graph
+gen-graph: stop
+	$(DC) up gen-graph
+	$(DC) down
+
 .PHONY: test
 test:
 	$(GO) test -v -race -short $(shell $(call go_packages))
