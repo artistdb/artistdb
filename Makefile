@@ -21,8 +21,7 @@ start-api: stop
 	GOPATH=$$(go env GOPATH) $(DC) up api
 
 .PHONY: gen-graph
-gen-graph:
-	$(DC) down
+gen-graph: stop
 	$(DC) up gen-graph
 	$(DC) down
 
