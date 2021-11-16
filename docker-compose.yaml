@@ -24,12 +24,3 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
-  gen-graph:
-    image: golang:1.17.3-alpine3.14
-    working_dir: /app
-    volumes:
-      - ".:/app"
-      - type: bind  # share host's go cache
-        source: "${GOPATH}/pkg"
-        target: "/go/pkg"
-    command: go run github.com/99designs/gqlgen generate

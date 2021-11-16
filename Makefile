@@ -22,8 +22,7 @@ start-api: stop
 
 .PHONY: gen-graph
 gen-graph: stop
-	$(DC) up gen-graph
-	$(DC) down
+	$(GO) run github.com/99designs/gqlgen generate
 
 .PHONY: test
 test:
