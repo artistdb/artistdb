@@ -5,12 +5,17 @@ import (
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	"github.com/go-chi/cors"
+
 	// "github.com/obitech/artist-db/graph"
+	"github.com/obitech/artist-db/graph"
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/internal/database"
 )
@@ -36,6 +41,15 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		}
 	}
 
+	// Add CORS middleware around every request
+	// See https://github.com/rs/cors for full option listing
+	srv.router.Use(cors.New(cors.Options{
+		AllowedOrigins: []string{
+			"*"},
+		AllowCredentials: true,
+		Debug:            true,
+	}).Handler)
+
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
 		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
@@ -46,11 +60,24 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		r.Handle("/query", gqlHandler())
 	})
 
+	gqlsrv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	gqlsrv.AddTransport(&transport.Websocket{
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				// Check against your desired domains here
+				return r.Host == "localhost:8080/internal/playground"
+			},
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+		},
+	})
+	srv.router.Handle("/query", gqlsrv)
+
 	return srv, nil
 }
 
 func gqlHandler() http.HandlerFunc {
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{}))
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
 	return h.ServeHTTP
 }
