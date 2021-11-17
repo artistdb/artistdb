@@ -5,10 +5,8 @@ import (
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
@@ -59,19 +57,6 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	srv.router.Route("/", func(r chi.Router) {
 		r.Handle("/query", gqlHandler())
 	})
-
-	gqlsrv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-	gqlsrv.AddTransport(&transport.Websocket{
-		Upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				// Check against your desired domains here
-				return r.Host == "localhost:8080/internal/playground"
-			},
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
-		},
-	})
-	srv.router.Handle("/query", gqlsrv)
 
 	return srv, nil
 }
