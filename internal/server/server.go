@@ -10,7 +10,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	"github.com/go-chi/cors"
+
 	// "github.com/obitech/artist-db/graph"
+	"github.com/obitech/artist-db/graph"
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/internal/database"
 )
@@ -36,6 +39,15 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		}
 	}
 
+	// Add CORS middleware around every request
+	// See https://github.com/rs/cors for full option listing
+	srv.router.Use(cors.New(cors.Options{
+		AllowedOrigins: []string{
+			"*"},
+		AllowCredentials: true,
+		Debug:            true,
+	}).Handler)
+
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
 		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
@@ -50,7 +62,7 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 }
 
 func gqlHandler() http.HandlerFunc {
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{}))
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
 	return h.ServeHTTP
 }
