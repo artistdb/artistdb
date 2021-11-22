@@ -43,10 +43,14 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	// See https://github.com/rs/cors for full option listing
 	srv.router.Use(cors.New(cors.Options{
 		AllowedOrigins: []string{
-			"*"},
+			"*",
+		},
 		AllowCredentials: true,
 		Debug:            true,
 	}).Handler)
+
+	srv.router.Use(loggingMiddleware)
+	srv.router.Use(prometheusMiddleware)
 
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
