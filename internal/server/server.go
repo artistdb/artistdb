@@ -39,15 +39,8 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		}
 	}
 
-	// Add CORS middleware around every request
-	// See https://github.com/rs/cors for full option listing
-	srv.router.Use(cors.New(cors.Options{
-		AllowedOrigins: []string{
-			"*",
-		},
-		AllowCredentials: true,
-		Debug:            true,
-	}).Handler)
+	// See https://github.com/go-chi/cors
+	srv.router.Use(cors.AllowAll().Handler)
 
 	srv.router.Use(loggingMiddleware)
 	srv.router.Use(prometheusMiddleware)
