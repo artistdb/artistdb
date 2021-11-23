@@ -75,3 +75,24 @@ type ArtworkEventLocation {
   size:                         Float
   pubAgreement:                 String
 }
+
+input ArtistInput {
+  id:           ID
+  firstName:    String!
+  lastName:     String!
+  artistName:   String
+  pronouns:     [String]
+  dateOfBirth:  String
+  placeOfBirth: String
+  nationality:  String
+  language:     String
+  facebook:     String
+  instagram:    String
+  bandcamp:     String
+  bioGer:       String
+  bioEn:        String
+}
+
+type Mutation {
+  upsertArtists(input: [ArtistInput!]): [Artist!]
+}
