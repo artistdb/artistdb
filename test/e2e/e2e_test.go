@@ -59,6 +59,8 @@ func TestApiIntegration(t *testing.T) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", body)
 		require.NoError(t, err)
 
+		req.Header.Set("Content-Type", "application/json")
+
 		resp, err := httpClient.Do(req)
 		require.NoError(t, err)
 
