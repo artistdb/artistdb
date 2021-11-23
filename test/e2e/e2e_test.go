@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -42,6 +43,40 @@ func TestApiIntegration(t *testing.T) {
 		}()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
+
+	t.Run("insertion of single artist works", func(t *testing.T) {
+
+		str := `mutation {
+					upsertArtists(input: [{firstName: "Rainer", lastName: "Ingo"}]) {
+						firstName
+						lastName
+				  }
+				}`
+
+		body := strings.NewReader(str)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", body)
+		require.NoError(t, err)
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		wanted := `{"data": {
+					  "upsertArtists": [
+						{
+						  "firstName": "Rainer",
+						  "lastName": "Ingo"
+						}
+					  ]
+					}
+				  }`
+
+		assert.Equal(t, wanted, resp.Body)
 	})
 
 	// This should always be the last test in this suite.
