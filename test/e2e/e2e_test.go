@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -46,7 +47,6 @@ func TestApiIntegration(t *testing.T) {
 	})
 
 	t.Run("insertion of single artist works", func(t *testing.T) {
-
 		str := `mutation {
 					upsertArtists(input: [{firstName: "Rainer", lastName: "Ingo"}]) {
 						firstName
@@ -76,7 +76,10 @@ func TestApiIntegration(t *testing.T) {
 					}
 				  }`
 
-		assert.Equal(t, wanted, resp.Body)
+		got, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		assert.Equal(t, wanted, string(got))
 	})
 
 	// This should always be the last test in this suite.

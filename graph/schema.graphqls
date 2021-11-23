@@ -82,7 +82,7 @@ input ArtistInput {
   lastName:     String!
   artistName:   String
   pronouns:     [String]
-  dateOfBirth:  String
+  dateOfBirth:  Int
   placeOfBirth: String
   nationality:  String
   language:     String

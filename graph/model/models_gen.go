@@ -24,7 +24,7 @@ type ArtistInput struct {
 	LastName     string    `json:"lastName"`
 	ArtistName   *string   `json:"artistName"`
 	Pronouns     []*string `json:"pronouns"`
-	DateOfBirth  *string   `json:"dateOfBirth"`
+	DateOfBirth  *int      `json:"dateOfBirth"`
 	PlaceOfBirth *string   `json:"placeOfBirth"`
 	Nationality  *string   `json:"nationality"`
 	Language     *string   `json:"language"`

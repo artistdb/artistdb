@@ -7,9 +7,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
-	"github.com/go-chi/cors"
+
 	"github.com/obitech/artist-db/graph"
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/internal/database"
@@ -18,7 +19,7 @@ import (
 // Server holds API handlers.
 type Server struct {
 	router chi.Router
-	DB     *database.Database
+	db     *database.Database
 	logger *zap.Logger
 }
 
@@ -26,7 +27,7 @@ type Server struct {
 func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	srv := &Server{
 		router: chi.NewRouter(),
-		DB:     db,
+		db:     db,
 		logger: zap.L().With(zap.String("component", "server")),
 	}
 
@@ -40,7 +41,8 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	// See https://github.com/rs/cors for full option listing
 	srv.router.Use(cors.New(cors.Options{
 		AllowedOrigins: []string{
-			"*"},
+			"*",
+		},
 		AllowCredentials: true,
 		Debug:            true,
 	}).Handler)
@@ -52,14 +54,14 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	})
 
 	srv.router.Route("/", func(r chi.Router) {
-		r.Handle("/query", gqlHandler(srv.DB))
+		r.Handle("/query", gqlHandler(db))
 	})
 
 	return srv, nil
 }
 
 func gqlHandler(db *database.Database) http.HandlerFunc {
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: *db}}))
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(db)}))
 
 	return h.ServeHTTP
 }

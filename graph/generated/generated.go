@@ -726,7 +726,7 @@ input ArtistInput {
   lastName:     String!
   artistName:   String
   pronouns:     [String]
-  dateOfBirth:  String
+  dateOfBirth:  Int
   placeOfBirth: String
   nationality:  String
   language:     String
@@ -4041,7 +4041,7 @@ func (ec *executionContext) unmarshalInputArtistInput(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateOfBirth"))
-			it.DateOfBirth, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.DateOfBirth, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}

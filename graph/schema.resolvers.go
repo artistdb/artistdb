@@ -5,57 +5,67 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/obitech/artist-db/graph/generated"
 	model_gen "github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/model"
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen.ArtistInput) ([]*model_gen.Artist, error) {
-	artists := []*model.Artist{}
-	ret := []*model_gen.Artist{} //return array as workaround for now, to satisfy resolver's need to use generated model
+	artists := make([]*model.Artist, len(input))
+	ret := make([]*model_gen.Artist, len(input))
 
-	layout := "2020-01-01 09:09:09"
-
-	for i := 0; i < len(input); i++ {
-
+	for i, artistInput := range input {
 		var artist model.Artist
 		var re model_gen.Artist
 
-		if input[i].ID != nil {
-			artist.ID = *input[i].ID
+		if artistInput.ID != nil {
+			artist.ID = *artistInput.ID
 		} else {
 			artist.ID = uuid.NewString()
 		}
-		
-		artist.FirstName = input[i].FirstName
-		artist.LastName = input[i].LastName
-		artist.ArtistName = toString(input[i].ArtistName)
-		for j := 0; j < len(input[i].Pronouns); j++ {
-			artist.Pronouns[j] = toString(input[i].Pronouns[j])
-		}
-		artist.Origin.DateOfBirth, _ = time.Parse(layout, toString(input[i].DateOfBirth))
-		artist.Origin.PlaceOfBirth = toString(input[i].PlaceOfBirth)
-		artist.Language = toString(input[i].Language)
-		artist.Socials.Facebook = toString(input[i].Facebook)
-		artist.Socials.Instagram = toString(input[i].Instagram)
-		artist.Socials.Bandcamp = toString(input[i].Bandcamp)
-		artist.BioGerman = toString(input[i].BioGer)
-		artist.BioEnglish = toString(input[i].BioEn)
 
-		artists = append(artists, &artist)
+		artist.FirstName = artistInput.FirstName
+		artist.LastName = artistInput.LastName
+		artist.ArtistName = toString(artistInput.ArtistName)
+
+		if len(artistInput.Pronouns) > 0 {
+			artist.Pronouns = make([]string, len(artistInput.Pronouns))
+
+			for i, pronoun := range artistInput.Pronouns {
+				artist.Pronouns[i] = toString(pronoun)
+			}
+		}
+
+		if artistInput.DateOfBirth != nil {
+			artist.Origin.DateOfBirth = time.Unix(int64(*artistInput.DateOfBirth), 0).UTC()
+		}
+
+		artist.Origin.PlaceOfBirth = toString(artistInput.PlaceOfBirth)
+		artist.Language = toString(artistInput.Language)
+		artist.Socials.Facebook = toString(artistInput.Facebook)
+		artist.Socials.Instagram = toString(artistInput.Instagram)
+		artist.Socials.Bandcamp = toString(artistInput.Bandcamp)
+		artist.BioGerman = toString(artistInput.BioGer)
+		artist.BioEnglish = toString(artistInput.BioEn)
+
+		artists[i] = &artist
 
 		// returning a stub for now since we will refactor anyways?
 		re.ID = artist.ID
 		re.FirstName = artist.FirstName
 		re.LastName = artist.LastName
 
-		ret = append(ret, &re)
+		ret[i] = &re
 	}
 
-	r.DB.UpsertArtists(ctx, artists...)
+	if err := r.db.UpsertArtists(ctx, artists...); err != nil {
+		return nil, fmt.Errorf("upserting artist failed: %w", err)
+	}
 
 	return ret, nil
 }
