@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/kong v0.2.17
 	github.com/alecthomas/kong-yaml v0.1.1
 	github.com/go-chi/chi/v5 v5.0.4
+	github.com/go-chi/cors v1.2.0
 	github.com/golang-migrate/migrate/v4 v4.15.0
 	github.com/google/uuid v1.2.0
 	github.com/jackc/pgconn v1.10.0

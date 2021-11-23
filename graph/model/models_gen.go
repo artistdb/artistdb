@@ -18,6 +18,23 @@ type Artist struct {
 	BioEn        *string   `json:"bioEn"`
 }
 
+type ArtistInput struct {
+	ID           *string   `json:"id"`
+	FirstName    string    `json:"firstName"`
+	LastName     string    `json:"lastName"`
+	ArtistName   *string   `json:"artistName"`
+	Pronouns     []*string `json:"pronouns"`
+	DateOfBirth  *int      `json:"dateOfBirth"`
+	PlaceOfBirth *string   `json:"placeOfBirth"`
+	Nationality  *string   `json:"nationality"`
+	Language     *string   `json:"language"`
+	Facebook     *string   `json:"facebook"`
+	Instagram    *string   `json:"instagram"`
+	Bandcamp     *string   `json:"bandcamp"`
+	BioGer       *string   `json:"bioGer"`
+	BioEn        *string   `json:"bioEn"`
+}
+
 type Artwork struct {
 	ID              string    `json:"id"`
 	Title           *string   `json:"title"`
