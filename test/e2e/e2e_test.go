@@ -89,6 +89,7 @@ func TestApiIntegration(t *testing.T) {
 
 		assert.Equal(t, "Rainer", gqlresp.Data.UpsertArtists[0].FirstName)
 		assert.Equal(t, "Ingo", gqlresp.Data.UpsertArtists[0].LastName)
+
 	})
 
 	// This should always be the last test in this suite.
