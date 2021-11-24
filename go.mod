@@ -10,7 +10,6 @@ require (
 	github.com/go-chi/cors v1.2.0
 	github.com/golang-migrate/migrate/v4 v4.15.0
 	github.com/google/uuid v1.2.0
-	github.com/gorilla/websocket v1.4.2
 	github.com/jackc/pgconn v1.10.0
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a
@@ -28,6 +27,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect

@@ -2,15 +2,27 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/obitech/artist-db/internal/database/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type gqlresp struct {
+	Data data `json:"data"`
+}
+
+type data struct {
+	Data          string
+	UpsertArtists []model.Artist `json:"upsertArtists"`
+}
 
 func TestApiIntegration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -63,12 +75,20 @@ func TestApiIntegration(t *testing.T) {
 			require.NoError(t, resp.Body.Close())
 		}()
 
-		wanted := `{"data":{"upsertArtists":[{"firstName":"Rainer","lastName":"Ingo"}]}}`
-
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		assert.Equal(t, wanted, string(got))
+		fmt.Println(string(got))
+
+		gqlresp := gqlresp{Data: data{UpsertArtists: []model.Artist{}}}
+
+		marshalErr := json.Unmarshal(got, &gqlresp)
+		require.NoError(t, marshalErr)
+
+		fmt.Println(gqlresp)
+
+		assert.Equal(t, "Rainer", gqlresp.Data.UpsertArtists[0].FirstName)
+		assert.Equal(t, "Ingo", gqlresp.Data.UpsertArtists[0].LastName)
 	})
 
 	// This should always be the last test in this suite.
