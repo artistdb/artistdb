@@ -13,10 +13,33 @@ import (
 )
 
 func TestApiIntegration(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	httpClient := &http.Client{}
+
+	// This should always be the first test in this suite.
+	t.Run("health endpoint is reachable", func(t *testing.T) {
+		do := func() bool {
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/internal/health", nil)
+			require.NoError(t, err)
+
+			req.Close = true
+
+			resp, err := httpClient.Do(req)
+			if err != nil {
+				return false
+			}
+
+			defer func() {
+				require.NoError(t, resp.Body.Close())
+			}()
+
+			return resp.StatusCode == http.StatusOK
+		}
+
+		require.Eventuallyf(t, do, 50*time.Second, 500*time.Millisecond, "controller didn't become ready")
+	})
 
 	t.Run("graphql query endpoint is reachable", func(t *testing.T) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/query", nil)
