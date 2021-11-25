@@ -95,5 +95,5 @@ input ArtistInput {
 
 type Mutation {
   upsertArtists(input: [ArtistInput!]): [Artist!]
-  deleteArtistByID(id: ID!): Boolean
+  deleteArtistByID(id: ID!): Boolean!
 }

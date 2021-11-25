@@ -22,7 +22,7 @@ type gqlresp struct {
 type data struct {
 	UpsertArtists    []model.Artist `json:"upsertArtists"`
 	DeleteArtistByID bool           `json:"deleteArtistByID"`
-
+}
 
 func TestApiIntegration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
