@@ -105,28 +105,25 @@ func TestApiIntegration(t *testing.T) {
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		gqlresp := gqlresp{
+		var result = gqlresp{
 			Data: data{
 				UpsertArtists: []model.Artist{},
 			},
 		}
 
-		unmarshalErr := json.Unmarshal(got, &gqlresp)
+		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
 
-		require.Len(t, gqlresp.Data.UpsertArtists, 1)
-		assert.NotEmpty(t, gqlresp.Data.UpsertArtists[0].ID)
-		assert.Equal(t, "Bob", gqlresp.Data.UpsertArtists[0].FirstName)
-		assert.Equal(t, "Ross", gqlresp.Data.UpsertArtists[0].LastName)
+		require.Len(t, result.Data.UpsertArtists, 1)
+		assert.NotEmpty(t, result.Data.UpsertArtists[0].ID)
+		assert.Equal(t, "Bob", result.Data.UpsertArtists[0].FirstName)
+		assert.Equal(t, "Ross", result.Data.UpsertArtists[0].LastName)
 
-		testID = gqlresp.Data.UpsertArtists[0].ID
-		fmt.Println(testID)
+		testID = result.Data.UpsertArtists[0].ID
 	})
 
 	t.Run("deletion of single artist works", func(t *testing.T) {
 		str := fmt.Sprintf(`{"query": "mutation { deleteArtistByID(id: \"%s\")}"}`, testID)
-
-		fmt.Println(str)
 
 		body := strings.NewReader(str)
 
@@ -145,15 +142,14 @@ func TestApiIntegration(t *testing.T) {
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		gqlresp := gqlresp{
+		var result = gqlresp{
 			Data: data{},
 		}
 
-		unmarshalErr := json.Unmarshal(got, &gqlresp)
+		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
 
-
-		assert.Equal(t, true, gqlresp.Data.DeleteArtistByID)
+		assert.Equal(t, true, result.Data.DeleteArtistByID)
 	})
 
 	// This should always be the last test in this suite.
