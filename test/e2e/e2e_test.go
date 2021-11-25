@@ -3,7 +3,6 @@ package e2e
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -79,8 +78,6 @@ func TestApiIntegration(t *testing.T) {
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		fmt.Println(string(got))
-
 		gqlresp := gqlresp{
 			Data: data{
 				UpsertArtists: []model.Artist{},
@@ -89,8 +86,6 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &gqlresp)
 		require.NoError(t, unmarshalErr)
-
-		fmt.Println(gqlresp)
 
 		require.Len(t, gqlresp.Data.UpsertArtists, 1)
 		assert.NotEmpty(t, gqlresp.Data.UpsertArtists[0].ID)
