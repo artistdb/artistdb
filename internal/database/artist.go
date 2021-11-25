@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/multierr"
 
+	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database/model"
 )
 
@@ -175,21 +176,21 @@ func (db *Database) GetArtistByID(ctx context.Context, id string) (*model.Artist
 		ID:         id,
 		FirstName:  firstName,
 		LastName:   lastName,
-		ArtistName: toString(artistName),
+		ArtistName: conversion.PointerToString(artistName),
 		Pronouns:   pronouns,
 		Origin: model.Origin{
-			DateOfBirth:  toTime(dob),
-			PlaceOfBirth: toString(pob),
-			Nationality:  toString(nationality),
+			DateOfBirth:  conversion.PointerToTime(dob),
+			PlaceOfBirth: conversion.PointerToString(pob),
+			Nationality:  conversion.PointerToString(nationality),
 		},
-		Language: toString(language),
+		Language: conversion.PointerToString(language),
 		Socials: model.Socials{
-			Instagram: toString(instagram),
-			Facebook:  toString(facebook),
-			Bandcamp:  toString(bandcamp),
+			Instagram: conversion.PointerToString(instagram),
+			Facebook:  conversion.PointerToString(facebook),
+			Bandcamp:  conversion.PointerToString(bandcamp),
 		},
-		BioGerman:  toString(bioGer),
-		BioEnglish: toString(bioEn),
+		BioGerman:  conversion.PointerToString(bioGer),
+		BioEnglish: conversion.PointerToString(bioEn),
 	}, nil
 }
 

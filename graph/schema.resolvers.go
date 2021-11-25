@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/obitech/artist-db/graph/generated"
 	model_gen "github.com/obitech/artist-db/graph/model"
+	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database/model"
 )
 
@@ -30,13 +31,13 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 
 		artist.FirstName = artistInput.FirstName
 		artist.LastName = artistInput.LastName
-		artist.ArtistName = toString(artistInput.ArtistName)
+		artist.ArtistName = conversion.PointerToString(artistInput.ArtistName)
 
 		if len(artistInput.Pronouns) > 0 {
 			artist.Pronouns = make([]string, len(artistInput.Pronouns))
 
 			for i, pronoun := range artistInput.Pronouns {
-				artist.Pronouns[i] = toString(pronoun)
+				artist.Pronouns[i] = conversion.PointerToString(pronoun)
 			}
 		}
 
@@ -44,13 +45,13 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 			artist.Origin.DateOfBirth = time.Unix(int64(*artistInput.DateOfBirth), 0).UTC()
 		}
 
-		artist.Origin.PlaceOfBirth = toString(artistInput.PlaceOfBirth)
-		artist.Language = toString(artistInput.Language)
-		artist.Socials.Facebook = toString(artistInput.Facebook)
-		artist.Socials.Instagram = toString(artistInput.Instagram)
-		artist.Socials.Bandcamp = toString(artistInput.Bandcamp)
-		artist.BioGerman = toString(artistInput.BioGer)
-		artist.BioEnglish = toString(artistInput.BioEn)
+		artist.Origin.PlaceOfBirth = conversion.PointerToString(artistInput.PlaceOfBirth)
+		artist.Language = conversion.PointerToString(artistInput.Language)
+		artist.Socials.Facebook = conversion.PointerToString(artistInput.Facebook)
+		artist.Socials.Instagram = conversion.PointerToString(artistInput.Instagram)
+		artist.Socials.Bandcamp = conversion.PointerToString(artistInput.Bandcamp)
+		artist.BioGerman = conversion.PointerToString(artistInput.BioGer)
+		artist.BioEnglish = conversion.PointerToString(artistInput.BioEn)
 
 		artists[i] = &artist
 

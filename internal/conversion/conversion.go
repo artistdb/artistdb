@@ -1,8 +1,8 @@
-package database
+package conversion
 
 import "time"
 
-func toString(s *string) string {
+func PointerToString(s *string) string {
 	if s == nil {
 		return ""
 	}
@@ -10,7 +10,7 @@ func toString(s *string) string {
 	return *s
 }
 
-func toTime(t *time.Time) time.Time {
+func PointerToTime(t *time.Time) time.Time {
 	if t == nil {
 		return time.Time{}
 	}
