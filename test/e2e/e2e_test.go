@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -19,7 +20,8 @@ type gqlresp struct {
 }
 
 type data struct {
-	UpsertArtists []model.Artist `json:"upsertArtists"`
+	UpsertArtists    []model.Artist `json:"upsertArtists"`
+	DeleteArtistByID bool           `json:"deleteArtistByID"`
 }
 
 func TestApiIntegration(t *testing.T) {
@@ -27,6 +29,8 @@ func TestApiIntegration(t *testing.T) {
 	defer cancel()
 
 	httpClient := &http.Client{}
+
+	testID := ""
 
 	t.Run("graphql query endpoint is reachable", func(t *testing.T) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/query", nil)
@@ -91,6 +95,43 @@ func TestApiIntegration(t *testing.T) {
 		assert.NotEmpty(t, gqlresp.Data.UpsertArtists[0].ID)
 		assert.Equal(t, "Bob", gqlresp.Data.UpsertArtists[0].FirstName)
 		assert.Equal(t, "Ross", gqlresp.Data.UpsertArtists[0].LastName)
+
+		testID = gqlresp.Data.UpsertArtists[0].ID
+		fmt.Println(testID)
+	})
+
+	t.Run("deletion of single artist works", func(t *testing.T) {
+		str := fmt.Sprintf(`{"query": "mutation { deleteArtistByID(id: \"%s\")}"}`, testID)
+
+		fmt.Println(str)
+
+		body := strings.NewReader(str)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", body)
+		require.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		got, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		gqlresp := gqlresp{
+			Data: data{},
+		}
+
+		unmarshalErr := json.Unmarshal(got, &gqlresp)
+		require.NoError(t, unmarshalErr)
+
+		fmt.Printf(string(got))
+
+		assert.Equal(t, true, gqlresp.Data.DeleteArtistByID)
 	})
 
 	// This should always be the last test in this suite.
