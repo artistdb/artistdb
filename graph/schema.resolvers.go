@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/obitech/artist-db/graph/generated"
 	model_gen "github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/model"
@@ -70,6 +69,17 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 	return ret, nil
 }
 
+func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (*bool, error) {
+	t := true
+	f := false
+
+	if err := r.db.DeleteArtistByID(ctx, id); err == nil {
+		return &t, nil
+	} else {
+		return &f, err
+	}
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
@@ -81,6 +91,17 @@ type mutationResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) DeleteArtist(ctx context.Context, input string) (*bool, error) {
+
+	t := true
+	f := false
+
+	if err := r.db.DeleteArtistByID(ctx, input); err == nil {
+		return &t, nil
+	} else {
+		return &f, err
+	}
+}
 func toString(s *string) string {
 	if s == nil {
 		return ""
