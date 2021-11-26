@@ -10,9 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/obitech/artist-db/graph/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/obitech/artist-db/graph/model"
 )
 
 type gqlresp struct {
@@ -30,7 +31,7 @@ func TestApiIntegration(t *testing.T) {
 
 	httpClient := &http.Client{}
 
-	testID := ""
+	var testID string
 
 	// This should always be the first test in this suite.
 	t.Run("health endpoint is reachable", func(t *testing.T) {
@@ -84,11 +85,10 @@ func TestApiIntegration(t *testing.T) {
 	})
 
 	t.Run("insertion of single artist works", func(t *testing.T) {
-
 		str := `{"query": 
 			"mutation { upsertArtists(input: [{firstName:\"Bob\",lastName:\"Ross\",artistName:\"BBR\",pronouns:[\"they\",\"them\"],dateOfBirth:1637830936,placeOfBirth:\"Space, Sachsen-Anhalt\",nationality:\"none\",language:\"peace\",facebook:\"meta ;)\",instagram:\"da_real_bob_ross\",bandcamp:\"bandcamp.com/babitorossi\",bioGer:\"bob ross malt so schön!!!!\",bioEn:\"i like so much to draw with bobby\"}]) { id firstName lastName}}"}`
 
-		body := strings.NewReader(string(str))
+		body := strings.NewReader(str)
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", body)
 		require.NoError(t, err)
@@ -105,11 +105,7 @@ func TestApiIntegration(t *testing.T) {
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		var result = gqlresp{
-			Data: data{
-				UpsertArtists: []model.Artist{},
-			},
-		}
+		var result gqlresp
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
@@ -142,9 +138,7 @@ func TestApiIntegration(t *testing.T) {
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		var result = gqlresp{
-			Data: data{},
-		}
+		var result gqlresp
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
