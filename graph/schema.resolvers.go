@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/obitech/artist-db/graph/generated"
 	model_gen "github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/conversion"
@@ -71,8 +70,16 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 	return ret, nil
 }
 
+func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (bool, error) {
+
+	if err := r.db.DeleteArtistByID(ctx, id); err != nil {
+		return false, err
+	} 
+
+	return true, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-
