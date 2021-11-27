@@ -237,6 +237,12 @@ func Test_ArtistsIntegration(t *testing.T) {
 	})
 
 	t.Run("retrieving non-existent artist throws error", func(t *testing.T) {
+		t.Run("invalid ID throws error", func(t *testing.T) {
+			res, err := db.GetArtists(ctx, database.ByID("foo"))
+			require.Error(t, err)
+			assert.Nil(t, res)
+		})
+
 		t.Run("unknown ID throws error", func(t *testing.T) {
 			artist, err := db.GetArtists(ctx, database.ByID(uuid.New().String()))
 			require.Error(t, err)
