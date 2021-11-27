@@ -151,16 +151,36 @@ func Test_ArtistsIntegration(t *testing.T) {
 			BioGerman:  "alfred2",
 			BioEnglish: "biolek2",
 		},
+		{
+			ID:         uuid.New().String(),
+			FirstName:  "first2",
+			LastName:   "last2",
+			ArtistName: "artist2",
+		},
 	}
 
 	t.Run("inserting and retrieving single artist works", func(t *testing.T) {
+		t.Run("invalid ID throws error", func(t *testing.T) {
+			require.Error(t, db.UpsertArtists(ctx, &model.Artist{ID: "foo"}))
+		})
+
 		require.NoError(t, db.UpsertArtists(ctx, artists[0]))
 
 		t.Run("verify", func(t *testing.T) {
-			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
 			require.NoError(t, err)
+			require.Len(t, res, 1)
+			assert.Equal(t, artists[0], res[0])
 
-			assert.Equal(t, artists[0], artist)
+			res, err = db.GetArtists(ctx, database.ByArtistName(artists[0].ArtistName))
+			require.NoError(t, err)
+			require.Len(t, res, 1)
+			assert.Equal(t, artists[0], res[0])
+
+			res, err = db.GetArtists(ctx, database.ByLastName(artists[0].LastName))
+			require.NoError(t, err)
+			require.Len(t, res, 1)
+			assert.Equal(t, artists[0], res[0])
 		})
 
 		t.Run("cleanup", func(t *testing.T) {
@@ -181,37 +201,44 @@ func Test_ArtistsIntegration(t *testing.T) {
 		require.NoError(t, db.UpsertArtists(ctx, artists...))
 
 		t.Run("verify", func(t *testing.T) {
-			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
 			require.NoError(t, err)
-			assert.Equal(t, artists[0], artist)
+			require.Len(t, res, 1)
+			assert.Equal(t, artists[0], res[0])
 
-			artist, err = db.GetArtistByID(ctx, artists[1].ID)
+			res, err = db.GetArtists(ctx, database.ByID(artists[1].ID))
 			require.NoError(t, err)
-			assert.Equal(t, artists[1], artist)
+			require.Len(t, res, 1)
+			assert.Equal(t, artists[1], res[0])
+
+			res, err = db.GetArtists(ctx, database.ByArtistName(artists[1].ArtistName))
+			require.NoError(t, err)
+			require.Len(t, res, 2)
+			assert.Equal(t, artists[1], res[0])
+			assert.Equal(t, artists[2], res[1])
+
+			res, err = db.GetArtists(ctx, database.ByLastName(artists[1].LastName))
+			require.NoError(t, err)
+			require.Len(t, res, 2)
+			assert.Equal(t, artists[1], res[0])
+			assert.Equal(t, artists[2], res[1])
 		})
 
 		t.Run("updating existing artist works", func(t *testing.T) {
 			artists[0].ArtistName = "pee.age"
 			require.NoError(t, db.UpsertArtists(ctx, artists...))
 
-			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
 			require.NoError(t, err)
-			assert.Equal(t, artists[0], artist)
-			assert.Equal(t, "pee.age", artist.ArtistName)
+			require.Len(t, res, 1)
+			assert.Equal(t, artists[0], res[0])
+			assert.Equal(t, "pee.age", res[0].ArtistName)
 		})
 	})
 
 	t.Run("retrieving non-existent artist throws error", func(t *testing.T) {
-		t.Run("invalid ID throws error", func(t *testing.T) {
-			artist, err := db.GetArtistByID(ctx, "foo")
-			require.Error(t, err)
-
-			assert.True(t, errors.Is(err, database.ErrInvalidUUID), err.Error())
-			assert.Nil(t, artist)
-		})
-
-		t.Run("unknown ID thwrows error", func(t *testing.T) {
-			artist, err := db.GetArtistByID(ctx, uuid.New().String())
+		t.Run("unknown ID throws error", func(t *testing.T) {
+			artist, err := db.GetArtists(ctx, database.ByID(uuid.New().String()))
 			require.Error(t, err)
 
 			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
@@ -242,7 +269,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 		})
 
 		t.Run("validate", func(t *testing.T) {
-			artist, err := db.GetArtistByID(ctx, artists[0].ID)
+			artist, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
 			require.Error(t, err)
 			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
 
