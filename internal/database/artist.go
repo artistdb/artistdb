@@ -107,14 +107,37 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 	return nil
 }
 
-// GetArtistByID retrieves an Artist by ID, or an ErrNotFound.
-func (db *Database) GetArtistByID(ctx context.Context, id string) (*model.Artist, error) {
-	if _, err := uuid.Parse(id); err != nil {
-		return nil, ErrInvalidUUID
+// GetArtistRequest specifies the input for an  Artists query against the database.
+type GetArtistRequest func() (string, string)
+
+// ByID requests and Artist by ID.
+func ByID(id string) GetArtistRequest {
+	return func() (string, string) {
+		return id, "id=$1"
 	}
+}
+
+// ByArtistName requests Artists by the artists'.
+func ByArtistName(firstName string) GetArtistRequest {
+	return func() (string, string) {
+		return firstName, "artist_name=$1"
+	}
+}
+
+// ByLastName requests Artists by last name.
+func ByLastName(lastName string) GetArtistRequest {
+	return func() (string, string) {
+		return lastName, "last_name=$1"
+	}
+}
+
+// GetArtists retrieves Artists according to GetArtistRequest, or an ErrNotFound.
+func (db *Database) GetArtists(ctx context.Context, request GetArtistRequest) ([]*model.Artist, error) {
+	input, whereClause := request()
 
 	stmt := fmt.Sprintf(`
 		SELECT 
+				id,
 				first_name,
 				last_name,
 				pronouns,
@@ -130,68 +153,89 @@ func (db *Database) GetArtistByID(ctx context.Context, id string) (*model.Artist
 				artist_name
 		FROM
 			"%s"
-		WHERE
-			id=$1`, TableArtists,
+		WHERE `, TableArtists,
 	)
 
-	var (
-		firstName   string
-		lastName    string
-		pronouns    []string
-		dob         *time.Time
-		pob         *string
-		nationality *string
-		language    *string
-		facebook    *string
-		instagram   *string
-		bandcamp    *string
-		bioGer      *string
-		bioEn       *string
-		artistName  *string
-	)
+	stmt += whereClause
 
-	if err := db.conn.QueryRow(ctx, stmt, id).Scan(
-		&firstName,
-		&lastName,
-		&pronouns,
-		&dob,
-		&pob,
-		&nationality,
-		&language,
-		&facebook,
-		&instagram,
-		&bandcamp,
-		&bioGer,
-		&bioEn,
-		&artistName,
-	); err != nil {
+	rows, err := db.conn.Query(ctx, stmt, input)
+	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("query failed: %w", err)
 	}
 
-	return &model.Artist{
-		ID:         id,
-		FirstName:  firstName,
-		LastName:   lastName,
-		ArtistName: conversion.PointerToString(artistName),
-		Pronouns:   pronouns,
-		Origin: model.Origin{
-			DateOfBirth:  conversion.PointerToTime(dob),
-			PlaceOfBirth: conversion.PointerToString(pob),
-			Nationality:  conversion.PointerToString(nationality),
-		},
-		Language: conversion.PointerToString(language),
-		Socials: model.Socials{
-			Instagram: conversion.PointerToString(instagram),
-			Facebook:  conversion.PointerToString(facebook),
-			Bandcamp:  conversion.PointerToString(bandcamp),
-		},
-		BioGerman:  conversion.PointerToString(bioGer),
-		BioEnglish: conversion.PointerToString(bioEn),
-	}, nil
+	defer rows.Close()
+
+	var artists []*model.Artist
+
+	for rows.Next() {
+		var (
+			id          string
+			firstName   string
+			lastName    string
+			pronouns    []string
+			dob         *time.Time
+			pob         *string
+			nationality *string
+			language    *string
+			facebook    *string
+			instagram   *string
+			bandcamp    *string
+			bioGer      *string
+			bioEn       *string
+			artistName  *string
+		)
+
+		if err := rows.Scan(
+			&id,
+			&firstName,
+			&lastName,
+			&pronouns,
+			&dob,
+			&pob,
+			&nationality,
+			&language,
+			&facebook,
+			&instagram,
+			&bandcamp,
+			&bioGer,
+			&bioEn,
+			&artistName,
+		); err != nil {
+			return nil, fmt.Errorf("scanning rows failed: %w", err)
+		}
+
+		artists = append(artists, &model.Artist{
+			ID:         id,
+			FirstName:  firstName,
+			LastName:   lastName,
+			ArtistName: conversion.PointerToString(artistName),
+			Pronouns:   pronouns,
+			Origin: model.Origin{
+				DateOfBirth:  conversion.PointerToTime(dob),
+				PlaceOfBirth: conversion.PointerToString(pob),
+				Nationality:  conversion.PointerToString(nationality),
+			},
+			Language: conversion.PointerToString(language),
+			Socials: model.Socials{
+				Instagram: conversion.PointerToString(instagram),
+				Facebook:  conversion.PointerToString(facebook),
+				Bandcamp:  conversion.PointerToString(bandcamp),
+			},
+			BioGerman:  conversion.PointerToString(bioGer),
+			BioEnglish: conversion.PointerToString(bioEn),
+		})
+
+	}
+
+	if len(artists) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return artists, nil
 }
 
 // DeleteArtistByID deletes an Artist by ID. Returns ErrNotFound if the Artist
