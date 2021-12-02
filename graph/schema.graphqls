@@ -10,6 +10,7 @@ type Artist {
   language:     String
   facebook:     String
   instagram:    String
+  bandcamp:     String
   bioGer:       String
   bioEn:        String
 }
@@ -78,8 +79,8 @@ type ArtworkEventLocation {
 
 input ArtistInput {
   id:           ID
-  firstName:    String!
-  lastName:     String!
+  firstName:    String
+  lastName:     String
   artistName:   String
   pronouns:     [String]
   dateOfBirth:  Int
@@ -91,6 +92,10 @@ input ArtistInput {
   bandcamp:     String
   bioGer:       String
   bioEn:        String
+}
+
+type Query {
+  getArtists(input: [ArtistInput!]): [Artist]
 }
 
 type Mutation {

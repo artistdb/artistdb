@@ -14,14 +14,15 @@ type Artist struct {
 	Language     *string   `json:"language"`
 	Facebook     *string   `json:"facebook"`
 	Instagram    *string   `json:"instagram"`
+	Bandcamp     *string   `json:"bandcamp"`
 	BioGer       *string   `json:"bioGer"`
 	BioEn        *string   `json:"bioEn"`
 }
 
 type ArtistInput struct {
 	ID           *string   `json:"id"`
-	FirstName    string    `json:"firstName"`
-	LastName     string    `json:"lastName"`
+	FirstName    *string   `json:"firstName"`
+	LastName     *string   `json:"lastName"`
 	ArtistName   *string   `json:"artistName"`
 	Pronouns     []*string `json:"pronouns"`
 	DateOfBirth  *int      `json:"dateOfBirth"`

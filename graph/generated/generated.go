@@ -35,6 +35,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
+	Query() QueryResolver
 }
 
 type DirectiveRoot struct {
@@ -43,6 +44,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Artist struct {
 		ArtistName   func(childComplexity int) int
+		Bandcamp     func(childComplexity int) int
 		BioEn        func(childComplexity int) int
 		BioGer       func(childComplexity int) int
 		DateOfBirth  func(childComplexity int) int
@@ -125,12 +127,16 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		GetArtists func(childComplexity int, input []*model.ArtistInput) int
 	}
 }
 
 type MutationResolver interface {
 	UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error)
 	DeleteArtistByID(ctx context.Context, id string) (bool, error)
+}
+type QueryResolver interface {
+	GetArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error)
 }
 
 type executableSchema struct {
@@ -154,6 +160,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Artist.ArtistName(childComplexity), true
+
+	case "Artist.bandcamp":
+		if e.complexity.Artist.Bandcamp == nil {
+			break
+		}
+
+		return e.complexity.Artist.Bandcamp(childComplexity), true
 
 	case "Artist.bioEn":
 		if e.complexity.Artist.BioEn == nil {
@@ -592,6 +605,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpsertArtists(childComplexity, args["input"].([]*model.ArtistInput)), true
 
+	case "Query.getArtists":
+		if e.complexity.Query.GetArtists == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getArtists_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetArtists(childComplexity, args["input"].([]*model.ArtistInput)), true
+
 	}
 	return 0, false
 }
@@ -668,6 +693,7 @@ var sources = []*ast.Source{
   language:     String
   facebook:     String
   instagram:    String
+  bandcamp:     String
   bioGer:       String
   bioEn:        String
 }
@@ -736,8 +762,8 @@ type ArtworkEventLocation {
 
 input ArtistInput {
   id:           ID
-  firstName:    String!
-  lastName:     String!
+  firstName:    String
+  lastName:     String
   artistName:   String
   pronouns:     [String]
   dateOfBirth:  Int
@@ -749,6 +775,10 @@ input ArtistInput {
   bandcamp:     String
   bioGer:       String
   bioEn:        String
+}
+
+type Query {
+  getArtists(input: [ArtistInput!]): [Artist]
 }
 
 type Mutation {
@@ -804,6 +834,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getArtists_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.ArtistInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOArtistInput2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtistInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1193,6 +1238,38 @@ func (ec *executionContext) _Artist_instagram(ctx context.Context, field graphql
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Instagram, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Artist_bandcamp(ctx context.Context, field graphql.CollectedField, obj *model.Artist) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Artist",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Bandcamp, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2867,6 +2944,45 @@ func (ec *executionContext) _Mutation_deleteArtistByID(ctx context.Context, fiel
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getArtists(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getArtists_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetArtists(rctx, args["input"].([]*model.ArtistInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Artist)
+	fc.Result = res
+	return ec.marshalOArtist2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtist(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4081,7 +4197,7 @@ func (ec *executionContext) unmarshalInputArtistInput(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
-			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
+			it.FirstName, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4089,7 +4205,7 @@ func (ec *executionContext) unmarshalInputArtistInput(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
-			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			it.LastName, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4237,6 +4353,8 @@ func (ec *executionContext) _Artist(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Artist_facebook(ctx, field, obj)
 		case "instagram":
 			out.Values[i] = ec._Artist_instagram(ctx, field, obj)
+		case "bandcamp":
+			out.Values[i] = ec._Artist_bandcamp(ctx, field, obj)
 		case "bioGer":
 			out.Values[i] = ec._Artist_bioGer(ctx, field, obj)
 		case "bioEn":
@@ -4516,6 +4634,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "getArtists":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getArtists(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -5096,6 +5225,47 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalOArtist2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtist(ctx context.Context, sel ast.SelectionSet, v []*model.Artist) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOArtist2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtist(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalOArtist2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtistᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Artist) graphql.Marshaler {
