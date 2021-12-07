@@ -127,7 +127,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetArtists func(childComplexity int, input []*model.ArtistInput) int
+		GetArtists func(childComplexity int, input []*model.GetArtistInput) int
 	}
 }
 
@@ -136,7 +136,7 @@ type MutationResolver interface {
 	DeleteArtistByID(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
-	GetArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error)
+	GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error)
 }
 
 type executableSchema struct {
@@ -615,7 +615,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetArtists(childComplexity, args["input"].([]*model.ArtistInput)), true
+		return e.complexity.Query.GetArtists(childComplexity, args["input"].([]*model.GetArtistInput)), true
 
 	}
 	return 0, false
@@ -762,8 +762,8 @@ type ArtworkEventLocation {
 
 input ArtistInput {
   id:           ID
-  firstName:    String
-  lastName:     String
+  firstName:    String!
+  lastName:     String!
   artistName:   String
   pronouns:     [String]
   dateOfBirth:  Int
@@ -777,8 +777,14 @@ input ArtistInput {
   bioEn:        String
 }
 
+input GetArtistInput {
+  id:   ID
+  lastName: String
+  artistName: String
+}
+
 type Query {
-  getArtists(input: [ArtistInput!]): [Artist]
+  getArtists(input: [GetArtistInput!]): [Artist]
 }
 
 type Mutation {
@@ -840,10 +846,10 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_getArtists_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []*model.ArtistInput
+	var arg0 []*model.GetArtistInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOArtistInput2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtistInputᚄ(ctx, tmp)
+		arg0, err = ec.unmarshalOGetArtistInput2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetArtistInputᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2969,7 +2975,7 @@ func (ec *executionContext) _Query_getArtists(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetArtists(rctx, args["input"].([]*model.ArtistInput))
+		return ec.resolvers.Query().GetArtists(rctx, args["input"].([]*model.GetArtistInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4197,7 +4203,7 @@ func (ec *executionContext) unmarshalInputArtistInput(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
-			it.FirstName, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4205,7 +4211,7 @@ func (ec *executionContext) unmarshalInputArtistInput(ctx context.Context, obj i
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
-			it.LastName, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.LastName, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4294,6 +4300,45 @@ func (ec *executionContext) unmarshalInputArtistInput(ctx context.Context, obj i
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bioEn"))
 			it.BioEn, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputGetArtistInput(ctx context.Context, obj interface{}) (model.GetArtistInput, error) {
+	var it model.GetArtistInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "lastName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			it.LastName, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "artistName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("artistName"))
+			it.ArtistName, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4940,6 +4985,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNGetArtistInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetArtistInput(ctx context.Context, v interface{}) (*model.GetArtistInput, error) {
+	res, err := ec.unmarshalInputGetArtistInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5397,6 +5447,30 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalFloat(*v)
+}
+
+func (ec *executionContext) unmarshalOGetArtistInput2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetArtistInputᚄ(ctx context.Context, v interface{}) ([]*model.GetArtistInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*model.GetArtistInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNGetArtistInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetArtistInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

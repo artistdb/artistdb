@@ -21,8 +21,8 @@ type Artist struct {
 
 type ArtistInput struct {
 	ID           *string   `json:"id"`
-	FirstName    *string   `json:"firstName"`
-	LastName     *string   `json:"lastName"`
+	FirstName    string    `json:"firstName"`
+	LastName     string    `json:"lastName"`
 	ArtistName   *string   `json:"artistName"`
 	Pronouns     []*string `json:"pronouns"`
 	DateOfBirth  *int      `json:"dateOfBirth"`
@@ -76,6 +76,12 @@ type Event struct {
 	StartTime *string          `json:"startTime"`
 	Location  *Location        `json:"location"`
 	Artists   []*InvitedArtist `json:"artists"`
+}
+
+type GetArtistInput struct {
+	ID         *string `json:"id"`
+	LastName   *string `json:"lastName"`
+	ArtistName *string `json:"artistName"`
 }
 
 type InvitedArtist struct {

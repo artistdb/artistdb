@@ -30,8 +30,8 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 			artist.ID = uuid.NewString()
 		}
 
-		artist.FirstName = *artistInput.FirstName
-		artist.LastName = *artistInput.LastName
+		artist.FirstName = artistInput.FirstName
+		artist.LastName = artistInput.LastName
 		artist.ArtistName = conversion.PointerToString(artistInput.ArtistName)
 
 		if len(artistInput.Pronouns) > 0 {
@@ -79,7 +79,7 @@ func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (boo
 	return true, nil
 }
 
-func (r *queryResolver) GetArtists(ctx context.Context, input []*model_gen.ArtistInput) ([]*model_gen.Artist, error) {
+func (r *queryResolver) GetArtists(ctx context.Context, input []*model_gen.GetArtistInput) ([]*model_gen.Artist, error) {
 	var artists []*model.Artist
 	var ret []*model_gen.Artist
 
@@ -88,20 +88,21 @@ func (r *queryResolver) GetArtists(ctx context.Context, input []*model_gen.Artis
 		var artist []*model.Artist
 		var err error
 
-		if input[i].ID != nil {
+		switch {
+		case input[i].ID != nil:
 			artist, err = r.db.GetArtists(ctx, database.ByID(*input[i].ID))
 			if err != nil {
-				return nil, fmt.Errorf("Artist with property raises error %s", err)
+				return nil, fmt.Errorf("retrieving artist failed: %w", err)
 			}
-		} else if input[i].LastName != nil {
+		case input[i].LastName != nil:
 			artist, err = r.db.GetArtists(ctx, database.ByLastName(*input[i].LastName))
 			if err != nil {
-				return nil, fmt.Errorf("Artist with property raises error %s", err)
+				return nil, fmt.Errorf("retrieving artist failed: %w", err)
 			}
-		} else if input[i].ArtistName != nil {
+		case input[i].ArtistName != nil:
 			artist, err = r.db.GetArtists(ctx, database.ByLastName(*input[i].ArtistName))
 			if err != nil {
-				return nil, fmt.Errorf("Artist with property raises error %s", err)
+				return nil, fmt.Errorf("retrieving artist failed: %w", err)
 			}
 		}
 
@@ -109,7 +110,7 @@ func (r *queryResolver) GetArtists(ctx context.Context, input []*model_gen.Artis
 
 		re, err := conversion.ArtistToGenArtist(artist)
 		if err != nil {
-			return nil, fmt.Errorf("Retrieving Artist failed with error: %s", err)
+			return nil, fmt.Errorf("conversion failed: %w", err)
 		}
 
 		ret = append(ret, re...)

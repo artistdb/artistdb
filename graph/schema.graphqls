@@ -79,8 +79,8 @@ type ArtworkEventLocation {
 
 input ArtistInput {
   id:           ID
-  firstName:    String
-  lastName:     String
+  firstName:    String!
+  lastName:     String!
   artistName:   String
   pronouns:     [String]
   dateOfBirth:  Int
@@ -94,8 +94,14 @@ input ArtistInput {
   bioEn:        String
 }
 
+input GetArtistInput {
+  id:   ID
+  lastName: String
+  artistName: String
+}
+
 type Query {
-  getArtists(input: [ArtistInput!]): [Artist]
+  getArtists(input: [GetArtistInput!]): [Artist]
 }
 
 type Mutation {

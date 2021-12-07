@@ -1,7 +1,6 @@
 package conversion
 
 import (
-	"fmt"
 	"time"
 
 	model_gen "github.com/obitech/artist-db/graph/model"
@@ -29,37 +28,30 @@ func PointerToTime(t *time.Time) time.Time {
 func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {
 	ret := make([]*model_gen.Artist, len(a))
 
-	fmt.Println(len(ret))
-
 	for i, a := range a {
+		ret[i] = &model_gen.Artist{}
 
-		var re model_gen.Artist
-
-		fmt.Println(a)
-		re.ID = a.ID
-		re.FirstName = a.FirstName
-		re.LastName = a.LastName
-		re.ArtistName = &a.ArtistName
+		ret[i].ID = a.ID
+		ret[i].FirstName = a.FirstName
+		ret[i].LastName = a.LastName
+		ret[i].ArtistName = &a.ArtistName
 
 		if len(a.Pronouns) > 0 {
-			re.Pronouns = make([]*string, len(a.Pronouns))
+			ret[i].Pronouns = make([]*string, len(a.Pronouns))
 
-			for i, pronoun := range a.Pronouns {
-				re.Pronouns[i] = &pronoun
+			for j, pronoun := range a.Pronouns {
+				ret[i].Pronouns[j] = &pronoun
 			}
 		}
 		t := a.Origin.DateOfBirth.Format(time.UnixDate)
-		re.DateOfBirth = &t
-
-		re.PlaceOfBirth = &a.Origin.PlaceOfBirth
-		re.Language = &a.Language
-		re.Facebook = &a.Socials.Facebook
-		re.Instagram = &a.Socials.Instagram
-		re.Bandcamp = &a.Socials.Bandcamp
-		re.BioGer = &a.BioGerman
-		re.BioEn = &a.BioEnglish
-
-		ret[i] = &re
+		ret[i].DateOfBirth = &t
+		ret[i].PlaceOfBirth = &a.Origin.PlaceOfBirth
+		ret[i].Language = &a.Language
+		ret[i].Facebook = &a.Socials.Facebook
+		ret[i].Instagram = &a.Socials.Instagram
+		ret[i].Bandcamp = &a.Socials.Bandcamp
+		ret[i].BioGer = &a.BioGerman
+		ret[i].BioEn = &a.BioEnglish
 	}
 
 	return ret, nil
