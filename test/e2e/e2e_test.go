@@ -17,12 +17,18 @@ import (
 )
 
 type gqlresp struct {
-	Data data `json:"data"`
+	Data   data     `json:"data"`
+	Errors []gqlerr `json:"errors"`
 }
 
 type data struct {
+	GetArtists       []model.Artist `json:"getArtists"`
 	UpsertArtists    []model.Artist `json:"upsertArtists"`
 	DeleteArtistByID bool           `json:"deleteArtistByID"`
+}
+
+type gqlerr struct {
+	Message string `json:"message"`
 }
 
 func TestApiIntegration(t *testing.T) {
@@ -116,6 +122,116 @@ func TestApiIntegration(t *testing.T) {
 		assert.Equal(t, "Ross", result.Data.UpsertArtists[0].LastName)
 
 		testID = result.Data.UpsertArtists[0].ID
+	})
+
+	t.Run("retrival of single artist by ID works", func(t *testing.T) {
+		str := fmt.Sprintf(`{"query": "{getArtists(input: [{id: \"%s\"}]){ id, lastName, artistName}}"}`, testID)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", strings.NewReader(str))
+		require.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		got, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var result gqlresp
+
+		unmarshalErr := json.Unmarshal(got, &result)
+		require.NoError(t, unmarshalErr)
+
+		require.Len(t, result.Data.GetArtists, 1)
+		assert.Equal(t, testID, result.Data.GetArtists[0].ID)
+	})
+
+	t.Run("retrival of single artist by last name works", func(t *testing.T) {
+		str := fmt.Sprintf(`{"query": "{getArtists(input: [{lastName: \"%s\"}]){id lastName artistName}}"}`, "Ross")
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", strings.NewReader(str))
+		require.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		got, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var result gqlresp
+
+		unmarshalErr := json.Unmarshal(got, &result)
+		require.NoError(t, unmarshalErr)
+
+		require.Len(t, result.Data.GetArtists, 1)
+		assert.Equal(t, "Ross", result.Data.GetArtists[0].LastName)
+	})
+
+	t.Run("retrival of single artist by artist name works", func(t *testing.T) {
+		str := fmt.Sprintf(`{"query": "{getArtists(input: [{lastName: \"%s\"}]){id lastName artistName}}"}`, "Ross")
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", strings.NewReader(str))
+		require.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		got, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var result gqlresp
+
+		unmarshalErr := json.Unmarshal(got, &result)
+		require.NoError(t, unmarshalErr)
+
+		require.Len(t, result.Data.GetArtists, 1)
+		assert.Equal(t, "BBR", *result.Data.GetArtists[0].ArtistName)
+	})
+
+	t.Run("Retrieval with invalid ID throws error", func(t *testing.T) {
+		str := fmt.Sprintf(`{"query": "{getArtists(input: [{id: \"%s\"}]){ id, lastName, artistName}}"}`, "bogusßß")
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", strings.NewReader(str))
+		require.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		got, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		fmt.Println(string(got))
+
+		var result gqlresp
+
+		unmarshalErr := json.Unmarshal(got, &result)
+		require.NoError(t, unmarshalErr)
+
+		require.Len(t, result.Data.GetArtists, 0)
+		assert.Equal(t, "retrieving artist failed: resource not found", result.Errors[0].Message)
 	})
 
 	t.Run("deletion of single artist works", func(t *testing.T) {

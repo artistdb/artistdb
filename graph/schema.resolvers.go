@@ -12,6 +12,7 @@ import (
 	"github.com/obitech/artist-db/graph/generated"
 	model_gen "github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/conversion"
+	"github.com/obitech/artist-db/internal/database"
 	"github.com/obitech/artist-db/internal/database/model"
 )
 
@@ -71,15 +72,58 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 }
 
 func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (bool, error) {
-
 	if err := r.db.DeleteArtistByID(ctx, id); err != nil {
 		return false, err
-	} 
+	}
 
 	return true, nil
+}
+
+func (r *queryResolver) GetArtists(ctx context.Context, input []*model_gen.GetArtistInput) ([]*model_gen.Artist, error) {
+	var artists []*model.Artist
+	var ret []*model_gen.Artist
+
+	for i := range input {
+
+		var artist []*model.Artist
+		var err error
+
+		switch {
+		case input[i].ID != nil:
+			artist, err = r.db.GetArtists(ctx, database.ByID(*input[i].ID))
+			if err != nil {
+				return nil, fmt.Errorf("retrieving artist failed: %w", err)
+			}
+		case input[i].LastName != nil:
+			artist, err = r.db.GetArtists(ctx, database.ByLastName(*input[i].LastName))
+			if err != nil {
+				return nil, fmt.Errorf("retrieving artist failed: %w", err)
+			}
+		case input[i].ArtistName != nil:
+			artist, err = r.db.GetArtists(ctx, database.ByLastName(*input[i].ArtistName))
+			if err != nil {
+				return nil, fmt.Errorf("retrieving artist failed: %w", err)
+			}
+		}
+
+		artists = append(artists, artist...)
+
+		re, err := conversion.ArtistToGenArtist(artist)
+		if err != nil {
+			return nil, fmt.Errorf("conversion failed: %w", err)
+		}
+
+		ret = append(ret, re...)
+	}
+
+	return ret, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
+// Query returns generated.QueryResolver implementation.
+func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
+
 type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

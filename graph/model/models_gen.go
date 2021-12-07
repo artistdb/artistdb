@@ -14,6 +14,7 @@ type Artist struct {
 	Language     *string   `json:"language"`
 	Facebook     *string   `json:"facebook"`
 	Instagram    *string   `json:"instagram"`
+	Bandcamp     *string   `json:"bandcamp"`
 	BioGer       *string   `json:"bioGer"`
 	BioEn        *string   `json:"bioEn"`
 }
@@ -75,6 +76,12 @@ type Event struct {
 	StartTime *string          `json:"startTime"`
 	Location  *Location        `json:"location"`
 	Artists   []*InvitedArtist `json:"artists"`
+}
+
+type GetArtistInput struct {
+	ID         *string `json:"id"`
+	LastName   *string `json:"lastName"`
+	ArtistName *string `json:"artistName"`
 }
 
 type InvitedArtist struct {
