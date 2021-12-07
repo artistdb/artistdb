@@ -4,6 +4,10 @@ TEST_DB_CONN_STRING ?= postgres://postgres:postgres@127.0.0.1:5432/postgres?sslm
 
 go_packages = $(GO) list ./... | grep -v /test | xargs
 
+.PHONY: lint
+lint:
+	$(GO) vet
+
 .PHONY: start
 start: stop
 	GOPATH=$$(go env GOPATH) $(DC) up
@@ -21,12 +25,13 @@ start-api: stop
 	GOPATH=$$(go env GOPATH) $(DC) up api
 
 .PHONY: gen-graph
-gen-graph: stop
+gen-graph:
 	$(GO) run github.com/99designs/gqlgen generate
 
 .PHONY: test
 test:
 	$(GO) test -v -race -short $(shell $(call go_packages))
+
 .PHONY: build
 build: clean
 	$(GO) build -o bin/api
