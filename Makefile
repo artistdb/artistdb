@@ -1,5 +1,6 @@
 DC ?= docker-compose
 GO := go
+FN := frontend/
 TEST_DB_CONN_STRING ?= postgres://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable
 
 go_packages = $(GO) list ./... | grep -v /test | xargs
@@ -24,6 +25,10 @@ start-db: stop
 start-api: stop
 	GOPATH=$$(go env GOPATH) $(DC) up api
 
+.PHONY: start-frontend
+start-frontend: stop
+	cd $(FN) && ng serve 
+	
 .PHONY: gen-graph
 gen-graph:
 	$(GO) run github.com/99designs/gqlgen generate
@@ -48,6 +53,10 @@ test-integration:
 .PHONY: test-e2e
 test-e2e:
 	$(GO) test -count=1 -v ./test/e2e
+
+.PHONY: test-frontend
+test-frontend:
+	cd $(FN) && ng test
 
 .PHONY: test-local
 test-local: stop test
