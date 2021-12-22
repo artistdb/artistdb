@@ -19,19 +19,14 @@ CREATE TABLE IF NOT EXISTS artists (
                                       updated_at      TIMESTAMPTZ NOT NULL,
                                       deleted_at      TIMESTAMPTZ
 );
---
--- CREATE TABLE IF NOT EXISTS locations (
---                                         id              UUID PRIMARY KEY,
---                                         name            TEXT NOT NULL,
---                                         country         TEXT,
---                                         zip             TEXT,
---                                         city            TEXT,
---                                         street          TEXT,
---                                         picture         TEXT,
---                                         description     TEXT,
---                                         lat             TEXT,
---                                         lon             TEXT
--- );
+
+CREATE TABLE IF NOT EXISTS locations (
+                                        id              UUID PRIMARY KEY,
+                                        created_at      TIMESTAMPTZ NOT NULL,
+                                        updated_at      TIMESTAMPTZ NOT NULL,
+                                        deleted_at      TIMESTAMPTZ,
+                                        name            TEXT NOT NULL
+);
 --
 -- CREATE TABLE IF NOT EXISTS events (
 --                                      id              UUID PRIMARY KEY,
