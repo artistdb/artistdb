@@ -257,7 +257,8 @@ func (db *Database) DeleteArtistByID(ctx context.Context, id string) error {
 		UPDATE 
 			"%s" 
 		SET 
-			deleted_at=$1 
+			deleted_at=$1,
+			updated_at=$1
 		WHERE 
 			id=$2 
 		RETURNING 

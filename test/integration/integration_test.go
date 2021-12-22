@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database"
 	"github.com/obitech/artist-db/internal/database/model"
 )
@@ -252,6 +253,23 @@ func Test_ArtistsIntegration(t *testing.T) {
 			require.Len(t, res, 1)
 			assert.Equal(t, artists[0], res[0])
 			assert.Equal(t, "pee.age", res[0].ArtistName)
+
+			t.Run("metadata is set", func(t *testing.T) {
+				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE ID=$1`, database.TableArtists)
+
+				var (
+					createdAt time.Time
+					updatedAt time.Time
+					deletedAt *time.Time
+				)
+
+				require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&createdAt, &updatedAt, &deletedAt))
+
+				assert.NotZero(t, createdAt)
+				assert.NotZero(t, updatedAt)
+				assert.True(t, updatedAt.After(createdAt))
+				assert.Nil(t, deletedAt)
+			})
 		})
 	})
 
@@ -294,11 +312,31 @@ func Test_ArtistsIntegration(t *testing.T) {
 		})
 
 		t.Run("validate", func(t *testing.T) {
-			artist, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
-			require.Error(t, err)
-			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
+			t.Run("artist is deleted", func(t *testing.T) {
+				artist, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
+				require.Error(t, err)
+				assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
 
-			assert.Nil(t, artist)
+				assert.Nil(t, artist)
+			})
+
+			t.Run("metadata is set", func(t *testing.T) {
+				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE ID=$1`, database.TableArtists)
+
+				var (
+					createdAt time.Time
+					updatedAt time.Time
+					deletedAt *time.Time
+				)
+
+				require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&createdAt, &updatedAt, &deletedAt))
+
+				assert.NotZero(t, createdAt)
+				assert.NotZero(t, updatedAt)
+				assert.NotNil(t, deletedAt)
+				assert.Equal(t, *deletedAt, updatedAt)
+				assert.True(t, conversion.PointerToTime(deletedAt).After(createdAt))
+			})
 		})
 	})
 }
