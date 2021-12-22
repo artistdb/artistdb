@@ -79,6 +79,36 @@ func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (boo
 	return true, nil
 }
 
+func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model_gen.LocationInput) ([]*model_gen.Location, error) {
+	locations := make([]*model.Location, len(input))
+	ret := make([]*model_gen.Location, len(input))
+
+	for i, locationInput := range input {
+		var location model.Location
+
+		if locationInput.ID != nil {
+			location.ID = *locationInput.ID
+		} else {
+			location.ID = uuid.NewString()
+		}
+
+		location.Name = locationInput.Name
+
+		locations[i] = &location
+	}
+
+	if err := r.db.UpsertLocations(ctx, locations...); err != nil {
+		return nil, fmt.Errorf("upserting location failed: %w", err)
+	}
+
+	ret, err := conversion.LocationToGenLocation(locations)
+	if err != nil {
+		return nil, fmt.Errorf("conversion failed: %w", err)
+	}
+
+	return ret, nil
+}
+
 func (r *queryResolver) GetArtists(ctx context.Context, input []*model_gen.GetArtistInput) ([]*model_gen.Artist, error) {
 	var artists []*model.Artist
 	var ret []*model_gen.Artist

@@ -60,3 +60,16 @@ func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {
 
 	return ret, nil
 }
+
+func LocationToGenLocation(l []*model.Location) ([]*model_gen.Location, error) {
+	ret := make([]*model_gen.Location, len(l))
+
+	for i, l := range l {
+		ret[i] = &model_gen.Location{
+			ID:   l.ID,
+			Name: l.Name,
+		}
+	}
+
+	return ret, nil
+}

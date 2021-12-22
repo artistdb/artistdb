@@ -25,6 +25,7 @@ type data struct {
 	GetArtists       []model.Artist `json:"getArtists"`
 	UpsertArtists    []model.Artist `json:"upsertArtists"`
 	DeleteArtistByID bool           `json:"deleteArtistByID"`
+	UpsertLocations  []model.Location `json:"upsertLocations"`
 }
 
 type gqlerr struct {
@@ -223,8 +224,6 @@ func TestApiIntegration(t *testing.T) {
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		fmt.Println(string(got))
-
 		var result gqlresp
 
 		unmarshalErr := json.Unmarshal(got, &result)
@@ -260,6 +259,39 @@ func TestApiIntegration(t *testing.T) {
 		require.NoError(t, unmarshalErr)
 
 		assert.Equal(t, true, result.Data.DeleteArtistByID)
+	})
+
+	t.Run("insertion of single location works", func(t *testing.T) {
+		str := `{"query": 
+			"mutation { upsertLocations(input: [{name: \"Tille\"}]) { id name }}"}`
+
+		body := strings.NewReader(str)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", body)
+		require.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		got, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var result gqlresp
+
+		unmarshalErr := json.Unmarshal(got, &result)
+		require.NoError(t, unmarshalErr)
+
+		require.Len(t, result.Data.UpsertLocations, 1)
+		assert.NotEmpty(t, result.Data.UpsertLocations[0].ID)
+		assert.Equal(t, "Tille", result.Data.UpsertLocations[0].Name)
+
+		testID = result.Data.UpsertLocations[0].ID
 	})
 
 	// This should always be the last test in this suite.

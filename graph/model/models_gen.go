@@ -103,3 +103,8 @@ type Location struct {
 	Lat         *string `json:"lat"`
 	Lon         *string `json:"lon"`
 }
+
+type LocationInput struct {
+	ID   *string `json:"id"`
+	Name string  `json:"name"`
+}

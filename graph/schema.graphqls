@@ -94,6 +94,11 @@ input ArtistInput {
   bioEn:        String
 }
 
+input LocationInput {
+  id: ID
+  name: String! 
+}
+
 input GetArtistInput {
   id:   ID
   lastName: String
@@ -107,4 +112,5 @@ type Query {
 type Mutation {
   upsertArtists(input: [ArtistInput!]): [Artist!]
   deleteArtistByID(id: ID!): Boolean!
+  upsertLocations(input: [LocationInput!]): [Location!]
 }
