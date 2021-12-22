@@ -224,8 +224,6 @@ func TestApiIntegration(t *testing.T) {
 		got, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		fmt.Println(string(got))
-
 		var result gqlresp
 
 		unmarshalErr := json.Unmarshal(got, &result)
