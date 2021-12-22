@@ -85,7 +85,6 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model_g
 
 	for i, locationInput := range input {
 		var location model.Location
-		var re model_gen.Location
 
 		if locationInput.ID != nil {
 			location.ID = *locationInput.ID
@@ -96,15 +95,15 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model_g
 		location.Name = locationInput.Name
 
 		locations[i] = &location
-
-		re.ID = location.ID
-		re.Name = location.Name
-
-		ret[i] = &re
 	}
 
 	if err := r.db.UpsertLocations(ctx, locations...); err != nil {
 		return nil, fmt.Errorf("Upserting location failed: %w", err)
+	}
+
+	ret, err := conversion.LocationToGenLocation(locations)
+	if err != nil {
+		return nil, fmt.Errorf("conversion failed: %w", err)
 	}
 
 	return ret, nil
