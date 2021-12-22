@@ -98,7 +98,7 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model_g
 	}
 
 	if err := r.db.UpsertLocations(ctx, locations...); err != nil {
-		return nil, fmt.Errorf("Upserting location failed: %w", err)
+		return nil, fmt.Errorf("upserting location failed: %w", err)
 	}
 
 	ret, err := conversion.LocationToGenLocation(locations)
