@@ -48,6 +48,8 @@ func (db *Database) UpsertArtists(ctx context.Context, artists ...*model.Artist)
 }
 
 func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.Artist) error {
+	start := time.Now().UTC()
+
 	stmt := fmt.Sprintf(`
 		INSERT INTO "%s"
 			(
@@ -64,10 +66,12 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 				bandcamp,
 				bio_ger,
 				bio_en,
-				artist_name
+				artist_name,
+				created_at,
+				updated_at
 			)
 		VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 		ON CONFLICT 
 			(id)
 		DO UPDATE SET
@@ -83,7 +87,9 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 			bandcamp=$11,
 			bio_ger=$12,
 			bio_en=$13,
-			artist_name=$14`, TableArtists)
+			artist_name=$14,
+			updated_at=$16,
+			deleted_at=NULL`, TableArtists)
 
 	if _, err := tx.Exec(ctx, stmt,
 		artist.ID,                       // $1
@@ -100,6 +106,8 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 		artist.BioGerman,                // $12
 		artist.BioEnglish,               // $13
 		artist.ArtistName,               // $14
+		start,                           // $15
+		start,                           // $16
 	); err != nil {
 		return err
 	}
@@ -153,7 +161,7 @@ func (db *Database) GetArtists(ctx context.Context, request GetArtistRequest) ([
 				artist_name
 		FROM
 			"%s"
-		WHERE `, TableArtists,
+		WHERE deleted_at IS NULL AND `, TableArtists,
 	)
 
 	stmt += whereClause
@@ -245,10 +253,18 @@ func (db *Database) DeleteArtistByID(ctx context.Context, id string) error {
 		return ErrInvalidUUID
 	}
 
-	stmt := fmt.Sprintf(`DELETE FROM "%s" WHERE id=$1 RETURNING id`, TableArtists)
+	stmt := fmt.Sprintf(`
+		UPDATE 
+			"%s" 
+		SET 
+			deleted_at=$1 
+		WHERE 
+			id=$2 
+		RETURNING 
+			id`, TableArtists)
 
 	var deletedID string
-	if err := db.conn.QueryRow(ctx, stmt, id).Scan(&deletedID); err != nil {
+	if err := db.conn.QueryRow(ctx, stmt, conversion.TimeToPointer(time.Now().UTC()), id).Scan(&deletedID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNotFound
 		}

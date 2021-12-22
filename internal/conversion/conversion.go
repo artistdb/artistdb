@@ -23,6 +23,10 @@ func PointerToTime(t *time.Time) time.Time {
 	return t.UTC()
 }
 
+func TimeToPointer(t time.Time) *time.Time {
+	return &t
+}
+
 // ArtistToGenArtist takes Artist objects (model type) and converts it to
 // an Artist Object from our generated models
 func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {

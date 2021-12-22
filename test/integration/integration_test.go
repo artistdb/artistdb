@@ -67,40 +67,40 @@ func Test_TablesExistsIntegration(t *testing.T) {
 		assert.True(t, exists)
 	})
 
-	t.Run("artworks exists", func(t *testing.T) {
-		var exists bool
-		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableArtworks).Scan(&exists))
-
-		assert.True(t, exists)
-	})
-
-	t.Run("events exists", func(t *testing.T) {
-		var exists bool
-		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableEvents).Scan(&exists))
-
-		assert.True(t, exists)
-	})
-
-	t.Run("locations exists", func(t *testing.T) {
-		var exists bool
-		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableLocations).Scan(&exists))
-
-		assert.True(t, exists)
-	})
-
-	t.Run("artwork_event_locations exists", func(t *testing.T) {
-		var exists bool
-		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableArtworkEventLocations).Scan(&exists))
-
-		assert.True(t, exists)
-	})
-
-	t.Run("invited_artists exists", func(t *testing.T) {
-		var exists bool
-		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableInvitedArtists).Scan(&exists))
-
-		assert.True(t, exists)
-	})
+	// t.Run("artworks exists", func(t *testing.T) {
+	// 	var exists bool
+	// 	require.NoError(t, conn.QueryRow(ctx, stmt, database.TableArtworks).Scan(&exists))
+	//
+	// 	assert.True(t, exists)
+	// })
+	//
+	// t.Run("events exists", func(t *testing.T) {
+	// 	var exists bool
+	// 	require.NoError(t, conn.QueryRow(ctx, stmt, database.TableEvents).Scan(&exists))
+	//
+	// 	assert.True(t, exists)
+	// })
+	//
+	// t.Run("locations exists", func(t *testing.T) {
+	// 	var exists bool
+	// 	require.NoError(t, conn.QueryRow(ctx, stmt, database.TableLocations).Scan(&exists))
+	//
+	// 	assert.True(t, exists)
+	// })
+	//
+	// t.Run("artwork_event_locations exists", func(t *testing.T) {
+	// 	var exists bool
+	// 	require.NoError(t, conn.QueryRow(ctx, stmt, database.TableArtworkEventLocations).Scan(&exists))
+	//
+	// 	assert.True(t, exists)
+	// })
+	//
+	// t.Run("invited_artists exists", func(t *testing.T) {
+	// 	var exists bool
+	// 	require.NoError(t, conn.QueryRow(ctx, stmt, database.TableInvitedArtists).Scan(&exists))
+	//
+	// 	assert.True(t, exists)
+	// })
 }
 
 func Test_ArtistsIntegration(t *testing.T) {
@@ -167,20 +167,39 @@ func Test_ArtistsIntegration(t *testing.T) {
 		require.NoError(t, db.UpsertArtists(ctx, artists[0]))
 
 		t.Run("verify", func(t *testing.T) {
-			res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
-			require.NoError(t, err)
-			require.Len(t, res, 1)
-			assert.Equal(t, artists[0], res[0])
+			t.Run("resources are created", func(t *testing.T) {
+				res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
+				require.NoError(t, err)
+				require.Len(t, res, 1)
+				assert.Equal(t, artists[0], res[0])
 
-			res, err = db.GetArtists(ctx, database.ByArtistName(artists[0].ArtistName))
-			require.NoError(t, err)
-			require.Len(t, res, 1)
-			assert.Equal(t, artists[0], res[0])
+				res, err = db.GetArtists(ctx, database.ByArtistName(artists[0].ArtistName))
+				require.NoError(t, err)
+				require.Len(t, res, 1)
+				assert.Equal(t, artists[0], res[0])
 
-			res, err = db.GetArtists(ctx, database.ByLastName(artists[0].LastName))
-			require.NoError(t, err)
-			require.Len(t, res, 1)
-			assert.Equal(t, artists[0], res[0])
+				res, err = db.GetArtists(ctx, database.ByLastName(artists[0].LastName))
+				require.NoError(t, err)
+				require.Len(t, res, 1)
+				assert.Equal(t, artists[0], res[0])
+			})
+
+			t.Run("metadata is set", func(t *testing.T) {
+				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE ID=$1`, database.TableArtists)
+
+				var (
+					createdAt time.Time
+					updatedAt time.Time
+					deletedAt *time.Time
+				)
+
+				require.NoError(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&createdAt, &updatedAt, &deletedAt))
+
+				assert.NotZero(t, createdAt)
+				assert.NotZero(t, updatedAt)
+				assert.Equal(t, updatedAt, createdAt)
+				assert.Nil(t, deletedAt)
+			})
 		})
 
 		t.Run("cleanup", func(t *testing.T) {
