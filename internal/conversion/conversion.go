@@ -65,9 +65,10 @@ func LocationToGenLocation(l []*model.Location) ([]*model_gen.Location, error) {
 	ret := make([]*model_gen.Location, len(l))
 
 	for i, l := range l {
-		ret[i] = &model_gen.Location{}
-		ret[i].ID = l.ID
-		ret[i].Name = l.Name
+		ret[i] = &model_gen.Location{
+			ID:   l.ID,
+			Name: l.Name,
+		}
 	}
 
 	return ret, nil
