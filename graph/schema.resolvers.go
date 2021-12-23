@@ -18,11 +18,9 @@ import (
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen.ArtistInput) ([]*model_gen.Artist, error) {
 	artists := make([]*model.Artist, len(input))
-	ret := make([]*model_gen.Artist, len(input))
 
 	for i, artistInput := range input {
 		var artist model.Artist
-		var re model_gen.Artist
 
 		if artistInput.ID != nil {
 			artist.ID = *artistInput.ID
@@ -55,17 +53,15 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 		artist.BioEnglish = conversion.PointerToString(artistInput.BioEn)
 
 		artists[i] = &artist
-
-		// returning a stub for now since we will refactor anyways?
-		re.ID = artist.ID
-		re.FirstName = artist.FirstName
-		re.LastName = artist.LastName
-
-		ret[i] = &re
 	}
 
 	if err := r.db.UpsertArtists(ctx, artists...); err != nil {
 		return nil, fmt.Errorf("upserting artist failed: %w", err)
+	}
+
+	ret, err := conversion.ArtistToGenArtist(artists) 
+	if err != nil {
+		return nil, fmt.Errorf("conversion failed: %w", err)
 	}
 
 	return ret, nil
