@@ -28,7 +28,11 @@ func TimeToPointer(t time.Time) *time.Time {
 }
 
 func TimeToPString(t time.Time) *string {
-	ret := t.Format(time.UnixDate)
+	if t.IsZero() {
+		return nil
+	}
+
+	ret := t.Format(time.RFC3339)
 	return &ret
 }
 
