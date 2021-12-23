@@ -15,21 +15,21 @@ import (
 func main() {
 	cfg := config.New()
 
-	if err := initLogger(cfg.LoggingMode); err != nil {
+	logger, err := initLogger(cfg.LoggingMode)
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	logger := zap.L().With(zap.String("component", "main"))
-
-	db, err := database.NewDatabase(ctx, cfg.DbConnectionString)
+	db, err := database.NewDatabase(ctx, cfg.DbConnectionString, logger)
 	if err != nil {
 		logger.Fatal("setting up database connection failed", zap.Error(err))
 	}
 
 	defer db.Close()
+	defer logger.Sync()
 
 	if err := db.Ready(ctx); err != nil {
 		logger.Fatal("database not ready", zap.Error(err))
@@ -41,7 +41,7 @@ func main() {
 
 	logger.Info("database initialized")
 
-	srv, err := server.NewServer(db)
+	srv, err := server.NewServer(db, server.WithLogger(logger))
 	if err != nil {
 		logger.Fatal("setting up server failed", zap.Error(err))
 	}

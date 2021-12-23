@@ -1,4 +1,4 @@
-package model
+package artist
 
 import (
 	"time"
@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// NewArtist returns an artist with an initialized ID.
-func NewArtist() *Artist {
+// New returns an artist with an initialized ID.
+func New() *Artist {
 	return &Artist{ID: uuid.New().String()}
 }
 

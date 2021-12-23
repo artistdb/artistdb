@@ -6,60 +6,24 @@ package graph
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/google/uuid"
+	graphConversion "github.com/obitech/artist-db/graph/conversion"
 	"github.com/obitech/artist-db/graph/generated"
-	model_gen "github.com/obitech/artist-db/graph/model"
-	"github.com/obitech/artist-db/internal/conversion"
-	"github.com/obitech/artist-db/internal/database"
-	"github.com/obitech/artist-db/internal/database/model"
+	"github.com/obitech/artist-db/graph/model"
+	"github.com/obitech/artist-db/internal/database/artist"
 )
 
-func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen.ArtistInput) ([]*model_gen.Artist, error) {
-	artists := make([]*model.Artist, len(input))
-
-	for i, artistInput := range input {
-		var artist model.Artist
-
-		if artistInput.ID != nil {
-			artist.ID = *artistInput.ID
-		} else {
-			artist.ID = uuid.NewString()
-		}
-
-		artist.FirstName = artistInput.FirstName
-		artist.LastName = artistInput.LastName
-		artist.ArtistName = conversion.PointerToString(artistInput.ArtistName)
-
-		if len(artistInput.Pronouns) > 0 {
-			artist.Pronouns = make([]string, len(artistInput.Pronouns))
-
-			for i, pronoun := range artistInput.Pronouns {
-				artist.Pronouns[i] = conversion.PointerToString(pronoun)
-			}
-		}
-
-		if artistInput.DateOfBirth != nil {
-			artist.Origin.DateOfBirth = time.Unix(int64(*artistInput.DateOfBirth), 0).UTC()
-		}
-
-		artist.Origin.PlaceOfBirth = conversion.PointerToString(artistInput.PlaceOfBirth)
-		artist.Language = conversion.PointerToString(artistInput.Language)
-		artist.Socials.Facebook = conversion.PointerToString(artistInput.Facebook)
-		artist.Socials.Instagram = conversion.PointerToString(artistInput.Instagram)
-		artist.Socials.Bandcamp = conversion.PointerToString(artistInput.Bandcamp)
-		artist.BioGerman = conversion.PointerToString(artistInput.BioGer)
-		artist.BioEnglish = conversion.PointerToString(artistInput.BioEn)
-
-		artists[i] = &artist
+func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
+	dbArtists, err := graphConversion.DatabaseArtists(input)
+	if err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 
-	if err := r.db.UpsertArtists(ctx, artists...); err != nil {
+	if err := r.db.ArtistHandler.Upsert(ctx, dbArtists...); err != nil {
 		return nil, fmt.Errorf("upserting artist failed: %w", err)
 	}
 
-	ret, err := conversion.ArtistToGenArtist(artists) 
+	ret, err := graphConversion.ModelArtists(dbArtists)
 	if err != nil {
 		return nil, fmt.Errorf("conversion failed: %w", err)
 	}
@@ -68,36 +32,24 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model_gen
 }
 
 func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (bool, error) {
-	if err := r.db.DeleteArtistByID(ctx, id); err != nil {
+	if err := r.db.ArtistHandler.DeleteByID(ctx, id); err != nil {
 		return false, err
 	}
 
 	return true, nil
 }
 
-func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model_gen.LocationInput) ([]*model_gen.Location, error) {
-	locations := make([]*model.Location, len(input))
-	ret := make([]*model_gen.Location, len(input))
-
-	for i, locationInput := range input {
-		var location model.Location
-
-		if locationInput.ID != nil {
-			location.ID = *locationInput.ID
-		} else {
-			location.ID = uuid.NewString()
-		}
-
-		location.Name = locationInput.Name
-
-		locations[i] = &location
+func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]*model.Location, error) {
+	dbLocations, err := graphConversion.DatabaseLocations(input)
+	if err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 
-	if err := r.db.UpsertLocations(ctx, locations...); err != nil {
+	if err := r.db.LocationHandler.Upsert(ctx, dbLocations...); err != nil {
 		return nil, fmt.Errorf("upserting location failed: %w", err)
 	}
 
-	ret, err := conversion.LocationToGenLocation(locations)
+	ret, err := graphConversion.ModelLocations(dbLocations)
 	if err != nil {
 		return nil, fmt.Errorf("conversion failed: %w", err)
 	}
@@ -105,44 +57,32 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model_g
 	return ret, nil
 }
 
-func (r *queryResolver) GetArtists(ctx context.Context, input []*model_gen.GetArtistInput) ([]*model_gen.Artist, error) {
-	var artists []*model.Artist
-	var ret []*model_gen.Artist
+func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error) {
+	artists := make([]*artist.Artist, len(input))
 
 	for i := range input {
-
-		var artist []*model.Artist
-		var err error
+		var (
+			a   []*artist.Artist
+			err error
+		)
 
 		switch {
 		case input[i].ID != nil:
-			artist, err = r.db.GetArtists(ctx, database.ByID(*input[i].ID))
-			if err != nil {
-				return nil, fmt.Errorf("retrieving artist failed: %w", err)
-			}
+			a, err = r.db.ArtistHandler.Get(ctx, artist.ByID(*input[i].ID))
 		case input[i].LastName != nil:
-			artist, err = r.db.GetArtists(ctx, database.ByLastName(*input[i].LastName))
-			if err != nil {
-				return nil, fmt.Errorf("retrieving artist failed: %w", err)
-			}
+			a, err = r.db.ArtistHandler.Get(ctx, artist.ByLastName(*input[i].LastName))
 		case input[i].ArtistName != nil:
-			artist, err = r.db.GetArtists(ctx, database.ByLastName(*input[i].ArtistName))
-			if err != nil {
-				return nil, fmt.Errorf("retrieving artist failed: %w", err)
-			}
+			a, err = r.db.ArtistHandler.Get(ctx, artist.ByLastName(*input[i].ArtistName))
 		}
 
-		artists = append(artists, artist...)
-
-		re, err := conversion.ArtistToGenArtist(artist)
 		if err != nil {
-			return nil, fmt.Errorf("conversion failed: %w", err)
+			return nil, fmt.Errorf("retrieving artist failed: %w", err)
 		}
 
-		ret = append(ret, re...)
+		artists = append(artists, a...)
 	}
 
-	return ret, nil
+	return graphConversion.ModelArtists(artists)
 }
 
 // Mutation returns generated.MutationResolver implementation.

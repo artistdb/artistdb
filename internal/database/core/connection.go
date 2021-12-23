@@ -1,4 +1,4 @@
-package database
+package core
 
 import (
 	"context"
@@ -18,8 +18,8 @@ const (
 	commandExec  = "exec"
 )
 
-// connection abstracts a pgx Database connection.
-type connection interface {
+// Connection abstracts a pgx Database Connection.
+type Connection interface {
 	// Ping checks if the database is reachable.
 	Ping(ctx context.Context) error
 
@@ -39,22 +39,22 @@ type connection interface {
 	Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)
 }
 
-// connectionPool wraps a pgxpool and implements the connection interface.
-type connectionPool struct {
+// ConnectionPool wraps a pgxpool and implements the Connection interface.
+type ConnectionPool struct {
 	pool *pgxpool.Pool
 }
 
-// newConnectionPool returns a connectionPool.
-func newConnectionPool(ctx context.Context, connString string) (connection, error) {
+// NewConnectionPool returns a ConnectionPool.
+func NewConnectionPool(ctx context.Context, connString string) (*ConnectionPool, error) {
 	conn, err := pgxpool.Connect(ctx, connString)
 	if err != nil {
 		return nil, err
 	}
 
-	return &connectionPool{pool: conn}, nil
+	return &ConnectionPool{pool: conn}, nil
 }
 
-func (c *connectionPool) Ping(ctx context.Context) error {
+func (c *ConnectionPool) Ping(ctx context.Context) error {
 	start := time.Now()
 
 	defer func(s time.Time) {
@@ -64,7 +64,7 @@ func (c *connectionPool) Ping(ctx context.Context) error {
 	return c.pool.Ping(ctx)
 }
 
-func (c *connectionPool) Begin(ctx context.Context) (pgx.Tx, error) {
+func (c *ConnectionPool) Begin(ctx context.Context) (pgx.Tx, error) {
 	start := time.Now()
 
 	defer func(s time.Time) {
@@ -74,11 +74,11 @@ func (c *connectionPool) Begin(ctx context.Context) (pgx.Tx, error) {
 	return c.pool.Begin(ctx)
 }
 
-func (c *connectionPool) Close() {
+func (c *ConnectionPool) Close() {
 	c.pool.Close()
 }
 
-func (c *connectionPool) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
+func (c *ConnectionPool) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
 	start := time.Now()
 
 	defer func(s time.Time) {
@@ -88,7 +88,7 @@ func (c *connectionPool) Query(ctx context.Context, sql string, args ...interfac
 	return c.pool.Query(ctx, sql, args...)
 }
 
-func (c *connectionPool) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
+func (c *ConnectionPool) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
 	start := time.Now()
 
 	defer func(s time.Time) {
@@ -98,7 +98,7 @@ func (c *connectionPool) QueryRow(ctx context.Context, sql string, args ...inter
 	return c.pool.QueryRow(ctx, sql, args...)
 }
 
-func (c *connectionPool) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
+func (c *ConnectionPool) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
 	start := time.Now()
 
 	defer func(s time.Time) {

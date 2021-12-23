@@ -28,7 +28,7 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	srv := &Server{
 		router: chi.NewRouter(),
 		db:     db,
-		logger: zap.L().With(zap.String("component", "server")),
+		logger: zap.NewNop(),
 	}
 
 	for _, fn := range opts {

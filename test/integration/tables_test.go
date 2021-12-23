@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/obitech/artist-db/internal/database"
+	"github.com/obitech/artist-db/internal/database/core"
 )
 
 func Test_TablesExistsIntegration(t *testing.T) {
@@ -22,14 +22,14 @@ func Test_TablesExistsIntegration(t *testing.T) {
 
 	t.Run("artists exists", func(t *testing.T) {
 		var exists bool
-		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableArtists).Scan(&exists))
+		require.NoError(t, conn.QueryRow(ctx, stmt, core.TableArtists).Scan(&exists))
 
 		assert.True(t, exists)
 	})
 
 	t.Run("locations exists", func(t *testing.T) {
 		var exists bool
-		require.NoError(t, conn.QueryRow(ctx, stmt, database.TableLocations).Scan(&exists))
+		require.NoError(t, conn.QueryRow(ctx, stmt, core.TableLocations).Scan(&exists))
 
 		assert.True(t, exists)
 	})

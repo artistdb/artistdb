@@ -1,4 +1,4 @@
-package database
+package artist
 
 import (
 	"context"
@@ -9,29 +9,39 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/multierr"
+	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/internal/conversion"
-	"github.com/obitech/artist-db/internal/database/model"
+	"github.com/obitech/artist-db/internal/database/core"
 )
 
-var (
-	ErrNotFound    = errors.New("resource not found")
-	ErrInvalidUUID = errors.New("id must be valid UUID")
-)
+// Handler returns a DB Handler which operates on Artists.
+type Handler struct {
+	conn   core.Connection
+	logger *zap.Logger
+}
 
-// UpsertArtists creates or updates one or more artists in the database.
+// NewHandler returns a Handler.
+func NewHandler(conn core.Connection, logger *zap.Logger) *Handler {
+	return &Handler{
+		conn:   conn,
+		logger: logger,
+	}
+}
+
+// Upsert creates or updates one or more artists in the database.
 // Multiple artists are inserted in the same transaction
-func (db *Database) UpsertArtists(ctx context.Context, artists ...*model.Artist) error {
-	tx, err := db.conn.Begin(ctx)
+func (h *Handler) Upsert(ctx context.Context, artists ...*Artist) error {
+	tx, err := h.conn.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("creating tx failed: %w", err)
 	}
 
-	defer rollbackAndLogError(ctx, tx)
+	defer core.RollbackAndLogError(ctx, tx, h.logger)
 
 	var mErr error
 	for _, artist := range artists {
-		if err := db.upsertArtist(ctx, tx, artist); err != nil {
+		if err := h.upsertArtist(ctx, tx, artist); err != nil {
 			if errors.Is(err, pgx.ErrTxClosed) {
 				return fmt.Errorf("insert aborted, tx cancelled: %w", err)
 			}
@@ -47,7 +57,7 @@ func (db *Database) UpsertArtists(ctx context.Context, artists ...*model.Artist)
 	return mErr
 }
 
-func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.Artist) error {
+func (h *Handler) upsertArtist(ctx context.Context, tx pgx.Tx, artist *Artist) error {
 	start := time.Now().UTC()
 
 	stmt := fmt.Sprintf(`
@@ -89,7 +99,7 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 			bio_en=$13,
 			artist_name=$14,
 			updated_at=$16,
-			deleted_at=NULL`, TableArtists)
+			deleted_at=NULL`, core.TableArtists)
 
 	if _, err := tx.Exec(ctx, stmt,
 		artist.ID,                       // $1
@@ -115,32 +125,32 @@ func (db *Database) upsertArtist(ctx context.Context, tx pgx.Tx, artist *model.A
 	return nil
 }
 
-// GetArtistRequest specifies the input for an  Artists query against the database.
-type GetArtistRequest func() (string, string)
+// GetRequest specifies the input for an  Artists query against the database.
+type GetRequest func() (string, string)
 
 // ByID requests and Artist by ID.
-func ByID(id string) GetArtistRequest {
+func ByID(id string) GetRequest {
 	return func() (string, string) {
 		return id, "id=$1"
 	}
 }
 
 // ByArtistName requests Artists by the artists'.
-func ByArtistName(firstName string) GetArtistRequest {
+func ByArtistName(firstName string) GetRequest {
 	return func() (string, string) {
 		return firstName, "artist_name=$1"
 	}
 }
 
 // ByLastName requests Artists by last name.
-func ByLastName(lastName string) GetArtistRequest {
+func ByLastName(lastName string) GetRequest {
 	return func() (string, string) {
 		return lastName, "last_name=$1"
 	}
 }
 
-// GetArtists retrieves Artists according to GetArtistRequest, or an ErrNotFound.
-func (db *Database) GetArtists(ctx context.Context, request GetArtistRequest) ([]*model.Artist, error) {
+// Get retrieves Artists according to GetRequest, or an ErrNotFound.
+func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error) {
 	input, whereClause := request()
 
 	stmt := fmt.Sprintf(`
@@ -161,15 +171,15 @@ func (db *Database) GetArtists(ctx context.Context, request GetArtistRequest) ([
 				artist_name
 		FROM
 			"%s"
-		WHERE deleted_at IS NULL AND `, TableArtists,
+		WHERE deleted_at IS NULL AND `, core.TableArtists,
 	)
 
 	stmt += whereClause
 
-	rows, err := db.conn.Query(ctx, stmt, input)
+	rows, err := h.conn.Query(ctx, stmt, input)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
+			return nil, core.ErrNotFound
 		}
 
 		return nil, fmt.Errorf("query failed: %w", err)
@@ -177,7 +187,7 @@ func (db *Database) GetArtists(ctx context.Context, request GetArtistRequest) ([
 
 	defer rows.Close()
 
-	var artists []*model.Artist
+	var artists []*Artist
 
 	for rows.Next() {
 		var (
@@ -216,41 +226,41 @@ func (db *Database) GetArtists(ctx context.Context, request GetArtistRequest) ([
 			return nil, fmt.Errorf("scanning rows failed: %w", err)
 		}
 
-		artists = append(artists, &model.Artist{
+		artists = append(artists, &Artist{
 			ID:         id,
 			FirstName:  firstName,
 			LastName:   lastName,
-			ArtistName: conversion.PointerToString(artistName),
+			ArtistName: conversion.String(artistName),
 			Pronouns:   pronouns,
-			Origin: model.Origin{
-				DateOfBirth:  conversion.PointerToTime(dob),
-				PlaceOfBirth: conversion.PointerToString(pob),
-				Nationality:  conversion.PointerToString(nationality),
+			Origin: Origin{
+				DateOfBirth:  conversion.Time(dob),
+				PlaceOfBirth: conversion.String(pob),
+				Nationality:  conversion.String(nationality),
 			},
-			Language: conversion.PointerToString(language),
-			Socials: model.Socials{
-				Instagram: conversion.PointerToString(instagram),
-				Facebook:  conversion.PointerToString(facebook),
-				Bandcamp:  conversion.PointerToString(bandcamp),
+			Language: conversion.String(language),
+			Socials: Socials{
+				Instagram: conversion.String(instagram),
+				Facebook:  conversion.String(facebook),
+				Bandcamp:  conversion.String(bandcamp),
 			},
-			BioGerman:  conversion.PointerToString(bioGer),
-			BioEnglish: conversion.PointerToString(bioEn),
+			BioGerman:  conversion.String(bioGer),
+			BioEnglish: conversion.String(bioEn),
 		})
 
 	}
 
 	if len(artists) == 0 {
-		return nil, ErrNotFound
+		return nil, core.ErrNotFound
 	}
 
 	return artists, nil
 }
 
-// DeleteArtistByID deletes an Artist by ID. Returns ErrNotFound if the Artist
+// DeleteByID deletes an Artist by ID. Returns ErrNotFound if the Artist
 // did not exist beforehand.
-func (db *Database) DeleteArtistByID(ctx context.Context, id string) error {
+func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 	if _, err := uuid.Parse(id); err != nil {
-		return ErrInvalidUUID
+		return core.ErrInvalidUUID
 	}
 
 	stmt := fmt.Sprintf(`
@@ -262,19 +272,19 @@ func (db *Database) DeleteArtistByID(ctx context.Context, id string) error {
 		WHERE 
 			id=$2 
 		RETURNING 
-			id`, TableArtists)
+			id`, core.TableArtists)
 
 	var deletedID string
-	if err := db.conn.QueryRow(ctx, stmt, conversion.TimeToPointer(time.Now().UTC()), id).Scan(&deletedID); err != nil {
+	if err := h.conn.QueryRow(ctx, stmt, conversion.TimeP(time.Now().UTC()), id).Scan(&deletedID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrNotFound
+			return core.ErrNotFound
 		}
 
 		return err
 	}
 
 	if deletedID == "" {
-		return ErrNotFound
+		return core.ErrNotFound
 	}
 
 	return nil
