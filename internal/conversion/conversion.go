@@ -27,6 +27,11 @@ func TimeToPointer(t time.Time) *time.Time {
 	return &t
 }
 
+func TimeToPString(t time.Time) *string {
+	ret := t.Format(time.UnixDate)
+	return &ret
+}
+
 // ArtistToGenArtist takes Artist objects (model type) and converts it to
 // an Artist Object from our generated models
 func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {
@@ -34,7 +39,6 @@ func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {
 
 
 	for i, a := range a {
-		t := a.Origin.DateOfBirth.Format(time.UnixDate)
 
 		ret[i] = &model_gen.Artist{
 			ID:           a.ID,
@@ -42,7 +46,7 @@ func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {
 			LastName:     a.LastName,
 			ArtistName:   &a.ArtistName,
 			Pronouns:     []*string{},
-			DateOfBirth:  &t,
+			DateOfBirth:  TimeToPString(a.Origin.DateOfBirth),
 			PlaceOfBirth: &a.Origin.PlaceOfBirth,
 			Nationality:  &a.Origin.Nationality,
 			Language:     &a.Language,
