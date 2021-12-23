@@ -27,18 +27,39 @@ func TimeToPointer(t time.Time) *time.Time {
 	return &t
 }
 
+func TimeToPString(t time.Time) *string {
+	if t.IsZero() {
+		return nil
+	}
+
+	ret := t.Format(time.RFC3339)
+	return &ret
+}
+
 // ArtistToGenArtist takes Artist objects (model type) and converts it to
 // an Artist Object from our generated models
 func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {
 	ret := make([]*model_gen.Artist, len(a))
 
-	for i, a := range a {
-		ret[i] = &model_gen.Artist{}
 
-		ret[i].ID = a.ID
-		ret[i].FirstName = a.FirstName
-		ret[i].LastName = a.LastName
-		ret[i].ArtistName = &a.ArtistName
+	for i, a := range a {
+
+		ret[i] = &model_gen.Artist{
+			ID:           a.ID,
+			FirstName:    a.FirstName,
+			LastName:     a.LastName,
+			ArtistName:   &a.ArtistName,
+			Pronouns:     []*string{},
+			DateOfBirth:  TimeToPString(a.Origin.DateOfBirth),
+			PlaceOfBirth: &a.Origin.PlaceOfBirth,
+			Nationality:  &a.Origin.Nationality,
+			Language:     &a.Language,
+			Facebook:     &a.Socials.Facebook,
+			Instagram:    &a.Socials.Instagram,
+			Bandcamp:     &a.Socials.Bandcamp,
+			BioGer:       &a.BioGerman,
+			BioEn:        &a.BioEnglish,
+		}
 
 		if len(a.Pronouns) > 0 {
 			ret[i].Pronouns = make([]*string, len(a.Pronouns))
@@ -47,15 +68,6 @@ func ArtistToGenArtist(a []*model.Artist) ([]*model_gen.Artist, error) {
 				ret[i].Pronouns[j] = &pronoun
 			}
 		}
-		t := a.Origin.DateOfBirth.Format(time.UnixDate)
-		ret[i].DateOfBirth = &t
-		ret[i].PlaceOfBirth = &a.Origin.PlaceOfBirth
-		ret[i].Language = &a.Language
-		ret[i].Facebook = &a.Socials.Facebook
-		ret[i].Instagram = &a.Socials.Instagram
-		ret[i].Bandcamp = &a.Socials.Bandcamp
-		ret[i].BioGer = &a.BioGerman
-		ret[i].BioEn = &a.BioEnglish
 	}
 
 	return ret, nil
