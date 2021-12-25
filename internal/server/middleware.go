@@ -13,28 +13,30 @@ import (
 	"github.com/obitech/artist-db/internal/metrics"
 )
 
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		w := middleware.NewWrapResponseWriter(rw, r.ProtoMajor)
+func loggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			w := middleware.NewWrapResponseWriter(rw, r.ProtoMajor)
 
-		defer func() {
-			zap.L().With(
-				zap.String("transaction.id", middleware.GetReqID(r.Context())),
-				zap.String("network.protocol", r.Proto),
-				zap.String("http.request.method", r.Method),
-				zap.String("url.path", r.URL.Path),
-				zap.String("url.query", r.URL.RawQuery),
-				zap.String("client.ip", r.RemoteAddr),
-				zap.String("user_agent.original", r.Header.Get("User-Agent")),
-				zap.Int("http.response.status_code", w.Status()),
-				zap.Int64("http.response.time.ms`", time.Since(start).Milliseconds()),
-				zap.Int64("http.response.body.bytes", int64(w.BytesWritten())),
-			).Info("request served")
-		}()
+			defer func() {
+				logger.Info("request served",
+					zap.String("transaction.id", middleware.GetReqID(r.Context())),
+					zap.String("network.protocol", r.Proto),
+					zap.String("http.request.method", r.Method),
+					zap.String("url.path", r.URL.Path),
+					zap.String("url.query", r.URL.RawQuery),
+					zap.String("client.ip", r.RemoteAddr),
+					zap.String("user_agent.original", r.Header.Get("User-Agent")),
+					zap.Int("http.response.status_code", w.Status()),
+					zap.Int64("http.response.time.ms`", time.Since(start).Milliseconds()),
+					zap.Int64("http.response.body.bytes", int64(w.BytesWritten())),
+				)
+			}()
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func prometheusMiddleware(next http.Handler) http.Handler {

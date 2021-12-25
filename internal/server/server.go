@@ -37,12 +37,6 @@ func NewServer(db *database.Database, logger *zap.Logger, opts ...Option) (*Serv
 		}
 	}
 
-	// See https://github.com/go-chi/cors
-	srv.router.Use(cors.AllowAll().Handler)
-
-	srv.router.Use(loggingMiddleware)
-	srv.router.Use(prometheusMiddleware)
-
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
 		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
@@ -50,6 +44,12 @@ func NewServer(db *database.Database, logger *zap.Logger, opts ...Option) (*Serv
 	})
 
 	srv.router.Route("/", func(r chi.Router) {
+		r.Use(
+			cors.AllowAll().Handler,
+			loggingMiddleware(logger),
+			prometheusMiddleware,
+		)
+
 		r.Handle("/query", gqlHandler(db, logger))
 	})
 
