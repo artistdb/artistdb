@@ -235,7 +235,7 @@ func TestApiIntegration(t *testing.T) {
 		require.Len(t, result.Errors, 1, result.Errors)
 
 		require.Len(t, result.Data.GetArtists, 0)
-		assert.Equal(t, "retrieving artist failed: resource not found", result.Errors[0].Message)
+		assert.Contains(t, result.Errors[0].Message, "resource not found")
 	})
 
 	t.Run("deletion of single artist works", func(t *testing.T) {

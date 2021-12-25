@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
@@ -19,12 +21,18 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 	}
 
 	if err := r.db.ArtistHandler.Upsert(ctx, dbArtists...); err != nil {
-		return nil, fmt.Errorf("upserting artist failed: %w", err)
+		msg := "upsert failed"
+
+		r.logger.Error(msg, zap.Error(err))
+		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
 	ret, err := modelArtists(dbArtists)
 	if err != nil {
-		return nil, fmt.Errorf("conversion failed: %w", err)
+		msg := "conversion failed"
+
+		r.logger.Error(msg, zap.Error(err))
+		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
 	return ret, nil
@@ -32,6 +40,7 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 
 func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (bool, error) {
 	if err := r.db.ArtistHandler.DeleteByID(ctx, id); err != nil {
+		r.logger.Error("delete failed", zap.Error(err), zap.String("id", id))
 		return false, err
 	}
 
@@ -45,12 +54,18 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 	}
 
 	if err := r.db.LocationHandler.Upsert(ctx, dbLocations...); err != nil {
-		return nil, fmt.Errorf("upserting location failed: %w", err)
+		msg := "upsert failed"
+
+		r.logger.Error(msg, zap.Error(err))
+		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
 	ret, err := modelLocations(dbLocations)
 	if err != nil {
-		return nil, fmt.Errorf("conversion failed: %w", err)
+		msg := "conversion failed"
+
+		r.logger.Error(msg, zap.Error(err))
+		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
 	return ret, nil
@@ -75,7 +90,8 @@ func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtist
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("retrieving artist failed: %w", err)
+			r.logger.Error("get failed", zap.Error(err))
+			return nil, err
 		}
 
 		artists = append(artists, a...)

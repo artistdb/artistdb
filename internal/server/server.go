@@ -24,11 +24,11 @@ type Server struct {
 }
 
 // NewServer returns a server.
-func NewServer(db *database.Database, opts ...Option) (*Server, error) {
+func NewServer(db *database.Database, logger *zap.Logger, opts ...Option) (*Server, error) {
 	srv := &Server{
 		router: chi.NewRouter(),
 		db:     db,
-		logger: zap.NewNop(),
+		logger: logger,
 	}
 
 	for _, fn := range opts {
@@ -50,14 +50,14 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	})
 
 	srv.router.Route("/", func(r chi.Router) {
-		r.Handle("/query", gqlHandler(db))
+		r.Handle("/query", gqlHandler(db, logger))
 	})
 
 	return srv, nil
 }
 
-func gqlHandler(db *database.Database) http.HandlerFunc {
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(db)}))
+func gqlHandler(db *database.Database, logger *zap.Logger) http.HandlerFunc {
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(db, logger)}))
 
 	return h.ServeHTTP
 }

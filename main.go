@@ -41,7 +41,7 @@ func main() {
 
 	logger.Info("database initialized")
 
-	srv, err := server.NewServer(db, server.WithLogger(logger))
+	srv, err := server.NewServer(db, logger)
 	if err != nil {
 		logger.Fatal("setting up server failed", zap.Error(err))
 	}
