@@ -7,14 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	graphConversion "github.com/obitech/artist-db/graph/conversion"
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
-	dbArtists, err := graphConversion.DatabaseArtists(input)
+	dbArtists, err := databaseArtists(input)
 	if err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
@@ -23,7 +22,7 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 		return nil, fmt.Errorf("upserting artist failed: %w", err)
 	}
 
-	ret, err := graphConversion.ModelArtists(dbArtists)
+	ret, err := modelArtists(dbArtists)
 	if err != nil {
 		return nil, fmt.Errorf("conversion failed: %w", err)
 	}
@@ -40,7 +39,7 @@ func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (boo
 }
 
 func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]*model.Location, error) {
-	dbLocations, err := graphConversion.DatabaseLocations(input)
+	dbLocations, err := databaseLocations(input)
 	if err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
@@ -49,7 +48,7 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 		return nil, fmt.Errorf("upserting location failed: %w", err)
 	}
 
-	ret, err := graphConversion.ModelLocations(dbLocations)
+	ret, err := modelLocations(dbLocations)
 	if err != nil {
 		return nil, fmt.Errorf("conversion failed: %w", err)
 	}
@@ -82,7 +81,7 @@ func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtist
 		artists = append(artists, a...)
 	}
 
-	return graphConversion.ModelArtists(artists)
+	return modelArtists(artists)
 }
 
 // Mutation returns generated.MutationResolver implementation.
@@ -91,5 +90,7 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
+type (
+	mutationResolver struct{ *Resolver }
+	queryResolver    struct{ *Resolver }
+)

@@ -1,4 +1,4 @@
-package conversion
+package graph
 
 import (
 	"github.com/google/uuid"
@@ -7,9 +7,9 @@ import (
 	"github.com/obitech/artist-db/internal/database/location"
 )
 
-// ModelLocations takes Locations returned from the database and converts them to
+// modelLocations takes Locations returned from the database and converts them to
 // Locations defined in the GraphQL model.
-func ModelLocations(locations []*location.Location) ([]*model.Location, error) {
+func modelLocations(locations []*location.Location) ([]*model.Location, error) {
 	var out []*model.Location
 
 	for _, loc := range locations {
@@ -22,7 +22,9 @@ func ModelLocations(locations []*location.Location) ([]*model.Location, error) {
 	return out, nil
 }
 
-func DatabaseLocations(locations []*model.LocationInput) ([]*location.Location, error) {
+// databaseLocations takes InputLocations as defined in the GraphQL models and
+// converts them to Locations defined in the database.
+func databaseLocations(locations []*model.LocationInput) ([]*location.Location, error) {
 	var out []*location.Location
 
 	for _, loc := range locations {

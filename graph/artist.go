@@ -1,4 +1,4 @@
-package conversion
+package graph
 
 import (
 	"time"
@@ -10,9 +10,9 @@ import (
 	"github.com/obitech/artist-db/internal/database/artist"
 )
 
-// ModelArtists takes Artists returned from the database and converts them to
+// modelArtists takes Artists returned from the database and converts them to
 // Artists defined in the GraphQL model.
-func ModelArtists(input []*artist.Artist) ([]*model.Artist, error) {
+func modelArtists(input []*artist.Artist) ([]*model.Artist, error) {
 	var out []*model.Artist
 
 	for _, a := range input {
@@ -46,7 +46,9 @@ func ModelArtists(input []*artist.Artist) ([]*model.Artist, error) {
 	return out, nil
 }
 
-func DatabaseArtists(artists []*model.ArtistInput) ([]*artist.Artist, error) {
+// databaseArtists takes InputArtists as defined in the GraphQL models and
+// converts them to Artists defined in the database.
+func databaseArtists(artists []*model.ArtistInput) ([]*artist.Artist, error) {
 	var out []*artist.Artist
 
 	for _, artistInput := range artists {
