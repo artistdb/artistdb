@@ -15,7 +15,7 @@ import (
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
-	dbArtists, err := databaseArtists(input)
+	dbArtists, err := databaseArtists(input...)
 	if err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
@@ -27,7 +27,7 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
-	ret, err := modelArtists(dbArtists)
+	ret, err := modelArtists(dbArtists...)
 	if err != nil {
 		msg := "conversion failed"
 
@@ -48,7 +48,7 @@ func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (boo
 }
 
 func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]*model.Location, error) {
-	dbLocations, err := databaseLocations(input)
+	dbLocations, err := databaseLocations(input...)
 	if err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
@@ -60,7 +60,7 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
-	ret, err := modelLocations(dbLocations)
+	ret, err := modelLocations(dbLocations...)
 	if err != nil {
 		msg := "conversion failed"
 
@@ -72,21 +72,21 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 }
 
 func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error) {
-	artists := make([]*artist.Artist, len(input))
+	artists := make([]*model.Artist, len(input))
 
 	for i := range input {
 		var (
-			a   []*artist.Artist
-			err error
+			dbArtists []*artist.Artist
+			err       error
 		)
 
 		switch {
 		case input[i].ID != nil:
-			a, err = r.db.ArtistHandler.Get(ctx, artist.ByID(*input[i].ID))
+			dbArtists, err = r.db.ArtistHandler.Get(ctx, artist.ByID(*input[i].ID))
 		case input[i].LastName != nil:
-			a, err = r.db.ArtistHandler.Get(ctx, artist.ByLastName(*input[i].LastName))
+			dbArtists, err = r.db.ArtistHandler.Get(ctx, artist.ByLastName(*input[i].LastName))
 		case input[i].ArtistName != nil:
-			a, err = r.db.ArtistHandler.Get(ctx, artist.ByLastName(*input[i].ArtistName))
+			dbArtists, err = r.db.ArtistHandler.Get(ctx, artist.ByLastName(*input[i].ArtistName))
 		}
 
 		if err != nil {
@@ -94,10 +94,15 @@ func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtist
 			return nil, err
 		}
 
+		a, err := modelArtists(dbArtists...)
+		if err != nil {
+			return nil, fmt.Errorf("conversion failed: %w", err)
+		}
+
 		artists = append(artists, a...)
 	}
 
-	return modelArtists(artists)
+	return artists, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
