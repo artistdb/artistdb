@@ -72,7 +72,7 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 }
 
 func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error) {
-	artists := make([]*model.Artist, len(input))
+	var artists []*model.Artist
 
 	for i := range input {
 		var (
