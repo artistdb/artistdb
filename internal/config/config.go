@@ -29,6 +29,9 @@ func New() *Config {
 		kong.Name(internal.Name),
 		kong.Configuration(kongyaml.Loader),
 		kong.UsageOnError(),
+		kong.Vars{
+			"version": internal.Version,
+		},
 	)
 
 	return cfg
