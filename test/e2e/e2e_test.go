@@ -63,6 +63,24 @@ func TestApiIntegration(t *testing.T) {
 		require.Eventuallyf(t, do, 50*time.Second, 500*time.Millisecond, "controller didn't become ready")
 	})
 
+	t.Run("version endpoint is reachable", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/internal/version", nil)
+		require.NoError(t, err)
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		assert.Equal(t, []byte("dev"), body)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
+
 	t.Run("graphql query endpoint is reachable", func(t *testing.T) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/query", nil)
 		require.NoError(t, err)

@@ -2,8 +2,17 @@ DC ?= docker-compose
 GO := go
 FN := frontend/
 TEST_DB_CONN_STRING ?= postgres://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable
+GIT_REF    := $(shell git describe --all | sed  -e  's%tags/%%g'  -e 's%/%.%g' )
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 go_packages = $(GO) list ./... | grep -v /test | xargs
+
+export GO_MODULE=$(shell head -1 go.mod | cut -d' ' -f 2)
+
+ifndef GITHUB_REF
+	DATE := ${shell date +%s}
+	GITHUB_REF := ${GIT_REF}-${GIT_COMMIT}-$(DATE)
+endif
 
 .PHONY: lint
 lint:
@@ -27,8 +36,8 @@ start-api: stop
 
 .PHONY: start-frontend
 start-frontend: stop
-	cd $(FN) && ng serve 
-	
+	cd $(FN) && ng serve
+
 .PHONY: gen-graph
 gen-graph:
 	$(GO) run github.com/99designs/gqlgen generate
@@ -39,7 +48,7 @@ test:
 
 .PHONY: build
 build: clean
-	$(GO) build -o bin/api
+	CGO_ENABLED=0  $(GO) build -o bin/api -a -ldflags '-X $(GO_MODULE)/internal.Version=$(GITHUB_REF)'
 
 .PHONY: clean
 clean:
