@@ -7,6 +7,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -47,6 +48,7 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		r.Get("/health", srv.health)
 		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
 		r.Handle("/metrics", promhttp.Handler())
+		r.Method(http.MethodGet, "/pprof/*", middleware.Profiler())
 	})
 
 	srv.router.Route("/", func(r chi.Router) {

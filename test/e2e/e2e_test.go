@@ -22,9 +22,9 @@ type gqlresp struct {
 }
 
 type data struct {
-	GetArtists       []model.Artist `json:"getArtists"`
-	UpsertArtists    []model.Artist `json:"upsertArtists"`
-	DeleteArtistByID bool           `json:"deleteArtistByID"`
+	GetArtists       []model.Artist   `json:"getArtists"`
+	UpsertArtists    []model.Artist   `json:"upsertArtists"`
+	DeleteArtistByID bool             `json:"deleteArtistByID"`
 	UpsertLocations  []model.Location `json:"upsertLocations"`
 }
 
@@ -79,6 +79,20 @@ func TestApiIntegration(t *testing.T) {
 
 	t.Run("graphql playground endpoint is reachable", func(t *testing.T) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/internal/playground", nil)
+		require.NoError(t, err)
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, resp.Body.Close())
+		}()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
+
+	t.Run("pprof endpoint is reachable", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/internal/pprof/", nil)
 		require.NoError(t, err)
 
 		resp, err := httpClient.Do(req)
