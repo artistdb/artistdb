@@ -7,13 +7,13 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/graph"
 	"github.com/obitech/artist-db/graph/generated"
+	"github.com/obitech/artist-db/internal"
 	"github.com/obitech/artist-db/internal/database"
 )
 
@@ -42,7 +42,6 @@ func NewServer(db *database.Database, logger *zap.Logger, opts ...Option) (*Serv
 		r.Get("/health", srv.health)
 		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
 		r.Handle("/metrics", promhttp.Handler())
-		r.Method(http.MethodGet, "/pprof/*", middleware.Profiler())
 	})
 
 	srv.router.Route("/", func(r chi.Router) {
@@ -62,6 +61,15 @@ func gqlHandler(db *database.Database, logger *zap.Logger) http.HandlerFunc {
 	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(db, logger)}))
 
 	return h.ServeHTTP
+}
+
+func (s *Server) versionHandler(w http.ResponseWriter, r *http.Request) {
+	if _, err := w.Write([]byte(internal.Version)); err != nil {
+		msg := "write failed"
+		s.logger.Error(msg, zap.Error(err))
+
+		http.Error(w, msg, http.StatusInternalServerError)
+	}
 }
 
 // ListenAndServe starts the HTTP server and listens for new requests.
