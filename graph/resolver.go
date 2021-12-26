@@ -1,6 +1,8 @@
 package graph
 
 import (
+	"go.uber.org/zap"
+
 	"github.com/obitech/artist-db/internal/database"
 )
 
@@ -9,9 +11,13 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	db *database.Database
+	db     *database.Database
+	logger *zap.Logger
 }
 
-func NewResolver(db *database.Database) *Resolver {
-	return &Resolver{db: db}
+func NewResolver(db *database.Database, logger *zap.Logger) *Resolver {
+	return &Resolver{
+		db:     db,
+		logger: logger,
+	}
 }

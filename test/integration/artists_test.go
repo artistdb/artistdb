@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/obitech/artist-db/internal/conversion"
-	"github.com/obitech/artist-db/internal/database"
-	"github.com/obitech/artist-db/internal/database/model"
+	"github.com/obitech/artist-db/internal/database/artist"
+	"github.com/obitech/artist-db/internal/database/core"
 )
 
 func Test_ArtistsIntegration(t *testing.T) {
@@ -23,20 +23,20 @@ func Test_ArtistsIntegration(t *testing.T) {
 	db, conn, teardown := setup(t, ctx)
 	defer teardown(t)
 
-	artists := []*model.Artist{
+	artists := []*artist.Artist{
 		{
 			ID:         uuid.New().String(),
 			FirstName:  "first",
 			LastName:   "last",
 			ArtistName: "artist",
 			Pronouns:   []string{"she", "her"},
-			Origin: model.Origin{
+			Origin: artist.Origin{
 				DateOfBirth:  time.Time{},
 				PlaceOfBirth: "de",
 				Nationality:  "de",
 			},
 			Language: "de",
-			Socials: model.Socials{
+			Socials: artist.Socials{
 				Instagram: "foo",
 				Facebook:  "bar",
 				Bandcamp:  "baz",
@@ -50,13 +50,13 @@ func Test_ArtistsIntegration(t *testing.T) {
 			LastName:   "last2",
 			ArtistName: "artist2",
 			Pronouns:   []string{"he", "her", "him"},
-			Origin: model.Origin{
+			Origin: artist.Origin{
 				DateOfBirth:  time.Time{}.Add(time.Hour),
 				PlaceOfBirth: "en",
 				Nationality:  "en",
 			},
 			Language: "en",
-			Socials: model.Socials{
+			Socials: artist.Socials{
 				Instagram: "foo2",
 				Facebook:  "bar2",
 				Bandcamp:  "baz2",
@@ -74,31 +74,31 @@ func Test_ArtistsIntegration(t *testing.T) {
 
 	t.Run("inserting and retrieving single artist works", func(t *testing.T) {
 		t.Run("invalid ID throws error", func(t *testing.T) {
-			require.Error(t, db.UpsertArtists(ctx, &model.Artist{ID: "foo"}))
+			require.Error(t, db.ArtistHandler.Upsert(ctx, &artist.Artist{ID: "foo"}))
 		})
 
-		require.NoError(t, db.UpsertArtists(ctx, artists[0]))
+		require.NoError(t, db.ArtistHandler.Upsert(ctx, artists[0]))
 
 		t.Run("verify", func(t *testing.T) {
 			t.Run("resources are created", func(t *testing.T) {
-				res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
+				res, err := db.ArtistHandler.Get(ctx, artist.ByID(artists[0].ID))
 				require.NoError(t, err)
 				require.Len(t, res, 1)
 				assert.Equal(t, artists[0], res[0])
 
-				res, err = db.GetArtists(ctx, database.ByArtistName(artists[0].ArtistName))
+				res, err = db.ArtistHandler.Get(ctx, artist.ByArtistName(artists[0].ArtistName))
 				require.NoError(t, err)
 				require.Len(t, res, 1)
 				assert.Equal(t, artists[0], res[0])
 
-				res, err = db.GetArtists(ctx, database.ByLastName(artists[0].LastName))
+				res, err = db.ArtistHandler.Get(ctx, artist.ByLastName(artists[0].LastName))
 				require.NoError(t, err)
 				require.Len(t, res, 1)
 				assert.Equal(t, artists[0], res[0])
 			})
 
 			t.Run("metadata is set", func(t *testing.T) {
-				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE id=$1`, database.TableArtists)
+				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE id=$1`, core.TableArtists)
 
 				var (
 					createdAt time.Time
@@ -116,12 +116,12 @@ func Test_ArtistsIntegration(t *testing.T) {
 		})
 
 		t.Run("cleanup", func(t *testing.T) {
-			stmt := fmt.Sprintf(`DELETE FROM %s WHERE id=$1`, database.TableArtists)
+			stmt := fmt.Sprintf(`DELETE FROM %s WHERE id=$1`, core.TableArtists)
 
 			_, err := conn.Exec(ctx, stmt, artists[0].ID)
 			require.NoError(t, err)
 
-			stmt = fmt.Sprintf(`SELECT id from %s WHERE id=$1`, database.TableArtists)
+			stmt = fmt.Sprintf(`SELECT id from %s WHERE id=$1`, core.TableArtists)
 
 			var id string
 			require.Error(t, conn.QueryRow(ctx, stmt, artists[0].ID).Scan(&id))
@@ -130,26 +130,26 @@ func Test_ArtistsIntegration(t *testing.T) {
 	})
 
 	t.Run("inserting multiple artists works", func(t *testing.T) {
-		require.NoError(t, db.UpsertArtists(ctx, artists...))
+		require.NoError(t, db.ArtistHandler.Upsert(ctx, artists...))
 
 		t.Run("verify", func(t *testing.T) {
-			res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
+			res, err := db.ArtistHandler.Get(ctx, artist.ByID(artists[0].ID))
 			require.NoError(t, err)
 			require.Len(t, res, 1)
 			assert.Equal(t, artists[0], res[0])
 
-			res, err = db.GetArtists(ctx, database.ByID(artists[1].ID))
+			res, err = db.ArtistHandler.Get(ctx, artist.ByID(artists[1].ID))
 			require.NoError(t, err)
 			require.Len(t, res, 1)
 			assert.Equal(t, artists[1], res[0])
 
-			res, err = db.GetArtists(ctx, database.ByArtistName(artists[1].ArtistName))
+			res, err = db.ArtistHandler.Get(ctx, artist.ByArtistName(artists[1].ArtistName))
 			require.NoError(t, err)
 			require.Len(t, res, 2)
 			assert.Equal(t, artists[1], res[0])
 			assert.Equal(t, artists[2], res[1])
 
-			res, err = db.GetArtists(ctx, database.ByLastName(artists[1].LastName))
+			res, err = db.ArtistHandler.Get(ctx, artist.ByLastName(artists[1].LastName))
 			require.NoError(t, err)
 			require.Len(t, res, 2)
 			assert.Equal(t, artists[1], res[0])
@@ -158,16 +158,16 @@ func Test_ArtistsIntegration(t *testing.T) {
 
 		t.Run("updating existing artist works", func(t *testing.T) {
 			artists[0].ArtistName = "pee.age"
-			require.NoError(t, db.UpsertArtists(ctx, artists...))
+			require.NoError(t, db.ArtistHandler.Upsert(ctx, artists...))
 
-			res, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
+			res, err := db.ArtistHandler.Get(ctx, artist.ByID(artists[0].ID))
 			require.NoError(t, err)
 			require.Len(t, res, 1)
 			assert.Equal(t, artists[0], res[0])
 			assert.Equal(t, "pee.age", res[0].ArtistName)
 
 			t.Run("metadata is set", func(t *testing.T) {
-				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE ID=$1`, database.TableArtists)
+				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE ID=$1`, core.TableArtists)
 
 				var (
 					createdAt time.Time
@@ -187,53 +187,53 @@ func Test_ArtistsIntegration(t *testing.T) {
 
 	t.Run("retrieving non-existent artist throws error", func(t *testing.T) {
 		t.Run("invalid ID throws error", func(t *testing.T) {
-			res, err := db.GetArtists(ctx, database.ByID("foo"))
+			res, err := db.ArtistHandler.Get(ctx, artist.ByID("foo"))
 			require.Error(t, err)
 			assert.Nil(t, res)
 		})
 
 		t.Run("unknown ID throws error", func(t *testing.T) {
-			artist, err := db.GetArtists(ctx, database.ByID(uuid.New().String()))
+			artist, err := db.ArtistHandler.Get(ctx, artist.ByID(uuid.New().String()))
 			require.Error(t, err)
 
-			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
+			assert.True(t, errors.Is(err, core.ErrNotFound), err.Error())
 			assert.Nil(t, artist)
 		})
 	})
 
 	t.Run("deleting non-existent artist throws error", func(t *testing.T) {
 		t.Run("invalid ID throws error", func(t *testing.T) {
-			err := db.DeleteArtistByID(ctx, "foo")
+			err := db.ArtistHandler.DeleteByID(ctx, "foo")
 			require.Error(t, err)
 
-			assert.True(t, errors.Is(err, database.ErrInvalidUUID), err.Error())
+			assert.True(t, errors.Is(err, core.ErrInvalidUUID), err.Error())
 		})
 
 		t.Run("unknown ID thwrows error", func(t *testing.T) {
-			err := db.DeleteArtistByID(ctx, uuid.New().String())
+			err := db.ArtistHandler.DeleteByID(ctx, uuid.New().String())
 			require.Error(t, err)
 
-			assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
+			assert.True(t, errors.Is(err, core.ErrNotFound), err.Error())
 		})
 	})
 
 	t.Run("deleting artist works", func(t *testing.T) {
 		t.Run("delete", func(t *testing.T) {
-			err := db.DeleteArtistByID(ctx, artists[0].ID)
+			err := db.ArtistHandler.DeleteByID(ctx, artists[0].ID)
 			require.NoError(t, err)
 		})
 
 		t.Run("validate", func(t *testing.T) {
 			t.Run("artist is deleted", func(t *testing.T) {
-				artist, err := db.GetArtists(ctx, database.ByID(artists[0].ID))
+				artist, err := db.ArtistHandler.Get(ctx, artist.ByID(artists[0].ID))
 				require.Error(t, err)
-				assert.True(t, errors.Is(err, database.ErrNotFound), err.Error())
+				assert.True(t, errors.Is(err, core.ErrNotFound), err.Error())
 
 				assert.Nil(t, artist)
 			})
 
 			t.Run("metadata is set", func(t *testing.T) {
-				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE ID=$1`, database.TableArtists)
+				stmt := fmt.Sprintf(`SELECT created_at, updated_at, deleted_at FROM %s WHERE ID=$1`, core.TableArtists)
 
 				var (
 					createdAt time.Time
@@ -247,7 +247,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 				assert.NotZero(t, updatedAt)
 				assert.NotNil(t, deletedAt)
 				assert.Equal(t, *deletedAt, updatedAt)
-				assert.True(t, conversion.PointerToTime(deletedAt).After(createdAt))
+				assert.True(t, conversion.Time(deletedAt).After(createdAt))
 			})
 		})
 	})

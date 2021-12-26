@@ -24,11 +24,11 @@ type Server struct {
 }
 
 // NewServer returns a server.
-func NewServer(db *database.Database, opts ...Option) (*Server, error) {
+func NewServer(db *database.Database, logger *zap.Logger, opts ...Option) (*Server, error) {
 	srv := &Server{
 		router: chi.NewRouter(),
 		db:     db,
-		logger: zap.L().With(zap.String("component", "server")),
+		logger: logger,
 	}
 
 	for _, fn := range opts {
@@ -37,12 +37,6 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		}
 	}
 
-	// See https://github.com/go-chi/cors
-	srv.router.Use(cors.AllowAll().Handler)
-
-	srv.router.Use(loggingMiddleware)
-	srv.router.Use(prometheusMiddleware)
-
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
 		r.Get("/playground", playground.Handler("GraphQL playground", "/query"))
@@ -50,14 +44,20 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 	})
 
 	srv.router.Route("/", func(r chi.Router) {
-		r.Handle("/query", gqlHandler(db))
+		r.Use(
+			cors.AllowAll().Handler,
+			loggingMiddleware(logger),
+			prometheusMiddleware,
+		)
+
+		r.Handle("/query", gqlHandler(db, logger))
 	})
 
 	return srv, nil
 }
 
-func gqlHandler(db *database.Database) http.HandlerFunc {
-	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(db)}))
+func gqlHandler(db *database.Database, logger *zap.Logger) http.HandlerFunc {
+	h := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.NewResolver(db, logger)}))
 
 	return h.ServeHTTP
 }

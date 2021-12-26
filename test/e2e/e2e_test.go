@@ -22,9 +22,9 @@ type gqlresp struct {
 }
 
 type data struct {
-	GetArtists       []model.Artist `json:"getArtists"`
-	UpsertArtists    []model.Artist `json:"upsertArtists"`
-	DeleteArtistByID bool           `json:"deleteArtistByID"`
+	GetArtists       []model.Artist   `json:"getArtists"`
+	UpsertArtists    []model.Artist   `json:"upsertArtists"`
+	DeleteArtistByID bool             `json:"deleteArtistByID"`
 	UpsertLocations  []model.Location `json:"upsertLocations"`
 }
 
@@ -116,6 +116,7 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
+		require.Len(t, result.Errors, 0, result.Errors)
 
 		require.Len(t, result.Data.UpsertArtists, 1)
 		assert.NotEmpty(t, result.Data.UpsertArtists[0].ID)
@@ -147,6 +148,7 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
+		require.Len(t, result.Errors, 0, result.Errors)
 
 		require.Len(t, result.Data.GetArtists, 1)
 		assert.Equal(t, testID, result.Data.GetArtists[0].ID)
@@ -174,6 +176,7 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
+		require.Len(t, result.Errors, 0, result.Errors)
 
 		require.Len(t, result.Data.GetArtists, 1)
 		assert.Equal(t, "Ross", result.Data.GetArtists[0].LastName)
@@ -201,6 +204,7 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
+		require.Len(t, result.Errors, 0, result.Errors)
 
 		require.Len(t, result.Data.GetArtists, 1)
 		assert.Equal(t, "BBR", *result.Data.GetArtists[0].ArtistName)
@@ -228,9 +232,10 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
+		require.Len(t, result.Errors, 1, result.Errors)
 
 		require.Len(t, result.Data.GetArtists, 0)
-		assert.Equal(t, "retrieving artist failed: resource not found", result.Errors[0].Message)
+		assert.Contains(t, result.Errors[0].Message, "resource not found")
 	})
 
 	t.Run("deletion of single artist works", func(t *testing.T) {
@@ -257,6 +262,7 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
+		require.Len(t, result.Errors, 0, result.Errors)
 
 		assert.Equal(t, true, result.Data.DeleteArtistByID)
 	})
@@ -286,6 +292,7 @@ func TestApiIntegration(t *testing.T) {
 
 		unmarshalErr := json.Unmarshal(got, &result)
 		require.NoError(t, unmarshalErr)
+		require.Len(t, result.Errors, 0, result.Errors)
 
 		require.Len(t, result.Data.UpsertLocations, 1)
 		assert.NotEmpty(t, result.Data.UpsertLocations[0].ID)
