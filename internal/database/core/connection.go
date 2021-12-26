@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"go.opentelemetry.io/otel/sdk/trace"
+	otelTrace "go.opentelemetry.io/otel/trace"
 
 	"github.com/obitech/artist-db/internal/observability"
 )
@@ -17,6 +17,10 @@ const (
 	commandPing  = "ping"
 	commandQuery = "query"
 	commandExec  = "exec"
+)
+
+const (
+	TracingInstrumentationName = "database"
 )
 
 // Connection abstracts a pgx Database Connection.
@@ -43,38 +47,57 @@ type Connection interface {
 // ConnectionPool wraps a pgxpool and implements the Connection interface.
 type ConnectionPool struct {
 	pool   *pgxpool.Pool
-	tracer *trace.TracerProvider
+	tracer otelTrace.TracerProvider
 }
 
-type ConnectionOption func(pool *ConnectionPool) error
+func NewConnectionPool(ctx context.Context, connString string, tp otelTrace.TracerProvider) (*ConnectionPool, error) {
+	spanCtx, span := tp.Tracer(TracingInstrumentationName).Start(ctx, "connect")
+	defer span.End()
 
-func NewConnectionPool(ctx context.Context, connString string) (*ConnectionPool, error) {
-	conn, err := pgxpool.Connect(ctx, connString)
+	conn, err := pgxpool.Connect(spanCtx, connString)
 	if err != nil {
+		span.RecordError(err)
 		return nil, err
 	}
 
-	return &ConnectionPool{pool: conn}, nil
+	return &ConnectionPool{
+		pool:   conn,
+		tracer: tp,
+	}, nil
 }
 
 func (c *ConnectionPool) Ping(ctx context.Context) error {
 	start := time.Now()
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "ping")
 
 	defer func(s time.Time) {
+		span.End()
 		observability.Metrics.ObserveCommandDuration(commandPing, time.Since(s))
 	}(start)
 
-	return c.pool.Ping(ctx)
+	if err := c.pool.Ping(spanCtx); err != nil {
+		span.RecordError(err)
+		return err
+	}
+
+	return nil
 }
 
 func (c *ConnectionPool) Begin(ctx context.Context) (pgx.Tx, error) {
 	start := time.Now()
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "begin")
 
 	defer func(s time.Time) {
+		span.End()
 		observability.Metrics.ObserveCommandDuration(commandBegin, time.Since(s))
 	}(start)
 
-	return c.pool.Begin(ctx)
+	res, err := c.pool.Begin(spanCtx)
+	if err != nil {
+		span.RecordError(err)
+	}
+
+	return res, err
 }
 
 func (c *ConnectionPool) Close() {
@@ -83,30 +106,46 @@ func (c *ConnectionPool) Close() {
 
 func (c *ConnectionPool) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
 	start := time.Now()
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "query")
 
 	defer func(s time.Time) {
+		span.End()
 		observability.Metrics.ObserveCommandDuration(commandQuery, time.Since(s))
 	}(start)
 
-	return c.pool.Query(ctx, sql, args...)
+	res, err := c.pool.Query(spanCtx, sql, args...)
+	if err != nil {
+		span.RecordError(err)
+	}
+
+	return res, err
 }
 
 func (c *ConnectionPool) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
 	start := time.Now()
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "query.row")
 
 	defer func(s time.Time) {
+		span.End()
 		observability.Metrics.ObserveCommandDuration(commandQuery, time.Since(s))
 	}(start)
 
-	return c.pool.QueryRow(ctx, sql, args...)
+	return c.pool.QueryRow(spanCtx, sql, args...)
 }
 
 func (c *ConnectionPool) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
 	start := time.Now()
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "exec")
 
 	defer func(s time.Time) {
+		span.End()
 		observability.Metrics.ObserveCommandDuration(commandExec, time.Since(s))
 	}(start)
 
-	return c.pool.Exec(ctx, sql, args...)
+	res, err := c.pool.Exec(spanCtx, sql, args...)
+	if err != nil {
+		span.RecordError(err)
+	}
+
+	return res, err
 }

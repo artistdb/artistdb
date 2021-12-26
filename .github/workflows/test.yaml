@@ -15,7 +15,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.1
+          go-version: 1.17.5
       - name: Run linter
         run: make lint
       - name: Run unit test
@@ -43,7 +43,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.1
+          go-version: 1.17.5
       - name: Run integration test
         run: make test-integration
   e2e_test:
@@ -69,7 +69,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.1
+          go-version: 1.17.5
       - name: Start API
         run: bash scripts/start_api.sh
       - name: Run e2e test
@@ -82,6 +82,6 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.1
+          go-version: 1.17.5
       - name: Build binary
         run: make build

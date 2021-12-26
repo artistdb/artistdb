@@ -12,13 +12,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/riandyrn/otelchi"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/graph"
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/internal"
 	"github.com/obitech/artist-db/internal/database"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
 // Server holds API handlers.
@@ -26,16 +27,21 @@ type Server struct {
 	router chi.Router
 	db     *database.Database
 	logger *zap.Logger
-	tracer *trace.TracerProvider
+	tracer trace.TracerProvider
 }
 
 // NewServer returns a server.
-func NewServer(db *database.Database, logger *zap.Logger, tracer *trace.TracerProvider, opts ...Option) (*Server, error) {
+func NewServer(db *database.Database, opts ...Option) (*Server, error) {
+	tp, err := observability.NewNoOpTracerProvider()
+	if err != nil {
+		return nil, fmt.Errorf("creating default trace provider failed: %w", err)
+	}
+
 	srv := &Server{
 		router: chi.NewRouter(),
 		db:     db,
-		logger: logger,
-		tracer: tracer,
+		logger: zap.NewNop(),
+		tracer: tp,
 	}
 
 	for _, fn := range opts {
@@ -43,12 +49,6 @@ func NewServer(db *database.Database, logger *zap.Logger, tracer *trace.TracerPr
 			return nil, fmt.Errorf("applying option failed: %w", err)
 		}
 	}
-
-	srv.router.Use(otelchi.Middleware(
-		internal.Name,
-		otelchi.WithTracerProvider(tracer),
-		otelchi.WithPropagators(otel.GetTextMapPropagator()),
-	))
 
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)
@@ -60,12 +60,17 @@ func NewServer(db *database.Database, logger *zap.Logger, tracer *trace.TracerPr
 
 	srv.router.Route("/", func(r chi.Router) {
 		r.Use(
+			otelchi.Middleware(
+				internal.Name,
+				otelchi.WithTracerProvider(srv.tracer),
+				otelchi.WithPropagators(otel.GetTextMapPropagator()),
+			),
 			cors.AllowAll().Handler,
-			loggingMiddleware(logger),
+			loggingMiddleware(srv.logger),
 			prometheusMiddleware,
 		)
 
-		r.Handle("/query", gqlHandler(db, logger))
+		r.Handle("/query", gqlHandler(db, srv.logger))
 	})
 
 	return srv, nil

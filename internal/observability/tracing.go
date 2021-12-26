@@ -23,13 +23,13 @@ import (
 )
 
 // NewResource returns an OpenTelemetry Resource.
-func newResource(name, version string) (*resource.Resource, error) {
+func newResource() (*resource.Resource, error) {
 	return resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(name),
-			semconv.ServiceVersionKey.String(version),
+			semconv.ServiceNameKey.String(internal.Name),
+			semconv.ServiceVersionKey.String(internal.Version),
 		),
 	)
 }
@@ -65,7 +65,7 @@ func NewTracerProvider(ctx context.Context, cfg *config.Config, opts ...trace.Tr
 		err error
 	)
 
-	res, err := newResource(internal.Name, "dev")
+	res, err := newResource()
 	if err != nil {
 		return nil, fmt.Errorf("creating resource failed: %w", err)
 	}
@@ -87,14 +87,32 @@ func NewTracerProvider(ctx context.Context, cfg *config.Config, opts ...trace.Tr
 
 	tp := trace.NewTracerProvider(opts...)
 
+	return tp, nil
+}
+
+func NewNoOpTracerProvider() (*trace.TracerProvider, error) {
+	res, err := newResource()
+	if err != nil {
+		return nil, fmt.Errorf("creating resource failed: %w", err)
+	}
+
+	exp, err := newStdoutExporter(io.Discard)
+	if err != nil {
+		return nil, fmt.Errorf("creating exporter failed: %w", err)
+	}
+
+	tp := trace.NewTracerProvider(trace.WithBatcher(exp), trace.WithResource(res))
+
+	return tp, nil
+}
+
+func SetGlobalTracerProviderAndPropagator(tp otelTrace.TracerProvider) {
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
 			propagation.TraceContext{}, propagation.Baggage{},
 		),
 	)
-
-	return tp, nil
 }
 
 func ExtractTraceID(ctx context.Context) string {

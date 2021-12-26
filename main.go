@@ -31,9 +31,15 @@ func main() {
 		logger.Fatal("creating tracer provider failed", zap.Error(err))
 	}
 
-	// Database
+	observability.SetGlobalTracerProviderAndPropagator(tp)
 
-	db, err := database.NewDatabase(ctx, cfg.DbConnectionString, logger)
+	// Database
+	db, err := database.NewDatabase(
+		ctx,
+		cfg.DbConnectionString,
+		database.WithLogger(logger),
+		database.WithTracerProvider(tp),
+	)
 	if err != nil {
 		logger.Fatal("setting up database connection failed", zap.Error(err))
 	}
@@ -52,7 +58,11 @@ func main() {
 	logger.Info("database initialized")
 
 	// Server
-	srv, err := server.NewServer(db, tp)
+	srv, err := server.NewServer(
+		db,
+		server.WithLogger(logger),
+		server.WithTracerProvider(tp),
+	)
 	if err != nil {
 		logger.Fatal("setting up server failed", zap.Error(err))
 	}
