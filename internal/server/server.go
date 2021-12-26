@@ -10,6 +10,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/riandyrn/otelchi"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/graph"
@@ -23,14 +26,16 @@ type Server struct {
 	router chi.Router
 	db     *database.Database
 	logger *zap.Logger
+	tracer *trace.TracerProvider
 }
 
 // NewServer returns a server.
-func NewServer(db *database.Database, logger *zap.Logger, opts ...Option) (*Server, error) {
+func NewServer(db *database.Database, logger *zap.Logger, tracer *trace.TracerProvider, opts ...Option) (*Server, error) {
 	srv := &Server{
 		router: chi.NewRouter(),
 		db:     db,
 		logger: logger,
+		tracer: tracer,
 	}
 
 	for _, fn := range opts {
@@ -38,6 +43,12 @@ func NewServer(db *database.Database, logger *zap.Logger, opts ...Option) (*Serv
 			return nil, fmt.Errorf("applying option failed: %w", err)
 		}
 	}
+
+	srv.router.Use(otelchi.Middleware(
+		internal.Name,
+		otelchi.WithTracerProvider(tracer),
+		otelchi.WithPropagators(otel.GetTextMapPropagator()),
+	))
 
 	srv.router.Route("/internal", func(r chi.Router) {
 		r.Get("/health", srv.health)

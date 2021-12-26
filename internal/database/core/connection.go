@@ -7,8 +7,9 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"go.opentelemetry.io/otel/sdk/trace"
 
-	"github.com/obitech/artist-db/internal/metrics"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
 const (
@@ -41,10 +42,12 @@ type Connection interface {
 
 // ConnectionPool wraps a pgxpool and implements the Connection interface.
 type ConnectionPool struct {
-	pool *pgxpool.Pool
+	pool   *pgxpool.Pool
+	tracer *trace.TracerProvider
 }
 
-// NewConnectionPool returns a ConnectionPool.
+type ConnectionOption func(pool *ConnectionPool) error
+
 func NewConnectionPool(ctx context.Context, connString string) (*ConnectionPool, error) {
 	conn, err := pgxpool.Connect(ctx, connString)
 	if err != nil {
@@ -58,7 +61,7 @@ func (c *ConnectionPool) Ping(ctx context.Context) error {
 	start := time.Now()
 
 	defer func(s time.Time) {
-		metrics.Collector.ObserveCommandDuration(commandPing, time.Since(s))
+		observability.Metrics.ObserveCommandDuration(commandPing, time.Since(s))
 	}(start)
 
 	return c.pool.Ping(ctx)
@@ -68,7 +71,7 @@ func (c *ConnectionPool) Begin(ctx context.Context) (pgx.Tx, error) {
 	start := time.Now()
 
 	defer func(s time.Time) {
-		metrics.Collector.ObserveCommandDuration(commandBegin, time.Since(s))
+		observability.Metrics.ObserveCommandDuration(commandBegin, time.Since(s))
 	}(start)
 
 	return c.pool.Begin(ctx)
@@ -82,7 +85,7 @@ func (c *ConnectionPool) Query(ctx context.Context, sql string, args ...interfac
 	start := time.Now()
 
 	defer func(s time.Time) {
-		metrics.Collector.ObserveCommandDuration(commandQuery, time.Since(s))
+		observability.Metrics.ObserveCommandDuration(commandQuery, time.Since(s))
 	}(start)
 
 	return c.pool.Query(ctx, sql, args...)
@@ -92,7 +95,7 @@ func (c *ConnectionPool) QueryRow(ctx context.Context, sql string, args ...inter
 	start := time.Now()
 
 	defer func(s time.Time) {
-		metrics.Collector.ObserveCommandDuration(commandQuery, time.Since(s))
+		observability.Metrics.ObserveCommandDuration(commandQuery, time.Since(s))
 	}(start)
 
 	return c.pool.QueryRow(ctx, sql, args...)
@@ -102,7 +105,7 @@ func (c *ConnectionPool) Exec(ctx context.Context, sql string, args ...interface
 	start := time.Now()
 
 	defer func(s time.Time) {
-		metrics.Collector.ObserveCommandDuration(commandExec, time.Since(s))
+		observability.Metrics.ObserveCommandDuration(commandExec, time.Since(s))
 	}(start)
 
 	return c.pool.Exec(ctx, sql, args...)

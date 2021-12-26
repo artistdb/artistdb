@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 
-	"github.com/obitech/artist-db/internal/metrics"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
 func loggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
@@ -49,9 +49,9 @@ func prometheusMiddleware(next http.Handler) http.Handler {
 			// routes added via Mount get a "/*" suffix, which we have to remove
 			routeLabel := strings.ReplaceAll(strings.Join(reqCtx.RoutePatterns, ""), "/*", "")
 
-			metrics.Collector.ObserveRequestDuration(r.Method, routeLabel, strconv.Itoa(w.Status()), time.Since(start))
-			metrics.Collector.ObserveRequestSize(r.Method, routeLabel, strconv.Itoa(w.Status()), float64(r.ContentLength))
-			metrics.Collector.ObserveResponseSize(r.Method, routeLabel, strconv.Itoa(w.Status()), float64(w.BytesWritten()))
+			observability.Metrics.ObserveRequestDuration(r.Method, routeLabel, strconv.Itoa(w.Status()), time.Since(start))
+			observability.Metrics.ObserveRequestSize(r.Method, routeLabel, strconv.Itoa(w.Status()), float64(r.ContentLength))
+			observability.Metrics.ObserveResponseSize(r.Method, routeLabel, strconv.Itoa(w.Status()), float64(w.BytesWritten()))
 		}()
 
 		next.ServeHTTP(w, r)
