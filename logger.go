@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+
+	"github.com/obitech/artist-db/internal"
 )
 
 // initLogger initializes a global zap logger. The logger can be accessed via
@@ -25,6 +27,8 @@ func initLogger(mode string) (*zap.Logger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("initializing logger failed: %w", err)
 	}
+
+	logger = logger.With(zap.String("service.version", internal.Version))
 
 	zap.RedirectStdLog(logger)
 	zap.ReplaceGlobals(logger)

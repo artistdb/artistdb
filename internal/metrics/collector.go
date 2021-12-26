@@ -1,10 +1,10 @@
 package metrics
 
 import (
-	"log"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 
 	"github.com/obitech/artist-db/internal"
 )
@@ -22,16 +22,34 @@ var (
 func init() {
 	Collector = newCollector()
 
-	if err := prometheus.Register(Collector); err != nil {
-		log.Fatalf("registering collector failed: %v", err)
+	serviceCol := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "service_info",
+			ConstLabels: prometheus.Labels{
+				"service": internal.Name,
+				"version": internal.Version,
+			},
+		},
+		func() float64 {
+			return 1
+		},
+	)
+
+	cols := []prometheus.Collector{
+		collectors.NewBuildInfoCollector(),
+		Collector,
+		serviceCol,
 	}
+
+	prometheus.MustRegister(cols...)
 }
 
 var Collector *collector
 
 // collector holds all metrics.
 type collector struct {
-	dbCommandDuration      *prometheus.HistogramVec
+	dbCommandDuration *prometheus.HistogramVec
+
 	serverRequestDurations *prometheus.HistogramVec
 	serverRequestSize      *prometheus.HistogramVec
 	serverResponseSize     *prometheus.HistogramVec
