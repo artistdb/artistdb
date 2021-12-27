@@ -40,12 +40,19 @@ func Test_LocationsIntegration(t *testing.T) {
 		require.NoError(t, db.LocationHandler.Upsert(ctx, locations[0]))
 
 		t.Run("location is created", func(t *testing.T) {
-			stmt := fmt.Sprintf(`SELECT name FROM %s WHERE id=$1`, core.TableLocations)
+			locs, err := db.LocationHandler.Get(ctx, location.ByID(locations[0].ID))
+			require.NoError(t, err)
 
-			var name string
-			require.NoError(t, conn.QueryRow(ctx, stmt, locations[0].ID).Scan(&name))
+			assert.Len(t, locs, 1)
+			assert.Equal(t, locations[0].ID, locs[0].ID)
+			assert.Equal(t, locations[0].Name, locs[0].Name)
 
-			assert.Equal(t, locations[0].Name, name)
+			locs, err = db.LocationHandler.Get(ctx, location.ByName(locations[0].Name))
+			require.NoError(t, err)
+
+			assert.Len(t, locs, 1)
+			assert.Equal(t, locations[0].ID, locs[0].ID)
+			assert.Equal(t, locations[0].Name, locs[0].Name)
 		})
 
 		t.Run("metadata is set", func(t *testing.T) {
