@@ -21,7 +21,7 @@ func loggingMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
 
 			defer func() {
 				logger.Info("request served",
-					zap.String("transaction.id", middleware.GetReqID(r.Context())),
+					zap.String("trace.id", observability.ExtractTraceID(r.Context())),
 					zap.String("network.protocol", r.Proto),
 					zap.String("http.request.method", r.Method),
 					zap.String("url.path", r.URL.Path),

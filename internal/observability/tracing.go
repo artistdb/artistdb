@@ -16,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	otelTrace "go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/credentials"
 
 	"github.com/obitech/artist-db/internal"
@@ -117,4 +118,8 @@ func SetGlobalTracerProviderAndPropagator(tp otelTrace.TracerProvider) {
 
 func ExtractTraceID(ctx context.Context) string {
 	return otelTrace.SpanFromContext(ctx).SpanContext().TraceID().String()
+}
+
+func TraceField(ctx context.Context) zap.Field {
+	return zap.String("trace.id", ExtractTraceID(ctx))
 }
