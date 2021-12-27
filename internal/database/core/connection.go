@@ -51,7 +51,7 @@ type ConnectionPool struct {
 }
 
 func NewConnectionPool(ctx context.Context, connString string, tp otelTrace.TracerProvider) (*ConnectionPool, error) {
-	spanCtx, span := tp.Tracer(TracingInstrumentationName).Start(ctx, "connect")
+	spanCtx, span := tp.Tracer(TracingInstrumentationName).Start(ctx, "pool.connect")
 	defer span.End()
 
 	conn, err := pgxpool.Connect(spanCtx, connString)
@@ -68,7 +68,7 @@ func NewConnectionPool(ctx context.Context, connString string, tp otelTrace.Trac
 
 func (c *ConnectionPool) Ping(ctx context.Context) error {
 	start := time.Now()
-	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "ping")
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "pool.ping")
 
 	defer func(s time.Time) {
 		span.End()
@@ -85,7 +85,7 @@ func (c *ConnectionPool) Ping(ctx context.Context) error {
 
 func (c *ConnectionPool) Begin(ctx context.Context) (pgx.Tx, error) {
 	start := time.Now()
-	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "begin")
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "pool.begin")
 
 	defer func(s time.Time) {
 		span.End()
@@ -106,7 +106,7 @@ func (c *ConnectionPool) Close() {
 
 func (c *ConnectionPool) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
 	start := time.Now()
-	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "query")
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "pool.query")
 
 	defer func(s time.Time) {
 		span.End()
@@ -123,7 +123,7 @@ func (c *ConnectionPool) Query(ctx context.Context, sql string, args ...interfac
 
 func (c *ConnectionPool) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
 	start := time.Now()
-	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "query.row")
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "pool.query.row")
 
 	defer func(s time.Time) {
 		span.End()
@@ -135,7 +135,7 @@ func (c *ConnectionPool) QueryRow(ctx context.Context, sql string, args ...inter
 
 func (c *ConnectionPool) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
 	start := time.Now()
-	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "exec")
+	spanCtx, span := c.tracer.Tracer(TracingInstrumentationName).Start(ctx, "pool.exec")
 
 	defer func(s time.Time) {
 		span.End()
