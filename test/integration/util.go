@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/internal/database"
 )
@@ -24,7 +23,7 @@ func setup(t *testing.T, ctx context.Context) (*database.Database, *pgx.Conn, fu
 
 	// Wait for the database to come up.
 	do := func() bool {
-		db, err = database.NewDatabase(ctx, connString, zap.NewNop())
+		db, err = database.NewDatabase(ctx, connString)
 		return err == nil && db.Ready(ctx) == nil
 	}
 
