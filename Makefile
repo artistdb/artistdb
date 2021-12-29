@@ -72,6 +72,6 @@ test-local: stop test
 	GOPATH=$$(go env GOPATH) $(DC) up -d db
 	make test-integration
 	$(DC) down
-	$(DC) up -d
+	$(DC) up -d api db
 	make test-e2e
 	$(DC) down

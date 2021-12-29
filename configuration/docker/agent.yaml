@@ -1,0 +1,25 @@
+server:
+  http_listen_port: 12345
+
+traces:
+  configs:
+    - name: default
+      attributes:
+        actions:
+          - key: "env"
+            value: "local"
+            action: "upsert"
+      receivers:
+        jaeger:
+          protocols:
+            thrift_http:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:55680
+      remote_write:
+        - endpoint: tempo:55680
+          insecure: true
+      batch:
+        timeout: 5s
+        send_batch_size: 100

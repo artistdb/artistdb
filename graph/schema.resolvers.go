@@ -12,6 +12,7 @@ import (
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
@@ -23,7 +24,7 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 	if err := r.db.ArtistHandler.Upsert(ctx, dbArtists...); err != nil {
 		msg := "upsert failed"
 
-		r.logger.Error(msg, zap.Error(err))
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
@@ -31,7 +32,7 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 	if err != nil {
 		msg := "conversion failed"
 
-		r.logger.Error(msg, zap.Error(err))
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
@@ -40,7 +41,7 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 
 func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (bool, error) {
 	if err := r.db.ArtistHandler.DeleteByID(ctx, id); err != nil {
-		r.logger.Error("delete failed", zap.Error(err), zap.String("id", id))
+		r.logger.Error("delete failed", zap.Error(err), zap.String("id", id), observability.TraceField(ctx))
 		return false, err
 	}
 
@@ -56,7 +57,7 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 	if err := r.db.LocationHandler.Upsert(ctx, dbLocations...); err != nil {
 		msg := "upsert failed"
 
-		r.logger.Error(msg, zap.Error(err))
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
@@ -64,7 +65,7 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 	if err != nil {
 		msg := "conversion failed"
 
-		r.logger.Error(msg, zap.Error(err))
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
@@ -90,13 +91,15 @@ func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtist
 		}
 
 		if err != nil {
-			r.logger.Error("get failed", zap.Error(err))
+			r.logger.Error("get failed", zap.Error(err), observability.TraceField(ctx))
 			return nil, err
 		}
 
 		a, err := modelArtists(dbArtists...)
 		if err != nil {
-			return nil, fmt.Errorf("conversion failed: %w", err)
+			msg := "conversion failed"
+			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+			return nil, fmt.Errorf("%s: %w", msg, err)
 		}
 
 		artists = append(artists, a...)

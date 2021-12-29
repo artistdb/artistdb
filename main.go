@@ -9,13 +9,15 @@ import (
 
 	"github.com/obitech/artist-db/internal/config"
 	"github.com/obitech/artist-db/internal/database"
+	"github.com/obitech/artist-db/internal/observability"
 	"github.com/obitech/artist-db/internal/server"
 )
 
 func main() {
 	cfg := config.New()
 
-	logger, err := initLogger(cfg.LoggingMode)
+	// Logger
+	logger, err := observability.NewLogger(cfg.LoggingMode)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,7 +25,21 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	db, err := database.NewDatabase(ctx, cfg.DbConnectionString, logger)
+	// Tracer
+	tp, err := observability.NewTracerProvider(ctx, cfg)
+	if err != nil {
+		logger.Fatal("creating tracer provider failed", zap.Error(err))
+	}
+
+	observability.SetGlobalTracerProviderAndPropagator(tp)
+
+	// Database
+	db, err := database.NewDatabase(
+		ctx,
+		cfg.DbConnectionString,
+		database.WithLogger(logger),
+		database.WithTracerProvider(tp),
+	)
 	if err != nil {
 		logger.Fatal("setting up database connection failed", zap.Error(err))
 	}
@@ -41,7 +57,12 @@ func main() {
 
 	logger.Info("database initialized")
 
-	srv, err := server.NewServer(db, logger)
+	// Server
+	srv, err := server.NewServer(
+		db,
+		server.WithLogger(logger),
+		server.WithTracerProvider(tp),
+	)
 	if err != nil {
 		logger.Fatal("setting up server failed", zap.Error(err))
 	}

@@ -1,4 +1,4 @@
-package metrics
+package observability
 
 import (
 	"time"
@@ -20,7 +20,7 @@ var (
 )
 
 func init() {
-	Collector = newCollector()
+	Metrics = newCollector()
 
 	serviceCol := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
@@ -37,14 +37,14 @@ func init() {
 
 	cols := []prometheus.Collector{
 		collectors.NewBuildInfoCollector(),
-		Collector,
+		Metrics,
 		serviceCol,
 	}
 
 	prometheus.MustRegister(cols...)
 }
 
-var Collector *collector
+var Metrics *collector
 
 // collector holds all metrics.
 type collector struct {

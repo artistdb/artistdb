@@ -9,11 +9,13 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/johejo/golang-migrate-extra/source/iofs"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/database/core"
 	"github.com/obitech/artist-db/internal/database/location"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
 // Database allows interaction with the underlying Postgres.
@@ -23,21 +25,37 @@ type Database struct {
 
 	conn   core.Connection
 	logger *zap.Logger
+	tracer trace.TracerProvider
 }
 
 // NewDatabase returns a database with an active connection pool.
-func NewDatabase(ctx context.Context, connString string, logger *zap.Logger) (*Database, error) {
-	conn, err := core.NewConnectionPool(ctx, connString)
+func NewDatabase(ctx context.Context, connString string, opts ...Option) (*Database, error) {
+	tp, err := observability.NewNoOpTracerProvider()
+	if err != nil {
+		return nil, fmt.Errorf("creating default tracer provider failed: %w", err)
+	}
+
+	db := &Database{
+		logger: zap.NewNop(),
+		tracer: tp,
+	}
+
+	for _, fn := range opts {
+		if err := fn(db); err != nil {
+			return nil, fmt.Errorf("apply option failed: %w", err)
+		}
+	}
+
+	conn, err := core.NewConnectionPool(ctx, connString, db.tracer)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to DB failed: %w", err)
 	}
 
-	return &Database{
-		ArtistHandler:   artist.NewHandler(conn, logger),
-		LocationHandler: location.NewHandler(conn, logger),
-		conn:            conn,
-		logger:          logger,
-	}, nil
+	db.conn = conn
+	db.ArtistHandler = artist.NewHandler(conn, db.logger, db.tracer)
+	db.LocationHandler = location.NewHandler(conn, db.logger)
+
+	return db, nil
 }
 
 // Ready returns nil if a connection to the database can be established.

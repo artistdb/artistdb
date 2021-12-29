@@ -1,4 +1,4 @@
-package server
+package database
 
 import (
 	"errors"
@@ -7,29 +7,29 @@ import (
 	"go.uber.org/zap"
 )
 
-// Option allows customization of the default Server.
-type Option func(s *Server) error
+// Option allows customization of the default Database.
+type Option func(db *Database) error
 
 // WithLogger adds a zap logger.
 func WithLogger(logger *zap.Logger) Option {
-	return func(s *Server) error {
+	return func(db *Database) error {
 		if logger == nil {
 			return errors.New("logger is nil")
 		}
 
-		s.logger = logger
+		db.logger = logger
 		return nil
 	}
 }
 
 // WithTracerProvider adds a tracer provider.
 func WithTracerProvider(tp trace.TracerProvider) Option {
-	return func(s *Server) error {
+	return func(db *Database) error {
 		if tp == nil {
 			return errors.New("tracer provider is nil")
 		}
 
-		s.tracer = tp
+		db.tracer = tp
 		return nil
 	}
 }

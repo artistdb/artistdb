@@ -1,4 +1,4 @@
-package main
+package observability
 
 import (
 	"fmt"
@@ -9,9 +9,8 @@ import (
 	"github.com/obitech/artist-db/internal"
 )
 
-// initLogger initializes a global zap logger. The logger can be accessed via
-// zap.L()
-func initLogger(mode string) (*zap.Logger, error) {
+// NewLogger returns an initialized zap Logger.
+func NewLogger(mode string) (*zap.Logger, error) {
 	var cfg zap.Config
 
 	switch strings.ToLower(mode) {

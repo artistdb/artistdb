@@ -8,6 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
+	"go.opentelemetry.io/otel/attribute"
+	otelTrace "go.opentelemetry.io/otel/trace"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
@@ -19,29 +21,34 @@ import (
 type Handler struct {
 	conn   core.Connection
 	logger *zap.Logger
+	tracer otelTrace.TracerProvider
 }
 
 // NewHandler returns a Handler.
-func NewHandler(conn core.Connection, logger *zap.Logger) *Handler {
+func NewHandler(conn core.Connection, logger *zap.Logger, tp otelTrace.TracerProvider) *Handler {
 	return &Handler{
 		conn:   conn,
 		logger: logger,
+		tracer: tp,
 	}
 }
 
 // Upsert creates or updates one or more artists in the database.
 // Multiple artists are inserted in the same transaction
 func (h *Handler) Upsert(ctx context.Context, artists ...*Artist) error {
-	tx, err := h.conn.Begin(ctx)
+	spanCtx, span := h.tracer.Tracer(core.TracingInstrumentationName).Start(ctx, "artist.upsert")
+	defer span.End()
+
+	tx, err := h.conn.Begin(spanCtx)
 	if err != nil {
 		return fmt.Errorf("creating tx failed: %w", err)
 	}
 
-	defer core.RollbackAndLogError(ctx, tx, h.logger)
+	defer core.RollbackAndLogError(spanCtx, tx, h.logger)
 
 	var mErr error
 	for _, artist := range artists {
-		if err := h.upsertArtist(ctx, tx, artist); err != nil {
+		if err := h.upsertArtist(spanCtx, tx, artist); err != nil {
 			if errors.Is(err, pgx.ErrTxClosed) {
 				return fmt.Errorf("insert aborted, tx cancelled: %w", err)
 			}
@@ -50,7 +57,7 @@ func (h *Handler) Upsert(ctx context.Context, artists ...*Artist) error {
 		}
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(spanCtx); err != nil {
 		return fmt.Errorf("commiting tx failed: %w", err)
 	}
 
@@ -126,32 +133,37 @@ func (h *Handler) upsertArtist(ctx context.Context, tx pgx.Tx, artist *Artist) e
 }
 
 // GetRequest specifies the input for an  Artists query against the database.
-type GetRequest func() (string, string)
+type GetRequest func() (string, string, string)
 
 // ByID requests and Artist by ID.
 func ByID(id string) GetRequest {
-	return func() (string, string) {
-		return id, "id=$1"
+	return func() (string, string, string) {
+		return id, "id=$1", "id"
 	}
 }
 
 // ByArtistName requests Artists by the artists'.
 func ByArtistName(firstName string) GetRequest {
-	return func() (string, string) {
-		return firstName, "artist_name=$1"
+	return func() (string, string, string) {
+		return firstName, "artist_name=$1", "artistName"
 	}
 }
 
 // ByLastName requests Artists by last name.
 func ByLastName(lastName string) GetRequest {
-	return func() (string, string) {
-		return lastName, "last_name=$1"
+	return func() (string, string, string) {
+		return lastName, "last_name=$1", "lastName"
 	}
 }
 
 // Get retrieves Artists according to GetRequest, or an ErrNotFound.
 func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error) {
-	input, whereClause := request()
+	input, whereClause, reqType := request()
+
+	spanCtx, span := h.tracer.Tracer(core.TracingInstrumentationName).Start(ctx, "artist.get")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("type", reqType))
 
 	stmt := fmt.Sprintf(`
 		SELECT 
@@ -176,7 +188,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 
 	stmt += whereClause
 
-	rows, err := h.conn.Query(ctx, stmt, input)
+	rows, err := h.conn.Query(spanCtx, stmt, input)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, core.ErrNotFound
@@ -223,6 +235,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			&bioEn,
 			&artistName,
 		); err != nil {
+			span.RecordError(err)
 			return nil, fmt.Errorf("scanning rows failed: %w", err)
 		}
 
@@ -263,6 +276,9 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 		return core.ErrInvalidUUID
 	}
 
+	spanCtx, span := h.tracer.Tracer(core.TracingInstrumentationName).Start(ctx, "artist.delete")
+	defer span.End()
+
 	stmt := fmt.Sprintf(`
 		UPDATE 
 			"%s" 
@@ -275,11 +291,12 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 			id`, core.TableArtists)
 
 	var deletedID string
-	if err := h.conn.QueryRow(ctx, stmt, conversion.TimeP(time.Now().UTC()), id).Scan(&deletedID); err != nil {
+	if err := h.conn.QueryRow(spanCtx, stmt, conversion.TimeP(time.Now().UTC()), id).Scan(&deletedID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return core.ErrNotFound
 		}
 
+		span.RecordError(err)
 		return err
 	}
 
