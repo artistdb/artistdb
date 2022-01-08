@@ -13,10 +13,12 @@ import (
 )
 
 const (
-	commandBegin = "begin"
-	commandPing  = "ping"
-	commandQuery = "query"
-	commandExec  = "exec"
+	commandBegin    = "begin"
+	commandPing     = "ping"
+	commandQuery    = "query"
+	commandExec     = "exec"
+	commandCommit   = "commit"
+	commandRollback = "rollback"
 )
 
 const (
@@ -57,6 +59,7 @@ func NewConnectionPool(ctx context.Context, connString string, tp otelTrace.Trac
 	conn, err := pgxpool.Connect(spanCtx, connString)
 	if err != nil {
 		span.RecordError(err)
+		observability.Metrics.TrackCommandError("connect")
 		return nil, err
 	}
 
@@ -77,6 +80,7 @@ func (c *ConnectionPool) Ping(ctx context.Context) error {
 
 	if err := c.pool.Ping(spanCtx); err != nil {
 		span.RecordError(err)
+		observability.Metrics.TrackCommandError(commandPing)
 		return err
 	}
 
@@ -95,9 +99,14 @@ func (c *ConnectionPool) Begin(ctx context.Context) (pgx.Tx, error) {
 	res, err := c.pool.Begin(spanCtx)
 	if err != nil {
 		span.RecordError(err)
+		observability.Metrics.TrackCommandError(commandBegin)
+		return nil, err
 	}
 
-	return res, err
+	return &Tx{
+		Tx:     res,
+		tracer: c.tracer,
+	}, err
 }
 
 func (c *ConnectionPool) Close() {
@@ -116,6 +125,7 @@ func (c *ConnectionPool) Query(ctx context.Context, sql string, args ...interfac
 	res, err := c.pool.Query(spanCtx, sql, args...)
 	if err != nil {
 		span.RecordError(err)
+		observability.Metrics.TrackCommandError(commandQuery)
 	}
 
 	return res, err
@@ -145,6 +155,7 @@ func (c *ConnectionPool) Exec(ctx context.Context, sql string, args ...interface
 	res, err := c.pool.Exec(spanCtx, sql, args...)
 	if err != nil {
 		span.RecordError(err)
+		observability.Metrics.TrackCommandError(commandExec)
 	}
 
 	return res, err

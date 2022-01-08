@@ -11,6 +11,11 @@ import (
 
 	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database/core"
+	"github.com/obitech/artist-db/internal/observability"
+)
+
+const (
+	entityLocation = "locations"
 )
 
 // DeleteByID deletes a Location by ID.
@@ -36,12 +41,15 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 			return core.ErrNotFound
 		}
 
+		observability.Metrics.TrackObjectError(entityLocation, "delete")
 		return err
 	}
 
 	if deletedID == "" {
 		return core.ErrNotFound
 	}
+
+	observability.Metrics.TrackObjectsChanged(1, entityLocation, "delete")
 
 	return nil
 }
