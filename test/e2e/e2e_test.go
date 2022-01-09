@@ -38,8 +38,6 @@ func TestServerIntegration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	httpClient := &http.Client{}
-
 	// This should always be the first test in this suite.
 	t.Run("health endpoint is reachable", func(t *testing.T) {
 		do := func() bool {
