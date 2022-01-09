@@ -113,4 +113,5 @@ type Mutation {
   upsertArtists(input: [ArtistInput!]): [Artist!]
   deleteArtistByID(id: ID!): Boolean!
   upsertLocations(input: [LocationInput!]): [Location!]
+  deleteLocationByID(input: ID!): Boolean!
 }
