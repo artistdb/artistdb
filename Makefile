@@ -1,3 +1,4 @@
+D := docker
 DC ?= docker-compose
 GO := go
 FN := frontend/
@@ -36,7 +37,8 @@ start-api: stop
 
 .PHONY: start-frontend
 start-frontend: stop
-	cd $(FN) && ng serve
+	$(DC) up frontend -d
+	sleep 30
 
 .PHONY: gen-graph
 gen-graph:
@@ -65,7 +67,7 @@ test-e2e:
 
 .PHONY: test-frontend
 test-frontend:
-	cd $(FN) && ng test
+	$(D) exec frontend ng test
 
 .PHONY: test-local
 test-local: stop test
