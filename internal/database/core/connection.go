@@ -19,6 +19,7 @@ const (
 	commandExec     = "exec"
 	commandCommit   = "commit"
 	commandRollback = "rollback"
+	commandConnect  = "connect"
 )
 
 const (
@@ -59,7 +60,7 @@ func NewConnectionPool(ctx context.Context, connString string, tp otelTrace.Trac
 	conn, err := pgxpool.Connect(spanCtx, connString)
 	if err != nil {
 		span.RecordError(err)
-		observability.Metrics.TrackCommandError("connect")
+		observability.Metrics.TrackCommandError(commandConnect)
 		return nil, err
 	}
 
