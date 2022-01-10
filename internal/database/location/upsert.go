@@ -10,6 +10,7 @@ import (
 	"go.uber.org/multierr"
 
 	"github.com/obitech/artist-db/internal/database/core"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
 // Upsert inserts or updates Locations.
@@ -21,20 +22,28 @@ func (h *Handler) Upsert(ctx context.Context, locations ...*Location) error {
 
 	defer core.RollbackAndLogError(ctx, tx, h.logger)
 
-	var mErr error
+	var (
+		mErr    error
+		changed int
+	)
 	for _, location := range locations {
 		if err := h.upsert(ctx, tx, location); err != nil {
 			if errors.Is(err, pgx.ErrTxClosed) {
 				return fmt.Errorf("insert aborted, tx cancelled: %w", err)
 			}
 
+			observability.Metrics.TrackObjectError(entityLocation, "upsert")
+
 			mErr = multierr.Append(mErr, err)
 		}
+		changed++
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("commiting tx failed: %w", err)
 	}
+
+	observability.Metrics.TrackObjectsChanged(changed, entityLocation, "upsert")
 
 	return mErr
 }

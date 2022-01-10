@@ -15,6 +15,11 @@ import (
 
 	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database/core"
+	"github.com/obitech/artist-db/internal/observability"
+)
+
+const (
+	entityArtist = "artist"
 )
 
 // Handler returns a DB Handler which operates on Artists.
@@ -46,20 +51,28 @@ func (h *Handler) Upsert(ctx context.Context, artists ...*Artist) error {
 
 	defer core.RollbackAndLogError(spanCtx, tx, h.logger)
 
-	var mErr error
+	var (
+		mErr           error
+		artistsChanged int
+	)
 	for _, artist := range artists {
 		if err := h.upsertArtist(spanCtx, tx, artist); err != nil {
 			if errors.Is(err, pgx.ErrTxClosed) {
 				return fmt.Errorf("insert aborted, tx cancelled: %w", err)
 			}
 
+			observability.Metrics.TrackObjectError(entityArtist, "upsert")
 			mErr = multierr.Append(mErr, err)
+		} else {
+			artistsChanged++
 		}
 	}
 
 	if err := tx.Commit(spanCtx); err != nil {
 		return fmt.Errorf("commiting tx failed: %w", err)
 	}
+
+	observability.Metrics.TrackObjectsChanged(artistsChanged, entityArtist, "upsert")
 
 	return mErr
 }
@@ -194,6 +207,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			return nil, core.ErrNotFound
 		}
 
+		observability.Metrics.TrackObjectError(entityArtist, "get")
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
 
@@ -236,6 +250,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			&artistName,
 		); err != nil {
 			span.RecordError(err)
+			observability.Metrics.TrackObjectError(entityArtist, "get")
 			return nil, fmt.Errorf("scanning rows failed: %w", err)
 		}
 
@@ -265,6 +280,8 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 	if len(artists) == 0 {
 		return nil, core.ErrNotFound
 	}
+
+	observability.Metrics.TrackObjectsRetrieved(len(artists), entityArtist)
 
 	return artists, nil
 }
@@ -296,6 +313,7 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 			return core.ErrNotFound
 		}
 
+		observability.Metrics.TrackObjectError(entityArtist, "delete")
 		span.RecordError(err)
 		return err
 	}
@@ -303,6 +321,8 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 	if deletedID == "" {
 		return core.ErrNotFound
 	}
+
+	observability.Metrics.TrackObjectsChanged(1, entityArtist, "delete")
 
 	return nil
 }

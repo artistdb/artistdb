@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4"
 
 	"github.com/obitech/artist-db/internal/database/core"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
 // GetRequest specifies the input for an  Artists query against the database.
@@ -47,6 +48,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Location, err
 			return nil, core.ErrNotFound
 		}
 
+		observability.Metrics.TrackObjectError(entityLocation, "get")
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
 
@@ -64,6 +66,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Location, err
 			&id,
 			&name,
 		); err != nil {
+			observability.Metrics.TrackObjectError(entityLocation, "get")
 			return nil, fmt.Errorf("scanning rows failed: %w", err)
 		}
 
@@ -76,6 +79,8 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Location, err
 	if len(locations) == 0 {
 		return nil, core.ErrNotFound
 	}
+
+	observability.Metrics.TrackObjectsRetrieved(len(locations), entityLocation)
 
 	return locations, nil
 }
