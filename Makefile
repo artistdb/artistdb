@@ -37,8 +37,7 @@ start-api: stop
 
 .PHONY: start-frontend
 start-frontend: stop
-	$(DC) up frontend -d
-	sleep 30
+	$(DC) up frontend
 
 .PHONY: gen-graph
 gen-graph:
@@ -67,6 +66,8 @@ test-e2e:
 
 .PHONY: test-frontend
 test-frontend:
+	$(DC) up -d frontend 
+	sleep 30
 	$(D) exec frontend ng test
 
 .PHONY: test-local
