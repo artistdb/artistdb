@@ -68,6 +68,18 @@ services:
       - "14268" # jaeger thrift
       - "12345" # http
 
+  frontend:
+    image: node:16-alpine
+    container_name: frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - "./frontend:/app:rw" 
+      - "/app/node_modules"
+    ports:
+      - "4200:4200"
+      - "9876:9876"
+    entrypoint: [/app/entrypoint.sh]
 
 volumes:
   tempo-data:
