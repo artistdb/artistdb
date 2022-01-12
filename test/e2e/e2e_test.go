@@ -189,6 +189,8 @@ func TestServerIntegration(t *testing.T) {
 	})
 
 	t.Run("test locations endpoints", func(t *testing.T) {
+		var testID string
+
 		t.Run("insertion of single location works", func(t *testing.T) {
 			str := `{"query": 
 			"mutation { upsertLocations(input: [{name: \"Tille\"}]) { id name }}"}`
@@ -199,36 +201,18 @@ func TestServerIntegration(t *testing.T) {
 			require.Len(t, result.Data.UpsertLocations, 1)
 			assert.NotEmpty(t, result.Data.UpsertLocations[0].ID)
 			assert.Equal(t, "Tille", result.Data.UpsertLocations[0].Name)
+
+			testID = result.Data.UpsertLocations[0].ID
 		})
-	})
 
-	t.Run("deletion of single location works", func(t *testing.T) {
-		str := fmt.Sprintf(`{"query": "mutation {deleteLocationByID(input: \"%s\")}"}`, testID)
+		t.Run("deletion of single location works", func(t *testing.T) {
+			str := fmt.Sprintf(`{"query": "mutation { deleteLocationByID(input: \"%s\")}"}`, testID)
 
-		body := strings.NewReader(str)
+			result := graphQuery(t, ctx, str)
+			require.Len(t, result.Errors, 0, result.Errors)
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8080/query", body)
-		require.NoError(t, err)
-
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := httpClient.Do(req)
-		require.NoError(t, err)
-
-		defer func() {
-			require.NoError(t, resp.Body.Close())
-		}()
-
-		got, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-
-		var result gqlresp
-
-		unmarshalErr := json.Unmarshal(got, &result)
-		require.NoError(t, unmarshalErr)
-		require.Len(t, result.Errors, 0, result.Errors)
-
-		assert.Equal(t, true, result.Data.DeleteLocationByID)
+			assert.Equal(t, true, result.Data.DeleteLocationByID)
+		})
 	})
 
 	// This should always be the last test in this suite.
