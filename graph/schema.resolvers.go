@@ -7,12 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/zap"
-
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/observability"
+	"go.uber.org/zap"
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
@@ -72,6 +71,15 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 	return ret, nil
 }
 
+func (r *mutationResolver) DeleteLocationByID(ctx context.Context, input string) (bool, error) {
+	if err := r.db.LocationHandler.DeleteByID(ctx, input); err != nil {
+		r.logger.Error("delete failed", zap.Error(err), zap.String("id", input), observability.TraceField(ctx))
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error) {
 	var artists []*model.Artist
 
@@ -114,7 +122,5 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type (
-	mutationResolver struct{ *Resolver }
-	queryResolver    struct{ *Resolver }
-)
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

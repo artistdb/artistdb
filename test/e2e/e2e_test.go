@@ -22,10 +22,11 @@ type graphQLResponse struct {
 }
 
 type data struct {
-	GetArtists       []model.Artist   `json:"getArtists"`
-	UpsertArtists    []model.Artist   `json:"upsertArtists"`
-	DeleteArtistByID bool             `json:"deleteArtistByID"`
-	UpsertLocations  []model.Location `json:"upsertLocations"`
+	GetArtists         []model.Artist   `json:"getArtists"`
+	UpsertArtists      []model.Artist   `json:"upsertArtists"`
+	DeleteArtistByID   bool             `json:"deleteArtistByID"`
+	UpsertLocations    []model.Location `json:"upsertLocations"`
+	DeleteLocationByID bool             `json:"deleteLocationByID"`
 }
 
 type graphQLError struct {
@@ -188,6 +189,8 @@ func TestServerIntegration(t *testing.T) {
 	})
 
 	t.Run("test locations endpoints", func(t *testing.T) {
+		var testID string
+
 		t.Run("insertion of single location works", func(t *testing.T) {
 			str := `{"query": 
 			"mutation { upsertLocations(input: [{name: \"Tille\"}]) { id name }}"}`
@@ -198,6 +201,17 @@ func TestServerIntegration(t *testing.T) {
 			require.Len(t, result.Data.UpsertLocations, 1)
 			assert.NotEmpty(t, result.Data.UpsertLocations[0].ID)
 			assert.Equal(t, "Tille", result.Data.UpsertLocations[0].Name)
+
+			testID = result.Data.UpsertLocations[0].ID
+		})
+
+		t.Run("deletion of single location works", func(t *testing.T) {
+			str := fmt.Sprintf(`{"query": "mutation { deleteLocationByID(input: \"%s\")}"}`, testID)
+
+			result := graphQuery(t, ctx, str)
+			require.Len(t, result.Errors, 0, result.Errors)
+
+			assert.Equal(t, true, result.Data.DeleteLocationByID)
 		})
 	})
 
