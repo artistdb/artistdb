@@ -67,7 +67,7 @@ test-e2e:
 .PHONY: test-frontend
 test-frontend:
 	$(DC) up -d frontend 
-	sleep 30
+	sleep 60
 	$(D) exec frontend ng test
 
 .PHONY: test-local
