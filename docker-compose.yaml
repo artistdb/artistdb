@@ -69,7 +69,7 @@ services:
       - "12345" # http
 
   frontend:
-    image: node:16-alpine
+    image: node:14-alpine
     container_name: frontend
     restart: unless-stopped
     working_dir: /app
@@ -77,8 +77,8 @@ services:
       - "./frontend:/app:rw" 
       - "/app/node_modules"
     ports:
-      - "4200:4200"
-      - "9876:9876"
+      - "4200:4200" # dev server
+      - "9876:9876" # testing via karma
     entrypoint: [/app/entrypoint.sh]
 
 volumes:
