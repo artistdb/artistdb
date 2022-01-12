@@ -36,11 +36,6 @@ func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.Art
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
-	ret, err := conversion.ArtistToGenArtist(artists) 
-	if err != nil {
-		return nil, fmt.Errorf("conversion failed: %w", err)
-	}
-
 	return ret, nil
 }
 
