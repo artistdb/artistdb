@@ -9,27 +9,43 @@ import (
 
 	"github.com/obitech/artist-db/internal/config"
 	"github.com/obitech/artist-db/internal/database"
+	"github.com/obitech/artist-db/internal/observability"
 	"github.com/obitech/artist-db/internal/server"
 )
 
 func main() {
 	cfg := config.New()
 
-	if err := initLogger(cfg.LoggingMode); err != nil {
+	// Logger
+	logger, err := observability.NewLogger(cfg.LoggingMode)
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	logger := zap.L().With(zap.String("component", "main"))
+	// Tracer
+	tp, err := observability.NewTracerProvider(ctx, cfg)
+	if err != nil {
+		logger.Fatal("creating tracer provider failed", zap.Error(err))
+	}
 
-	db, err := database.NewDatabase(ctx, cfg.DbConnectionString)
+	observability.SetGlobalTracerProviderAndPropagator(tp)
+
+	// Database
+	db, err := database.NewDatabase(
+		ctx,
+		cfg.DbConnectionString,
+		database.WithLogger(logger),
+		database.WithTracerProvider(tp),
+	)
 	if err != nil {
 		logger.Fatal("setting up database connection failed", zap.Error(err))
 	}
 
 	defer db.Close()
+	defer logger.Sync()
 
 	if err := db.Ready(ctx); err != nil {
 		logger.Fatal("database not ready", zap.Error(err))
@@ -41,7 +57,12 @@ func main() {
 
 	logger.Info("database initialized")
 
-	srv, err := server.NewServer(db)
+	// Server
+	srv, err := server.NewServer(
+		db,
+		server.WithLogger(logger),
+		server.WithTracerProvider(tp),
+	)
 	if err != nil {
 		logger.Fatal("setting up server failed", zap.Error(err))
 	}

@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   api:
-    image: obitech/go-build-tools
+    image: obitech/go-build-tools:v1.17.5
     working_dir: /app
     volumes:
       - ".:/app"
@@ -17,6 +17,7 @@ services:
       - "8080:8080"
     depends_on:
       - db
+      - agent
   db:
     image: postgres:12-alpine
     restart: unless-stopped
@@ -24,3 +25,61 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+
+  tempo:
+    image: grafana/tempo:latest
+    command:  [ "-search.enabled=true", "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - "./configuration/docker/tempo.yaml:/etc/tempo.yaml:ro"
+      - "./configuration/docker/overrides.yaml:/etc/overrides.yaml:ro"
+      - tempo-data:/tmp/tempo
+    ports:
+      - "3200"   # tempo
+      - "55680"  # otlp grpc
+
+  grafana:
+    image: grafana/grafana:8.3.3
+    volumes:
+      - "./configuration/docker/grafana.ini:/etc/grafana/grafana.ini:ro"
+      - "./configuration/docker/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus:latest
+    command: [ "--config.file=/etc/prometheus.yaml" ]
+    volumes:
+      - "./configuration/docker/prometheus.yaml:/etc/prometheus.yaml:ro"
+    ports:
+      - "9090:9090"
+
+  agent:
+    image: grafana/agent:v0.21.2
+    command: [ "-config.file=/etc/agent.yaml" ]
+    restart: unless-stopped
+    volumes:
+      - "./configuration/docker/agent.yaml:/etc/agent.yaml:ro"
+    ports:
+      - "55680" # otlp grpc
+      - "14268" # jaeger thrift
+      - "12345" # http
+
+  frontend:
+    image: node:16-alpine
+    container_name: frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - "./frontend:/app:rw" 
+      - "/app/node_modules"
+    ports:
+      - "4200:4200"
+      - "9876:9876"
+    entrypoint: [/app/entrypoint.sh]
+
+volumes:
+  tempo-data:

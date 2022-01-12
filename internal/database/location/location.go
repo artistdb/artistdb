@@ -1,4 +1,4 @@
-package model
+package location
 
 import "github.com/google/uuid"
 
@@ -7,6 +7,6 @@ type Location struct {
 	Name string
 }
 
-func NewLocation() Location {
+func New() Location {
 	return Location{ID: uuid.New().String()}
 }

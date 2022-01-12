@@ -1,4 +1,4 @@
-package model
+package artist
 
 import (
 	"testing"
@@ -7,5 +7,5 @@ import (
 )
 
 func TestNewArtist(t *testing.T) {
-	require.NotEmpty(t, NewArtist().ID)
+	require.NotEmpty(t, New().ID)
 }

@@ -1,4 +1,4 @@
-package database
+package location
 
 import (
 	"context"
@@ -9,36 +9,46 @@ import (
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/multierr"
 
-	"github.com/obitech/artist-db/internal/database/model"
+	"github.com/obitech/artist-db/internal/database/core"
+	"github.com/obitech/artist-db/internal/observability"
 )
 
-func (db *Database) UpsertLocations(ctx context.Context, locations ...*model.Location) error {
-	tx, err := db.conn.Begin(ctx)
+// Upsert inserts or updates Locations.
+func (h *Handler) Upsert(ctx context.Context, locations ...*Location) error {
+	tx, err := h.conn.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("creating tx failed: %w", err)
 	}
 
-	defer rollbackAndLogError(ctx, tx)
+	defer core.RollbackAndLogError(ctx, tx, h.logger)
 
-	var mErr error
+	var (
+		mErr    error
+		changed int
+	)
 	for _, location := range locations {
-		if err := db.upsertLocation(ctx, tx, location); err != nil {
+		if err := h.upsert(ctx, tx, location); err != nil {
 			if errors.Is(err, pgx.ErrTxClosed) {
 				return fmt.Errorf("insert aborted, tx cancelled: %w", err)
 			}
 
+			observability.Metrics.TrackObjectError(entityLocation, "upsert")
+
 			mErr = multierr.Append(mErr, err)
 		}
+		changed++
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("commiting tx failed: %w", err)
 	}
 
+	observability.Metrics.TrackObjectsChanged(changed, entityLocation, "upsert")
+
 	return mErr
 }
 
-func (db *Database) upsertLocation(ctx context.Context, tx pgx.Tx, location *model.Location) error {
+func (h *Handler) upsert(ctx context.Context, tx pgx.Tx, location *Location) error {
 	start := time.Now().UTC()
 
 	stmt := fmt.Sprintf(`
@@ -56,7 +66,7 @@ func (db *Database) upsertLocation(ctx context.Context, tx pgx.Tx, location *mod
 		DO UPDATE SET
 			updated_at=$3,
 			name=$4,
-			deleted_at=NULL`, TableLocations)
+			deleted_at=NULL`, core.TableLocations)
 
 	if _, err := tx.Exec(ctx, stmt,
 		location.ID,   // $1
