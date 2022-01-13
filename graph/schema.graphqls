@@ -105,8 +105,14 @@ input GetArtistInput {
   artistName: String
 }
 
+input GetLocationInput {
+  id: ID
+  name: String
+}
+
 type Query {
   getArtists(input: [GetArtistInput!]): [Artist]
+  getLocations(input: [GetLocationInput!]): [Location]
 }
 
 type Mutation {

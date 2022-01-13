@@ -84,6 +84,11 @@ type GetArtistInput struct {
 	ArtistName *string `json:"artistName"`
 }
 
+type GetLocationInput struct {
+	ID   *string `json:"id"`
+	Name *string `json:"name"`
+}
+
 type InvitedArtist struct {
 	Artist         *Artist `json:"artist"`
 	Event          *Event  `json:"event"`

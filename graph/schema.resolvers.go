@@ -10,6 +10,7 @@ import (
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
+	"github.com/obitech/artist-db/internal/database/location"
 	"github.com/obitech/artist-db/internal/observability"
 	"go.uber.org/zap"
 )
@@ -114,6 +115,40 @@ func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtist
 	}
 
 	return artists, nil
+}
+
+func (r *queryResolver) GetLocations(ctx context.Context, input []*model.GetLocationInput) ([]*model.Location, error) {
+	var locations []*model.Location
+
+	for i := range input {
+		var (
+			dbLocations []*location.Location
+			err         error
+		)
+
+		switch {
+		case input[i].ID != nil:
+			dbLocations, err = r.db.LocationHandler.Get(ctx, location.ByID(*input[i].ID))
+		case input[i].Name != nil:
+			dbLocations, err = r.db.LocationHandler.Get(ctx, location.ByName(*input[i].Name))
+		}
+
+		if err != nil {
+			r.logger.Error("get failed", zap.Error(err), observability.TraceField(ctx))
+			return nil, err
+		}
+
+		l, err := modelLocations(dbLocations...)
+		if err != nil {
+			msg := "conversion failed"
+			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+			return nil, fmt.Errorf("%s: %w", msg, err)
+		}
+
+		locations = append(locations, l...)
+	}
+
+	return locations, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
