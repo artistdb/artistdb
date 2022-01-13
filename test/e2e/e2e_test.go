@@ -25,6 +25,7 @@ type data struct {
 	GetArtists         []model.Artist   `json:"getArtists"`
 	UpsertArtists      []model.Artist   `json:"upsertArtists"`
 	DeleteArtistByID   bool             `json:"deleteArtistByID"`
+	GetLocations       []model.Location `json:"getLocations"`
 	UpsertLocations    []model.Location `json:"upsertLocations"`
 	DeleteLocationByID bool             `json:"deleteLocationByID"`
 }
@@ -203,6 +204,36 @@ func TestServerIntegration(t *testing.T) {
 			assert.Equal(t, "Tille", result.Data.UpsertLocations[0].Name)
 
 			testID = result.Data.UpsertLocations[0].ID
+		})
+
+		t.Run("retrieval of single location by ID works", func(t *testing.T) {
+			str := fmt.Sprintf(`{"query": "{getLocations(input: [{id: \"%s\"}]){id name}}"}`, testID)
+
+			result := graphQuery(t, ctx, str)
+			require.Len(t, result.Errors, 0, result.Errors)
+
+			require.Len(t, result.Data.GetLocations, 1)
+			assert.Equal(t, testID, result.Data.GetLocations[0].ID)
+		})
+
+		t.Run("retrieval of single location by name works", func(t *testing.T) {
+			str := fmt.Sprintf(`{"query": "{getLocations(input: [{name: \"%s\"}]){id name}}"}`, "Tille")
+
+			result := graphQuery(t, ctx, str)
+			require.Len(t, result.Errors, 0, result.Errors)
+
+			require.Len(t, result.Data.GetLocations, 1)
+			assert.Equal(t, "Tille", result.Data.GetLocations[0].Name)
+		})
+
+		t.Run("Retrieval with invalid ID throws error", func(t *testing.T) {
+			str := fmt.Sprintf(`{"query": "{getLocations(input: [{id: \"%s\"}]){id name}}"}`, "bogusßß")
+
+			result := graphQuery(t, ctx, str)
+			require.Len(t, result.Errors, 1, result.Errors)
+
+			require.Len(t, result.Data.GetLocations, 0)
+			assert.Contains(t, result.Errors[0].Message, "resource not found")
 		})
 
 		t.Run("deletion of single location works", func(t *testing.T) {
