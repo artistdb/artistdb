@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormControl} from '@angular/forms';
+import { Component, Input, OnInit } from '@angular/core';
+import { FormGroup, FormControl, Validators, FormArray} from '@angular/forms';
+import { UpsertArtists, ArtistInput } from '../graphql/artist.service';
 
 @Component({
   selector: 'app-artist',
@@ -8,17 +9,17 @@ import { FormGroup, FormControl} from '@angular/forms';
 })
 export class ArtistComponent implements OnInit {
 
-  constructor() { }
+  constructor(private upsertArtists: UpsertArtists) { }
 
   ngOnInit(): void {
   }
 
   artistForm = new FormGroup({
-    firstName: new FormControl(''),
-    lastName: new FormControl(''),
+    firstName: new FormControl('kai', Validators.required),
+    lastName: new FormControl('uwe', Validators.required),
     artistName: new FormControl(''),
-    pronouns: new FormControl(''),
-    dateOfBirth: new FormControl(''),
+    pronouns: new FormControl(['']),
+    dateOfBirth: new FormControl(),
     placeOfBirth: new FormControl(''),
     nationality: new FormControl(''),
     language:new FormControl(''),
@@ -29,4 +30,41 @@ export class ArtistComponent implements OnInit {
     bioEnglish:new FormControl(''),
   });
 
+  @Input()
+  artists: ArtistInput[] = [
+    {
+      firstName: this.artistForm.get('firstName')?.value,
+      lastName: this.artistForm.get('lastName')?.value,
+      artistName: this.artistForm.get('artistName')?.value,
+      pronouns: this.artistForm.get('pronouns')?.value,
+      dateOfBirth: this.artistForm.get('dateOfBirth')?.value,
+      placeOfBirth: this.artistForm.get('placeOfBirth')?.value,
+      nationality: this.artistForm.get('nationality')?.value,
+      language:this.artistForm.get('language')?.value,
+      facebook: this.artistForm.get('facebook')?.value,
+      instagram: this.artistForm.get('instagram')?.value,
+      bandcamp: this.artistForm.get('bandcamp')?.value,
+      bioGer: this.artistForm.get('bioGerman')?.value,
+      bioEn:this.artistForm.get('bioEnglish')?.value, 
+    }
+  ]
+
+  onSubmit() {  
+    console.log(this.artists)
+    this.upsertArtists
+      .mutate({
+        artists: this.artists,
+      }).subscribe(
+        ((error: any) => {
+          console.error(error)
+        }),
+        //((data: any) => {
+        //  console.log(data)
+        //}),
+        //((query: any) => {
+        //  console.log(query)
+        //  console.log(this.artists)
+        //}) 
+      );
+  }
 }

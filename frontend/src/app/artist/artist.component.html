@@ -1,4 +1,4 @@
-<form [formGroup]="artistForm">
+<form [formGroup]="artistForm" (ngSubmit)="onSubmit()" #form="ngForm">   
     <label for="first-name">First Name: </label>
     <input id="first-name" type="text" formControlName="firstName">
 
@@ -37,4 +37,6 @@
 
     <label for="bio-english">Your Bio (in English): </label>
     <input id="bio-english" type="text" formControlName="bioEnglish">
+
+    <button>Submit</button>
 </form>
