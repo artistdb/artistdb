@@ -1,42 +1,68 @@
-<form [formGroup]="artistForm" (ngSubmit)="onSubmit()" #form="ngForm">   
-    <label for="first-name">First Name: </label>
-    <input id="first-name" type="text" formControlName="firstName">
+<form [formGroup]="artistForm" (ngSubmit)="onSubmit()">
+    <div class="ctrl --first-name">
+        <label for="first-name">First Name: </label>
+        <input id="first-name" type="text" formControlName="firstName">
+    </div>
 
-    <label for="last-name">Last Name: </label>
-    <input id="last-name" type="text" formControlName="lastName">
+    <div class="ctrl --last-name">
+        <label for="last-name">Last Name: </label>
+        <input id="last-name" type="text" formControlName="lastName">
+    </div>
 
-    <label for="artist-name">Artist Name: </label>
-    <input id="artist-name" type="text" formControlName="artistName">
+    <div class="ctrl --artist-name">
+        <label for="artist-name">Artist Name: </label>
+        <input id="artist-name" type="text" formControlName="artistName">
+    </div>
 
-    <label for="pronouns">Pronouns: </label>
-    <input id="pronouns" type="text" formControlName="pronouns">
+    <div class="ctrl --pronouns">
+        <label for="pronouns">Pronouns: </label>
+        <input id="pronouns" type="text" formControlName="pronouns">
+    </div>
 
-    <label for="date-of-birth">Date of Birth: </label>
-    <input id="date-of-birth" type="datetime" formControlName="dateOfBirth">
+    <div class="ctrl --date-of-birth">
+        <label for="date-of-birth">Date of Birth: </label>
+        <input id="date-of-birth" type="datetime" formControlName="dateOfBirth">
+    </div>
 
-    <label for="place-of-birth">Place of Birth: </label>
-    <input id="place-of-birth" type="text" formControlName="placeOfBirth">
+    <div class="ctrl --place-of-birth">
+        <label for="place-of-birth">Place of Birth: </label>
+        <input id="place-of-birth" type="text" formControlName="placeOfBirth">
+    </div>
 
-    <label for="nationality">Nationality: </label>
-    <input id="nationality" type="text" formControlName="nationality">
+    <div class="ctrl --nationality">
+        <label for="nationality">Nationality: </label>
+        <input id="nationality" type="text" formControlName="nationality">
+    </div>
 
-    <label for="language">Language: </label>
-    <input id="language" type="text" formControlName="language">
+    <div class="ctrl --language">
+        <label for="language">Language: </label>
+        <input id="language" type="text" formControlName="language">
+    </div>
 
-    <label for="facebook">Facebook: </label>
-    <input id="facebook" type="url" formControlName="facebook">
+    <div class="ctrl --facebook">
+        <label for="facebook">Facebook: </label>
+        <input id="facebook" type="url" formControlName="facebook">
+    </div>
 
-    <label for="instagram">Instagram: </label>
-    <input id="instagram" type="url" formControlName="instagram">
+    <div class="ctrl --instagram">
+        <label for="instagram">Instagram: </label>
+        <input id="instagram" type="url" formControlName="instagram">
+    </div>
 
-    <label for="bandcamp">Bandcamp: </label>
-    <input id="bandcamp" type="url" formControlName="bandcamp">
+    <div class="ctrl --bandcamp">
+        <label for="bandcamp">Bandcamp: </label>
+        <input id="bandcamp" type="url" formControlName="bandcamp">
+    </div>
 
-    <label for="bio-german">Your Bio (in German): </label>
-    <input id="bio-german" type="text" formControlName="bioGerman">
+    <div class="ctrl --bio-german">
+        <label for="bio-german">Your Bio (in German): </label>
+        <input id="bio-german" type="text" formControlName="bioGerman">
+    </div>
 
-    <label for="bio-english">Your Bio (in English): </label>
-    <input id="bio-english" type="text" formControlName="bioEnglish">
+    <div class="ctrl --bio-english">
+        <label for="bio-english">Your Bio (in English): </label>
+        <input id="bio-english" type="text" formControlName="bioEnglish">
+    </div>
 
     <button>Submit</button>
 </form>
