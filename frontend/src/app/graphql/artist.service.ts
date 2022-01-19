@@ -6,7 +6,7 @@ export interface ArtistInput {
   lastName: string;
   artistName?: string;
   pronouns?: [string];
-  dateOfBirth?: [Date];
+  // dateOfBirth?: [Date];
   placeOfBirth?: string;
   nationality?: string;
   language?: string;

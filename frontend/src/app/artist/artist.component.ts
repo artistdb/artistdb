@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormGroup, FormControl, Validators, FormArray} from '@angular/forms';
+import { FormGroup, FormControl, Validators} from '@angular/forms';
 import { UpsertArtists, ArtistInput } from '../graphql/artist.service';
 
 @Component({
@@ -15,11 +15,11 @@ export class ArtistComponent implements OnInit {
   }
 
   artistForm = new FormGroup({
-    firstName: new FormControl('kai', Validators.required),
-    lastName: new FormControl('uwe', Validators.required),
+    firstName: new FormControl(''),
+    lastName: new FormControl(''),
     artistName: new FormControl(''),
     pronouns: new FormControl(['']),
-    dateOfBirth: new FormControl(),
+    // dateOfBirth: new FormControl(),
     placeOfBirth: new FormControl(''),
     nationality: new FormControl(''),
     language:new FormControl(''),
@@ -37,7 +37,7 @@ export class ArtistComponent implements OnInit {
       lastName: this.artistForm.get('lastName')?.value,
       artistName: this.artistForm.get('artistName')?.value,
       pronouns: this.artistForm.get('pronouns')?.value,
-      dateOfBirth: this.artistForm.get('dateOfBirth')?.value,
+      // dateOfBirth: this.artistForm.get('dateOfBirth')?.value,
       placeOfBirth: this.artistForm.get('placeOfBirth')?.value,
       nationality: this.artistForm.get('nationality')?.value,
       language:this.artistForm.get('language')?.value,
@@ -58,13 +58,6 @@ export class ArtistComponent implements OnInit {
         ((error: any) => {
           console.error(error)
         }),
-        //((data: any) => {
-        //  console.log(data)
-        //}),
-        //((query: any) => {
-        //  console.log(query)
-        //  console.log(this.artists)
-        //}) 
       );
   }
 }
