@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators} from '@angular/forms';
-import { UpsertArtists, ArtistInput } from '../graphql/artist.service';
+import { UpsertArtists } from '../graphql/artist.service';
+import { ArtistInput } from './artist.model.component';
 
 @Component({
   selector: 'app-artist',
