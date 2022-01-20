@@ -15,8 +15,8 @@ export class ArtistComponent implements OnInit {
   }
 
   artistForm = new FormGroup({
-    firstName: new FormControl(''),
-    lastName: new FormControl(''),
+    firstName: new FormControl('', Validators.required),
+    lastName: new FormControl('', Validators.required),
     artistName: new FormControl(''),
     pronouns: new FormControl(['']),
     // dateOfBirth: new FormControl(),

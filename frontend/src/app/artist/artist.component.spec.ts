@@ -2,10 +2,16 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
 import { ArtistComponent } from './artist.component';
+import { ArtistInput } from '../graphql/artist.service'
 
 describe('ArtistComponent', () => {
   let component: ArtistComponent;
   let fixture: ComponentFixture<ArtistComponent>;
+
+  var testArtist: ArtistInput = {
+    firstName: "Kai",
+    lastName: "Uwe",
+  }
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -277,11 +283,26 @@ describe('ArtistComponent', () => {
     });
   });
 
-  describe('Submit Button', () => {
+  describe('Submit Button', () => {   
     it('should have a submit button', () => {
       const b = fixture.debugElement.query(By.css(`button`));
       expect(b).toBeTruthy();
       expect(b.nativeElement.textContent).toEqual('Submit');
-    }); 
+    });
+    
+    it('should not be possible to click the button when data is lacking', () => {
+      const b = fixture.debugElement.query(By.css(`button`));
+      expect(b.nativeElement.getAttribute('disabled')).toBe('');
+    })
+
+    it('should be possible to click button after entering necessary data', () => {
+      const b = fixture.debugElement.query(By.css(`button`));
+      const fn = component.artistForm.get('firstName');
+      const ln = component.artistForm.get('lastName');
+      fn?.setValue(testArtist.firstName);
+      ln?.setValue(testArtist.lastName);
+      fixture.detectChanges()
+      expect(b.nativeElement.getAttribute('disabled')).toBe(null);
+    })
   })
 });

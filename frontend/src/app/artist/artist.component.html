@@ -64,5 +64,5 @@
         <input id="bio-english" type="text" formControlName="bioEnglish">
     </div>
 
-    <button>Submit</button>
+    <button [disabled]="!artistForm.valid">Submit</button>
 </form>
