@@ -12,4 +12,17 @@ export interface ArtistInput {
     bandcamp?: string;
     bioGer?: string;
     bioEn?: string;
-  }
+}
+
+export const MOCK_ARTISTS: ArtistInput[] = [
+    {
+        firstName: "Jens",
+        lastName: "Rainer",
+        artistName: "jens-rainer",
+    },
+    {
+        firstName: "Kai",
+        lastName: "Uwe",
+        artistName: "uwe-kai"
+    },
+]
