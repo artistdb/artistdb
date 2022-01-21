@@ -10,12 +10,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ArtistComponent } from './artist/artist.component';
 import { ArtistDashboardComponent } from './artist/artist-dashboard/artist-dashboard.component';
+import { ArtistFormComponent } from './artist/artist-form/artist-form.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ArtistComponent,
-    ArtistDashboardComponent
+    ArtistDashboardComponent,
+    ArtistFormComponent
   ],
   imports: [
     BrowserModule,

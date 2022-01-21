@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { MOCK_ARTISTS } from '../artist.model.component';
+import { Component, Input, OnInit } from '@angular/core';
+import { ArtistInput, MOCK_ARTISTS } from '../artist.model.component';
 
 @Component({
   selector: 'app-artist-dashboard',
@@ -7,9 +7,10 @@ import { MOCK_ARTISTS } from '../artist.model.component';
   styleUrls: ['./artist-dashboard.component.css']
 })
 export class ArtistDashboardComponent implements OnInit {
-  artists = MOCK_ARTISTS;
+  @Input() artists!: ArtistInput[];
   
-  constructor() { }
+  constructor() { 
+  }
 
   ngOnInit(): void {
   }
