@@ -1,15 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ArtistDashboardComponent } from './artist-dashboard.component';
-import { MOCK_ARTISTS } from '../artist.model.component';
+import { ArtistInput, MOCK_ARTISTS } from '../artist.model.component';
+import { By } from '@angular/platform-browser';
 
 describe('ArtistDashboardComponent', () => {
   let component: ArtistDashboardComponent;
   let fixture: ComponentFixture<ArtistDashboardComponent>;
+  let data: ArtistInput[] = MOCK_ARTISTS;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ArtistDashboardComponent ]
+      declarations: [ ArtistDashboardComponent ]    
     })
     .compileComponents();
   });
@@ -24,7 +26,10 @@ describe('ArtistDashboardComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render data', () => {
-    
+  it('should render all data', () => {
+    component.artists = data;
+    fixture.detectChanges();
+    const e: HTMLElement = fixture.nativeElement;
+    expect(e.querySelectorAll('li').length).toEqual(data.length);
   })
 });
