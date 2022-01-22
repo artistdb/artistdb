@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ArtistDashboardComponent } from './artist-dashboard.component';
 import { ArtistInput, MOCK_ARTISTS } from '../artist.model.component';
-import { By } from '@angular/platform-browser';
 
 describe('ArtistDashboardComponent', () => {
   let component: ArtistDashboardComponent;
