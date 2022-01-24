@@ -9,11 +9,15 @@ import { InMemoryCache } from '@apollo/client/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ArtistComponent } from './artist/artist.component';
+import { ArtistDashboardComponent } from './artist/artist-dashboard/artist-dashboard.component';
+import { ArtistFormComponent } from './artist/artist-form/artist-form.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ArtistComponent
+    ArtistComponent,
+    ArtistDashboardComponent,
+    ArtistFormComponent
   ],
   imports: [
     BrowserModule,
