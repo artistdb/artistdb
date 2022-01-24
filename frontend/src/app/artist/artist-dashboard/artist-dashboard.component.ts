@@ -15,4 +15,9 @@ export class ArtistDashboardComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  selectedArtist?: ArtistInput;
+  onSelect(artist: ArtistInput) {
+    this.selectedArtist = artist;
+  }
+
 }

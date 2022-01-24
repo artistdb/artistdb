@@ -1,6 +1,57 @@
 <h2>Artist Dashboard</h2>
-<ul class="artists">
-  <li *ngFor="let artist of artists">
+<ul>
+  <div class="artist" *ngFor="let artist of artists" (click)="onSelect(artist)">
     {{artist.firstName}} {{artist.lastName}} {{artist.artistName}}
-  </li>
+  </div>
 </ul>
+
+<div *ngIf="selectedArtist">
+  <h2>{{selectedArtist.artistName | uppercase}}</h2>
+  <div class="display --first-name">
+    <label for="first-name">First Name: </label> {{selectedArtist.firstName}}
+  </div>
+
+  <div class="display --last-name">
+    <label for="last-name">Last Name: </label> {{selectedArtist.lastName}}
+  </div>
+
+  <div class="display --pronouns">
+    <label for="pronouns">Pronouns: </label> {{selectedArtist.pronouns}}
+  </div>
+
+  <!--<div>
+    <label for="first-name">First Name: </label> {{selectedArtist.firstName}}
+  </div>-->
+
+  <div class="display --place-of-birth">
+    <label for="place-of-birth">Place of Birth: </label> {{selectedArtist.placeOfBirth}}
+  </div>
+
+  <div class="display --nationality">
+    <label for="nationality">Nationality: </label> {{selectedArtist.nationality}}
+  </div>
+
+  <div class="display --language">
+    <label for="language">Language: </label> {{selectedArtist.language}}
+  </div>
+
+  <div class="display --facebook">
+    <label for="facebook">Facebook: </label> {{selectedArtist.facebook}}
+  </div>
+
+  <div class="display --instagram">
+    <label for="instagram">Instagram: </label> {{selectedArtist.instagram}}
+  </div>
+  
+  <div class="display --bandcamp">
+  <label for="bandcamp">Bandcamp: </label> {{selectedArtist.bandcamp}}
+  </div>
+
+  <div class="display --bio-german">
+    <label for="bio-german">Bio (German): </label> {{selectedArtist.bioGer}}
+  </div>
+
+  <div class="display --bio-english">
+    <label for="bio-english">Bio (English): </label> {{selectedArtist.bioEn}}
+  </div>
+</div>
