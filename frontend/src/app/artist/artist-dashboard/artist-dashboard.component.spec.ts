@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 
 import { ArtistDashboardComponent } from './artist-dashboard.component';
 import { ArtistInput, MOCK_ARTISTS } from '../artist.model.component';
@@ -18,6 +19,7 @@ describe('ArtistDashboardComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ArtistDashboardComponent);
     component = fixture.componentInstance;
+    component.artists = data;
     fixture.detectChanges();
   });
 
@@ -26,9 +28,13 @@ describe('ArtistDashboardComponent', () => {
   });
 
   it('should render all data', () => {
-    component.artists = data;
-    fixture.detectChanges();
-    const e: HTMLElement = fixture.nativeElement;
-    expect(e.querySelectorAll('li').length).toEqual(data.length);
+    const e = fixture.debugElement.queryAll(By.css('.artist'))
+    expect(e.length).toEqual(data.length);
+  })
+
+  it('should select info on clicking on an artists name', () => {
+    const e = fixture.debugElement.query(By.css('.artist'))
+    e.triggerEventHandler('click', null);
+    expect(component.selectedArtist).toEqual(data[0]);
   })
 });
