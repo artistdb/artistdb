@@ -8,7 +8,7 @@ on:
 
 jobs:
   frontend_test:
-    timeout-minutes: 5
+    timeout-minutes: 3
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -19,7 +19,7 @@ jobs:
       - run: sudo apt-get install -y libgbm-dev
       - run: npm install
         working-directory: frontend
-      - run: npm test
+      - run: npm test -- --watch=false --browsers=ChromeHeadless
         working-directory: frontend
   unit_test:
     timeout-minutes: 2
