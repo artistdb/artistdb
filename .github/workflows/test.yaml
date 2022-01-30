@@ -7,6 +7,16 @@ on:
   pull_request:
 
 jobs:
+  frontend_test:
+    timeout-minutes: 2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+      - run: npm install
+      - run: npm test
   unit_test:
     timeout-minutes: 2
     runs-on: ubuntu-latest
