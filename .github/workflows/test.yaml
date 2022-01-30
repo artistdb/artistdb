@@ -15,9 +15,10 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '14.x'
-      - run: cd frontend
       - run: npm install
+        working-directory: frontend
       - run: npm test
+        working-directory: frontend
   unit_test:
     timeout-minutes: 2
     runs-on: ubuntu-latest
