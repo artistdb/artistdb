@@ -1,4 +1,10 @@
-<p>
-    <h2>ARTISTS</h2>
-    <app-artist-dashboard [artists]=xartists></app-artist-dashboard>
+<h2>ARTISTS</h2>
+<div>
+    <button class="--new-artist" (click)="showArtistForm()">Create New Artist</button>
+</div>
+<div>
+    <app-artist-dashboard [artists]="xartists"></app-artist-dashboard>
+</div>
+<div *ngIf="newArtist">
     <app-artist-form></app-artist-form>
+</div>

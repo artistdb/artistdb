@@ -11,10 +11,15 @@ import { MOCK_ARTISTS } from './artist.model.component';
 export class ArtistComponent implements OnInit {
 
   xartists = MOCK_ARTISTS;
+  newArtist = false;
 
   constructor() { }
 
   ngOnInit(): void {
+  }
+
+  showArtistForm(): void {
+    this.newArtist = true;
   }
 
 }

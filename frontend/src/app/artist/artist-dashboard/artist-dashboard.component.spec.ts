@@ -37,4 +37,9 @@ describe('ArtistDashboardComponent', () => {
     e.triggerEventHandler('click', null);
     expect(component.selectedArtist).toEqual(data[0]);
   })
+
+  it('should have a delete button', () => {
+    const b = fixture.debugElement.query(By.css('.--delete-artist'));
+    expect(b).toBeDefined();
+  })
 });
