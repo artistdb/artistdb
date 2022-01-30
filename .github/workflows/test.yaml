@@ -15,6 +15,8 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '14.x'
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y libgbm-dev
       - run: npm install
         working-directory: frontend
       - run: npm test
