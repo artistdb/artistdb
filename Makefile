@@ -65,8 +65,8 @@ test-e2e:
 	$(GO) test -count=1 -v ./test/e2e
 
 .PHONY: test-frontend
-test-frontend:
-	$(DC) up -d frontend 
+test-frontend: stop
+	$(DC) up -d frontend
 	sleep 60
 	$(D) exec frontend ng test
 
