@@ -8,7 +8,7 @@ on:
 
 jobs:
   frontend_test:
-    timeout-minutes: 2
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
