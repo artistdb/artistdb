@@ -7,6 +7,20 @@ on:
   pull_request:
 
 jobs:
+  frontend_test:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y libgbm-dev
+      - run: npm install
+        working-directory: frontend
+      - run: npm test -- --watch=false --browsers=ChromeHeadless
+        working-directory: frontend
   unit_test:
     timeout-minutes: 2
     runs-on: ubuntu-latest
