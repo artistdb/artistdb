@@ -11,6 +11,7 @@ import { AppComponent } from './app.component';
 import { ArtistComponent } from './artist/artist.component';
 import { ArtistDashboardComponent } from './artist/artist-dashboard/artist-dashboard.component';
 import { ArtistFormComponent } from './artist/artist-form/artist-form.component';
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [
@@ -32,7 +33,7 @@ import { ArtistFormComponent } from './artist/artist-form/artist-form.component'
         return {
           cache: new InMemoryCache(),
           link: httpLink.create({
-            uri: 'http://localhost:8080/query',
+            uri: environment.graphQLUri,
           }),
         };
       },
