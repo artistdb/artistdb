@@ -15,7 +15,6 @@ import (
 	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/database/core"
 	"github.com/obitech/artist-db/internal/database/location"
-	"github.com/obitech/artist-db/internal/observability"
 )
 
 // Database allows interaction with the underlying Postgres.
@@ -30,14 +29,9 @@ type Database struct {
 
 // NewDatabase returns a database with an active connection pool.
 func NewDatabase(ctx context.Context, connString string, opts ...Option) (*Database, error) {
-	tp, err := observability.NewNoOpTracerProvider()
-	if err != nil {
-		return nil, fmt.Errorf("creating default tracer provider failed: %w", err)
-	}
-
 	db := &Database{
 		logger: zap.NewNop(),
-		tracer: tp,
+		tracer: trace.NewNoopTracerProvider(),
 	}
 
 	for _, fn := range opts {

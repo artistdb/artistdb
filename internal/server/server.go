@@ -19,7 +19,6 @@ import (
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/internal"
 	"github.com/obitech/artist-db/internal/database"
-	"github.com/obitech/artist-db/internal/observability"
 )
 
 // Server holds API handlers.
@@ -32,16 +31,11 @@ type Server struct {
 
 // NewServer returns a server.
 func NewServer(db *database.Database, opts ...Option) (*Server, error) {
-	tp, err := observability.NewNoOpTracerProvider()
-	if err != nil {
-		return nil, fmt.Errorf("creating default trace provider failed: %w", err)
-	}
-
 	srv := &Server{
 		router: chi.NewRouter(),
 		db:     db,
 		logger: zap.NewNop(),
-		tracer: tp,
+		tracer: trace.NewNoopTracerProvider(),
 	}
 
 	for _, fn := range opts {

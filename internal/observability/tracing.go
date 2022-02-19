@@ -5,8 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"os"
 
+	"github.com/go-logr/zapr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -22,6 +22,18 @@ import (
 	"github.com/obitech/artist-db/internal"
 	"github.com/obitech/artist-db/internal/config"
 )
+
+type tracerProvider struct {
+	*trace.TracerProvider
+}
+
+type zapErrorHandler struct {
+	*zap.Logger
+}
+
+func (z *zapErrorHandler) Handle(err error) {
+	z.Error("otel tracing error", zap.Error(err))
+}
 
 // NewResource returns an OpenTelemetry Resource.
 func newResource() (*resource.Resource, error) {
@@ -60,60 +72,41 @@ func newGrpcExporter(ctx context.Context, endpoint string, withInsecure bool) (t
 }
 
 // NewTracerProvider initializes and returns a TracerProvider.
-func NewTracerProvider(ctx context.Context, cfg *config.Config, opts ...trace.TracerProviderOption) (*trace.TracerProvider, error) {
+func NewTracerProvider(ctx context.Context, cfg *config.Config, opts ...trace.TracerProviderOption) (*tracerProvider, error) {
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}),
+	)
+
+	if cfg.Tracing.SampleRate <= 0 {
+		nop := otelTrace.NewNoopTracerProvider()
+		otel.SetTracerProvider(nop)
+		return &tracerProvider{}, nil
+	}
+
 	var (
 		exp trace.SpanExporter
 		err error
 	)
-
 	res, err := newResource()
 	if err != nil {
 		return nil, fmt.Errorf("creating resource failed: %w", err)
 	}
 
-	switch cfg.Tracing.Mode {
-	case "stdout":
-		exp, err = newStdoutExporter(os.Stdout)
-	case "grpc":
-		exp, err = newGrpcExporter(ctx, cfg.Tracing.Grpc.Endpoint, cfg.Tracing.Grpc.Insecure)
-	default:
-		exp, err = newStdoutExporter(io.Discard)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("creating span exporter failed: %w", err)
-	}
-
-	opts = append(opts, trace.WithBatcher(exp), trace.WithResource(res))
-
-	tp := trace.NewTracerProvider(opts...)
-
-	return tp, nil
-}
-
-func NewNoOpTracerProvider() (*trace.TracerProvider, error) {
-	res, err := newResource()
-	if err != nil {
-		return nil, fmt.Errorf("creating resource failed: %w", err)
-	}
-
-	exp, err := newStdoutExporter(io.Discard)
-	if err != nil {
-		return nil, fmt.Errorf("creating exporter failed: %w", err)
-	}
-
-	tp := trace.NewTracerProvider(trace.WithBatcher(exp), trace.WithResource(res))
-
-	return tp, nil
-}
-
-func SetGlobalTracerProviderAndPropagator(tp otelTrace.TracerProvider) {
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(
-		propagation.NewCompositeTextMapPropagator(
-			propagation.TraceContext{}, propagation.Baggage{},
+	tp := trace.NewTracerProvider(
+		trace.WithSampler(
+			trace.ParentBased(
+				trace.TraceIDRatioBased(cfg.Tracing.SampleRate),
+			),
 		),
+		trace.WithBatcher(exp),
+		trace.WithResource(res),
 	)
+
+	otel.SetErrorHandler(&zapErrorHandler{Logger: zap.L()})
+	otel.SetLogger(zapr.NewLogger(zap.L()))
+	otel.SetTracerProvider(tp)
+
+	return &tracerProvider{tp}, nil
 }
 
 func ExtractTraceID(ctx context.Context) string {

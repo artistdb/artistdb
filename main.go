@@ -31,8 +31,6 @@ func main() {
 		logger.Fatal("creating tracer provider failed", zap.Error(err))
 	}
 
-	observability.SetGlobalTracerProviderAndPropagator(tp)
-
 	// Database
 	db, err := database.NewDatabase(
 		ctx,
