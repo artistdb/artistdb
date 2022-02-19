@@ -18,13 +18,13 @@ type Artist struct {
 	FirstName  string
 	LastName   string
 	ArtistName string
-	Email      string
 	Pronouns   []string
 	Origin     Origin
 	Language   string
 	Socials    Socials
 	BioGerman  string
 	BioEnglish string
+	Email      string
 }
 
 // Socials holds information about social media presences.
