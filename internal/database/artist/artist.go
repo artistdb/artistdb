@@ -18,6 +18,7 @@ type Artist struct {
 	FirstName  string
 	LastName   string
 	ArtistName string
+	Email      string
 	Pronouns   []string
 	Origin     Origin
 	Language   string

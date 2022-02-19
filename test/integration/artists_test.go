@@ -29,6 +29,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 			FirstName:  "first",
 			LastName:   "last",
 			ArtistName: "artist",
+			Email:      "test@foo.com",
 			Pronouns:   []string{"she", "her"},
 			Origin: artist.Origin{
 				DateOfBirth:  time.Time{},
@@ -48,6 +49,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 			ID:         uuid.New().String(),
 			FirstName:  "first2",
 			LastName:   "last2",
+			Email:      "test@bar.com",
 			ArtistName: "artist2",
 			Pronouns:   []string{"he", "her", "him"},
 			Origin: artist.Origin{
@@ -69,6 +71,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 			FirstName:  "first2",
 			LastName:   "last2",
 			ArtistName: "artist2",
+			Email:      "test",
 		},
 	}
 
