@@ -9,6 +9,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/johejo/golang-migrate-extra/source/iofs"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
@@ -31,7 +32,7 @@ type Database struct {
 func NewDatabase(ctx context.Context, connString string, opts ...Option) (*Database, error) {
 	db := &Database{
 		logger: zap.NewNop(),
-		tracer: trace.NewNoopTracerProvider(),
+		tracer: otel.GetTracerProvider(),
 	}
 
 	for _, fn := range opts {

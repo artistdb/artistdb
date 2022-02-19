@@ -35,7 +35,7 @@ func NewServer(db *database.Database, opts ...Option) (*Server, error) {
 		router: chi.NewRouter(),
 		db:     db,
 		logger: zap.NewNop(),
-		tracer: trace.NewNoopTracerProvider(),
+		tracer: otel.GetTracerProvider(),
 	}
 
 	for _, fn := range opts {

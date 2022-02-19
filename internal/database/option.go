@@ -3,7 +3,6 @@ package database
 import (
 	"errors"
 
-	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -18,18 +17,6 @@ func WithLogger(logger *zap.Logger) Option {
 		}
 
 		db.logger = logger
-		return nil
-	}
-}
-
-// WithTracerProvider adds a tracer provider.
-func WithTracerProvider(tp trace.TracerProvider) Option {
-	return func(db *Database) error {
-		if tp == nil {
-			return errors.New("tracer provider is nil")
-		}
-
-		db.tracer = tp
 		return nil
 	}
 }

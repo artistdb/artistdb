@@ -21,6 +21,10 @@ lint:
 
 .PHONY: start
 start: stop
+	GOPATH=$$(go env GOPATH) $(DC) up api db
+
+.PHONY: start-full
+start-full: stop
 	GOPATH=$$(go env GOPATH) $(DC) up
 
 .PHONY: stop

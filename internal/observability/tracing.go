@@ -4,13 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
+	"time"
 
 	"github.com/go-logr/zapr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -24,7 +23,20 @@ import (
 )
 
 type tracerProvider struct {
-	*trace.TracerProvider
+	tp *trace.TracerProvider
+}
+
+func (tp *tracerProvider) Shutdown() {
+	if tp.tp == nil {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := tp.tp.Shutdown(ctx); err != nil {
+		zap.L().Error("shutting down tracer provider failed", zap.Error(err))
+	}
 }
 
 type zapErrorHandler struct {
@@ -44,18 +56,6 @@ func newResource() (*resource.Resource, error) {
 			semconv.ServiceNameKey.String(internal.Name),
 			semconv.ServiceVersionKey.String(internal.Version),
 		),
-	)
-}
-
-// NewStdoutExporter returns a SpanExporter that exports spans to the provided
-// writer.
-func newStdoutExporter(w io.Writer) (trace.SpanExporter, error) {
-	return stdouttrace.New(
-		stdouttrace.WithWriter(w),
-		// Use human-readable output.
-		stdouttrace.WithPrettyPrint(),
-		// Do not print timestamps for the demo.
-		stdouttrace.WithoutTimestamps(),
 	)
 }
 
@@ -83,13 +83,14 @@ func NewTracerProvider(ctx context.Context, cfg *config.Config, opts ...trace.Tr
 		return &tracerProvider{}, nil
 	}
 
-	var (
-		exp trace.SpanExporter
-		err error
-	)
 	res, err := newResource()
 	if err != nil {
 		return nil, fmt.Errorf("creating resource failed: %w", err)
+	}
+
+	exp, err := newGrpcExporter(ctx, cfg.Tracing.Grpc.Endpoint, cfg.Tracing.Grpc.Insecure)
+	if err != nil {
+		return nil, fmt.Errorf("creating span exporter failed: %w", err)
 	}
 
 	tp := trace.NewTracerProvider(
@@ -106,7 +107,7 @@ func NewTracerProvider(ctx context.Context, cfg *config.Config, opts ...trace.Tr
 	otel.SetLogger(zapr.NewLogger(zap.L()))
 	otel.SetTracerProvider(tp)
 
-	return &tracerProvider{tp}, nil
+	return &tracerProvider{tp: tp}, nil
 }
 
 func ExtractTraceID(ctx context.Context) string {
