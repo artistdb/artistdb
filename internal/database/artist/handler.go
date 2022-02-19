@@ -224,7 +224,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			id          string
 			firstName   string
 			lastName    string
-			email       string
+			email       *string
 			pronouns    []string
 			dob         *time.Time
 			pob         *string
@@ -264,7 +264,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			ID:         id,
 			FirstName:  firstName,
 			LastName:   lastName,
-			Email:      email,
+			Email:      conversion.String(email),
 			ArtistName: conversion.String(artistName),
 			Pronouns:   pronouns,
 			Origin: Origin{

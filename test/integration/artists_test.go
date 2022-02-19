@@ -71,7 +71,6 @@ func Test_ArtistsIntegration(t *testing.T) {
 			FirstName:  "first2",
 			LastName:   "last2",
 			ArtistName: "artist2",
-			Email:      "test",
 		},
 	}
 

@@ -48,6 +48,7 @@ type ComplexityRoot struct {
 		BioEn        func(childComplexity int) int
 		BioGer       func(childComplexity int) int
 		DateOfBirth  func(childComplexity int) int
+		Email        func(childComplexity int) int
 		Facebook     func(childComplexity int) int
 		FirstName    func(childComplexity int) int
 		ID           func(childComplexity int) int
@@ -194,6 +195,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Artist.DateOfBirth(childComplexity), true
+
+	case "Artist.email":
+		if e.complexity.Artist.Email == nil {
+			break
+		}
+
+		return e.complexity.Artist.Email(childComplexity), true
 
 	case "Artist.facebook":
 		if e.complexity.Artist.Facebook == nil {
@@ -738,6 +746,7 @@ var sources = []*ast.Source{
   bandcamp:     String
   bioGer:       String
   bioEn:        String
+  email:        String
 }
 
 type Location {
@@ -817,11 +826,12 @@ input ArtistInput {
   bandcamp:     String
   bioGer:       String
   bioEn:        String
+  email:        String
 }
 
 input LocationInput {
   id: ID
-  name: String! 
+  name: String!
 }
 
 input GetArtistInput {
@@ -1440,6 +1450,38 @@ func (ec *executionContext) _Artist_bioEn(ctx context.Context, field graphql.Col
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.BioEn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Artist_email(ctx context.Context, field graphql.CollectedField, obj *model.Artist) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Artist",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4523,6 +4565,14 @@ func (ec *executionContext) unmarshalInputArtistInput(ctx context.Context, obj i
 			if err != nil {
 				return it, err
 			}
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -4686,6 +4736,8 @@ func (ec *executionContext) _Artist(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Artist_bioGer(ctx, field, obj)
 		case "bioEn":
 			out.Values[i] = ec._Artist_bioEn(ctx, field, obj)
+		case "email":
+			out.Values[i] = ec._Artist_email(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
