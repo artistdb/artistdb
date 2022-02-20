@@ -9,13 +9,13 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/johejo/golang-migrate-extra/source/iofs"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/database/core"
 	"github.com/obitech/artist-db/internal/database/location"
-	"github.com/obitech/artist-db/internal/observability"
 )
 
 // Database allows interaction with the underlying Postgres.
@@ -30,14 +30,9 @@ type Database struct {
 
 // NewDatabase returns a database with an active connection pool.
 func NewDatabase(ctx context.Context, connString string, opts ...Option) (*Database, error) {
-	tp, err := observability.NewNoOpTracerProvider()
-	if err != nil {
-		return nil, fmt.Errorf("creating default tracer provider failed: %w", err)
-	}
-
 	db := &Database{
 		logger: zap.NewNop(),
-		tracer: tp,
+		tracer: otel.GetTracerProvider(),
 	}
 
 	for _, fn := range opts {
