@@ -17,6 +17,7 @@ type Artist struct {
 	Bandcamp     *string   `json:"bandcamp"`
 	BioGer       *string   `json:"bioGer"`
 	BioEn        *string   `json:"bioEn"`
+	Email        *string   `json:"email"`
 }
 
 type ArtistInput struct {
@@ -34,6 +35,7 @@ type ArtistInput struct {
 	Bandcamp     *string   `json:"bandcamp"`
 	BioGer       *string   `json:"bioGer"`
 	BioEn        *string   `json:"bioEn"`
+	Email        *string   `json:"email"`
 }
 
 type Artwork struct {

@@ -98,10 +98,11 @@ func (h *Handler) upsertArtist(ctx context.Context, tx pgx.Tx, artist *Artist) e
 				bio_en,
 				artist_name,
 				created_at,
-				updated_at
+				updated_at,
+				email
 			)
 		VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 		ON CONFLICT 
 			(id)
 		DO UPDATE SET
@@ -119,6 +120,7 @@ func (h *Handler) upsertArtist(ctx context.Context, tx pgx.Tx, artist *Artist) e
 			bio_en=$13,
 			artist_name=$14,
 			updated_at=$16,
+			email=$17,
 			deleted_at=NULL`, core.TableArtists)
 
 	if _, err := tx.Exec(ctx, stmt,
@@ -138,6 +140,7 @@ func (h *Handler) upsertArtist(ctx context.Context, tx pgx.Tx, artist *Artist) e
 		artist.ArtistName,               // $14
 		start,                           // $15
 		start,                           // $16
+		artist.Email,                    // $17
 	); err != nil {
 		return err
 	}
@@ -193,7 +196,8 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 				bandcamp,
 				bio_ger,
 				bio_en,
-				artist_name
+				artist_name,
+				email
 		FROM
 			"%s"
 		WHERE deleted_at IS NULL AND `, core.TableArtists,
@@ -220,6 +224,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			id          string
 			firstName   string
 			lastName    string
+			email       *string
 			pronouns    []string
 			dob         *time.Time
 			pob         *string
@@ -248,6 +253,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			&bioGer,
 			&bioEn,
 			&artistName,
+			&email,
 		); err != nil {
 			span.RecordError(err)
 			observability.Metrics.TrackObjectError(entityArtist, "get")
@@ -258,6 +264,7 @@ func (h *Handler) Get(ctx context.Context, request GetRequest) ([]*Artist, error
 			ID:         id,
 			FirstName:  firstName,
 			LastName:   lastName,
+			Email:      conversion.String(email),
 			ArtistName: conversion.String(artistName),
 			Pronouns:   pronouns,
 			Origin: Origin{

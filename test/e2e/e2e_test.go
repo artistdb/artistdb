@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/obitech/artist-db/graph/model"
+	"github.com/obitech/artist-db/internal/conversion"
 )
 
 type graphQLResponse struct {
@@ -126,7 +127,7 @@ func TestServerIntegration(t *testing.T) {
 	t.Run("test artists endpoints", func(t *testing.T) {
 		var testID string
 		t.Run("insertion of single artist works", func(t *testing.T) {
-			str := `{"query": "mutation { upsertArtists(input: [{firstName:\"Bob\",lastName:\"Ross\",artistName:\"BBR\",pronouns:[\"they\",\"them\"],dateOfBirth:1637830936,placeOfBirth:\"Space, Sachsen-Anhalt\",nationality:\"none\",language:\"peace\",facebook:\"meta ;)\",instagram:\"da_real_bob_ross\",bandcamp:\"bandcamp.com/babitorossi\",bioGer:\"bob ross malt so schön!!!!\",bioEn:\"i like so much to draw with bobby\"}]) { id firstName lastName}}"}`
+			str := `{"query": "mutation { upsertArtists(input: [{firstName:\"Bob\",lastName:\"Ross\",artistName:\"BBR\",pronouns:[\"they\",\"them\"],dateOfBirth:1637830936,placeOfBirth:\"Space, Sachsen-Anhalt\",nationality:\"none\",language:\"peace\",facebook:\"meta ;)\",instagram:\"da_real_bob_ross\",bandcamp:\"bandcamp.com/babitorossi\",bioGer:\"bob ross malt so schön!!!!\",bioEn:\"i like so much to draw with bobby\",email:\"foo@bar.com\"}]) { id firstName lastName email}}"}`
 
 			result := graphQuery(t, ctx, str)
 			require.Len(t, result.Errors, 0, result.Errors)
@@ -135,6 +136,7 @@ func TestServerIntegration(t *testing.T) {
 			assert.NotEmpty(t, result.Data.UpsertArtists[0].ID)
 			assert.Equal(t, "Bob", result.Data.UpsertArtists[0].FirstName)
 			assert.Equal(t, "Ross", result.Data.UpsertArtists[0].LastName)
+			assert.Equal(t, "foo@bar.com", conversion.String(result.Data.UpsertArtists[0].Email))
 
 			testID = result.Data.UpsertArtists[0].ID
 		})
