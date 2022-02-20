@@ -20,8 +20,8 @@ type Config struct {
 }
 
 type TracingConfig struct {
-	Mode string         `env:"ADB_TRACING_MODE" help:"where to send traces (stdout, discard, grpc)" enum:"stdout,discard,grpc" default:"discard"`
-	Grpc OtlpGrpcConfig `embed:"" prefix:"grpc-"`
+	SampleRate float64        `env:"ADB_TRACING_SAMPLE_RATE" help:"Rate with which to sample. 0 means tracing is disabled" default:"0.0"`
+	Grpc       OtlpGrpcConfig `embed:"" prefix:"grpc-"`
 }
 
 type OtlpGrpcConfig struct {

@@ -24,6 +24,7 @@ type Artist struct {
 	Socials    Socials
 	BioGerman  string
 	BioEnglish string
+	Email      string
 }
 
 // Socials holds information about social media presences.

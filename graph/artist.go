@@ -40,6 +40,7 @@ func modelArtists(artists ...*artist.Artist) ([]*model.Artist, error) {
 			Bandcamp:     &a.Socials.Bandcamp,
 			BioGer:       &a.BioGerman,
 			BioEn:        &a.BioEnglish,
+			Email:        &a.Email,
 		})
 	}
 
@@ -92,6 +93,7 @@ func databaseArtists(artists ...*model.ArtistInput) ([]*artist.Artist, error) {
 			},
 			BioGerman:  conversion.String(a.BioGer),
 			BioEnglish: conversion.String(a.BioEn),
+			Email:      conversion.String(a.Email),
 		})
 	}
 

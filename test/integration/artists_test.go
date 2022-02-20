@@ -43,6 +43,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 			},
 			BioGerman:  "alfred",
 			BioEnglish: "biolek",
+			Email:      "test@foo.com",
 		},
 		{
 			ID:         uuid.New().String(),
@@ -63,6 +64,7 @@ func Test_ArtistsIntegration(t *testing.T) {
 			},
 			BioGerman:  "alfred2",
 			BioEnglish: "biolek2",
+			Email:      "test@bar.com",
 		},
 		{
 			ID:         uuid.New().String(),

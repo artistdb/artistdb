@@ -13,6 +13,7 @@ type Artist {
   bandcamp:     String
   bioGer:       String
   bioEn:        String
+  email:        String
 }
 
 type Location {
@@ -92,11 +93,12 @@ input ArtistInput {
   bandcamp:     String
   bioGer:       String
   bioEn:        String
+  email:        String
 }
 
 input LocationInput {
   id: ID
-  name: String! 
+  name: String!
 }
 
 input GetArtistInput {

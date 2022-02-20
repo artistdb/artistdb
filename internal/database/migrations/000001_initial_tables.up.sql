@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS artists (
                                       bio_en          TEXT,
                                       created_at      TIMESTAMPTZ NOT NULL,
                                       updated_at      TIMESTAMPTZ NOT NULL,
-                                      deleted_at      TIMESTAMPTZ
+                                      deleted_at      TIMESTAMPTZ,
+                                      email           TEXT
 );
 
 CREATE TABLE IF NOT EXISTS locations (
