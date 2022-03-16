@@ -13,8 +13,13 @@ import { LOCATION_FIELDS } from './location.model';
 })
 export class LocationComponent {
   fields$: Observable<FieldBase<any>[]>;
+  newLocation = false;
 
   constructor(service: FieldService) {
     this.fields$ = service.getFields(LOCATION_FIELDS);
+  }
+
+  showLocationForm(): void {
+    this.newLocation = true;
   }
 }
