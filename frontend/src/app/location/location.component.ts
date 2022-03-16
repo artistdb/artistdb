@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 
 import { FieldBase } from '../dynamic-form/field-base';
 import { FieldService } from '../dynamic-form/field.service';
+import { LOCATION_FIELDS } from './location.model';
 
 @Component({
   selector: 'app-location',
@@ -14,6 +15,6 @@ export class LocationComponent {
   fields$: Observable<FieldBase<any>[]>;
 
   constructor(service: FieldService) {
-    this.fields$ = service.getFields();
+    this.fields$ = service.getFields(LOCATION_FIELDS);
   }
 }

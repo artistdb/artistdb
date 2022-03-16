@@ -1,24 +1,34 @@
 import { Injectable } from '@angular/core';
-import { FieldBase } from './field-base';
-import { FieldTextbox } from './field-textbox';
-
 import { of } from 'rxjs';
+
+import { FieldBase } from './field-base';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FieldService {
 
-  getFields() {
-    const test: FieldBase<string>[] = [
-      new FieldTextbox({
-        key: 'testKey',
-        label: 'testLabel',
-        value: 'testValue',
-        required: true,
-      })
-    ]; 
+  getFields(data: string) { 
+    var parsed = JSON.parse(data);
+    console.log(parsed.data);
+    
+    var fields: FieldBase<string>[] = [];
 
-    return of(test);
+    for(var i in parsed.data) {
+      var item = parsed.data[i] 
+
+      var field: FieldBase<string> = {
+        key: item.key,
+        label: item.key,
+        value: '',
+        required: item.required,
+        controlType: item.controlType,
+        type: item.type,
+      };
+
+      fields.push(field);
+    }
+
+    return of(fields);
   };
 }
