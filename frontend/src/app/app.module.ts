@@ -12,13 +12,19 @@ import { ArtistComponent } from './artist/artist.component';
 import { ArtistDashboardComponent } from './artist/artist-dashboard/artist-dashboard.component';
 import { ArtistFormComponent } from './artist/artist-form/artist-form.component';
 import { environment } from 'src/environments/environment';
+import { LocationComponent } from './location/location.component';
+import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
+import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dynamic-form-field.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ArtistComponent,
     ArtistDashboardComponent,
-    ArtistFormComponent
+    ArtistFormComponent,
+    LocationComponent,
+    DynamicFormComponent,
+    DynamicFormFieldComponent
   ],
   imports: [
     BrowserModule,
