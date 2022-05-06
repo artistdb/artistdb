@@ -7,6 +7,6 @@ type Location struct {
 	Name string
 }
 
-func New() Location {
-	return Location{ID: uuid.New().String()}
+func New() *Location {
+	return &Location{ID: uuid.New().String()}
 }
