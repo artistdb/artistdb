@@ -15,6 +15,7 @@ import (
 
 	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/database/core"
+	"github.com/obitech/artist-db/internal/database/event"
 	"github.com/obitech/artist-db/internal/database/location"
 )
 
@@ -22,6 +23,7 @@ import (
 type Database struct {
 	ArtistHandler   *artist.Handler
 	LocationHandler *location.Handler
+	EventHandler    *event.Handler
 
 	conn   core.Connection
 	logger *zap.Logger
@@ -49,6 +51,7 @@ func NewDatabase(ctx context.Context, connString string, opts ...Option) (*Datab
 	db.conn = conn
 	db.ArtistHandler = artist.NewHandler(conn, db.logger, db.tracer)
 	db.LocationHandler = location.NewHandler(conn, db.logger)
+	db.EventHandler = event.NewHandler(conn, db.logger, db.tracer)
 
 	return db, nil
 }

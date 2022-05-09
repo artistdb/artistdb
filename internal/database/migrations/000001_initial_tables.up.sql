@@ -28,13 +28,20 @@ CREATE TABLE IF NOT EXISTS locations (
                                         deleted_at      TIMESTAMPTZ,
                                         name            TEXT NOT NULL
 );
---
--- CREATE TABLE IF NOT EXISTS events (
---                                      id              UUID PRIMARY KEY,
---                                      name            TEXT,
---                                      start_time      TIMESTAMPTZ,
---                                      location        UUID REFERENCES locations
--- );
+
+CREATE TABLE IF NOT EXISTS events (
+                                     id              UUID PRIMARY KEY,
+                                     created_at      TIMESTAMPTZ NOT NULL,
+                                     updated_at      TIMESTAMPTZ NOT NULL,
+                                     deleted_at      TIMESTAMPTZ,
+                                     name            TEXT NOT NULL,
+                                     start_time      TIMESTAMPTZ,
+                                     location_id    UUID,
+                                     CONSTRAINT     fk_locations
+                                        FOREIGN KEY (location_id)
+                                            REFERENCES locations(id)
+                                            ON DELETE SET NULL
+);
 --
 -- CREATE TABLE IF NOT EXISTS invited_artists (
 --                                              artist_id       UUID REFERENCES artists,

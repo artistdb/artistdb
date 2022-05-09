@@ -22,7 +22,7 @@ const (
 	entityArtist = "artist"
 )
 
-// Handler returns a DB Handler which operates on Artists.
+// Handler is a DB Handler which operates on Artists.
 type Handler struct {
 	conn   core.Connection
 	logger *zap.Logger
