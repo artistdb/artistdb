@@ -26,12 +26,16 @@ func Test_EventsIntegration(t *testing.T) {
 
 	events := []*event.Event{
 		event.New("onlyName"),
-		event.New("withTime", event.WithStartTime(time.Time{})),
-		event.New("withLocation", event.WithLocation(loc1)),
-		event.New("withTimeLocation", event.WithStartTime(time.Time{}), event.WithLocation(loc2)),
+		event.New("withTime", event.WithStartTime(time.Time{}.UTC())),
+		event.New("withLocation", event.WithLocationID(loc1.ID)),
+		event.New("withTimeLocation", event.WithStartTime(time.Time{}), event.WithLocationID(loc2.ID)),
 	}
 
-	t.Run("inserting and retrieving single event works", func(t *testing.T) {
+	t.Run("inserting event without existing location throws error", func(t *testing.T) {
+		require.Error(t, db.EventHandler.Upsert(ctx, events[2]))
+	})
+
+	t.Run("inserting and retrieving single event without location works", func(t *testing.T) {
 		t.Run("invalid ID throws error", func(t *testing.T) {
 			require.Error(t, db.EventHandler.Upsert(ctx, &event.Event{ID: "foo"}))
 		})
@@ -42,23 +46,11 @@ func Test_EventsIntegration(t *testing.T) {
 
 		t.Run("verify", func(t *testing.T) {
 			t.Run("resources are created", func(t *testing.T) {
-				stmt := `SELECT id, name, start_time, location_id FROM events WHERE id = $1`
-				var res event.Event
+				events, err := db.EventHandler.Get(ctx, event.ByID(events[0].ID))
+				require.NoError(t, err)
 
-				var locationID *string
-
-				require.NoError(t, conn.QueryRow(ctx, stmt, events[0].ID).Scan(
-					&res.ID,
-					&res.Name,
-					&res.StartTime,
-					&locationID,
-				),
-				)
-
-				res.StartTime = res.StartTime.UTC()
-
-				assert.Equal(t, events[0], &res)
-				assert.Nil(t, locationID)
+				assert.Len(t, events, 1)
+				assert.Equal(t, events[0], events[0])
 			})
 
 			t.Run("metadata is set", func(t *testing.T) {
@@ -93,29 +85,113 @@ func Test_EventsIntegration(t *testing.T) {
 		})
 	})
 
-	t.Run("inserting event without location throws error", func(t *testing.T) {
-		require.Error(t, db.EventHandler.Upsert(ctx, events[2]))
-	})
-
-	// TODO: verify once Get is implemented
 	t.Run("inserting multiple events work", func(t *testing.T) {
 		t.Run("insert", func(t *testing.T) {
 			require.NoError(t, db.LocationHandler.Upsert(ctx, loc1, loc2))
 			require.NoError(t, db.EventHandler.Upsert(ctx, events...))
 		})
 
+		t.Run("verify", func(t *testing.T) {
+			// ByID
+			ev, err := db.EventHandler.Get(ctx, event.ByID(events[0].ID))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[0], ev[0])
+
+			ev, err = db.EventHandler.Get(ctx, event.ByID(events[1].ID))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[1], ev[0])
+
+			ev, err = db.EventHandler.Get(ctx, event.ByID(events[2].ID))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[2], ev[0])
+
+			ev, err = db.EventHandler.Get(ctx, event.ByID(events[3].ID))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[3], ev[0])
+
+			// ByName
+			ev, err = db.EventHandler.Get(ctx, event.ByName(events[0].Name))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[0], ev[0])
+
+			ev, err = db.EventHandler.Get(ctx, event.ByName(events[1].Name))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[1], ev[0])
+
+			ev, err = db.EventHandler.Get(ctx, event.ByName(events[2].Name))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[2], ev[0])
+
+			ev, err = db.EventHandler.Get(ctx, event.ByName(events[3].Name))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[3], ev[0])
+		})
+
 		t.Run("updating existing events work", func(t *testing.T) {
-			events[0].Name = "updatedName"
+			newName := "newName"
+			events[0].Name = newName
 			require.NoError(t, db.EventHandler.Upsert(ctx, events[0]))
+
+			ev, err := db.EventHandler.Get(ctx, event.ByName(newName))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Equal(t, events[0], ev[0])
 		})
 	})
 
 	t.Run("inserting event with existing, assigned location ID works", func(t *testing.T) {
-		events = append(events, event.New("withDuplicateLocation", event.WithLocation(loc1)))
+		events = append(events, event.New("withDuplicateLocation", event.WithLocationID(loc1.ID)))
 		require.NoError(t, db.EventHandler.Upsert(ctx, events[4]))
 	})
 
-	// TODO: test once Get is implemented
 	t.Run("deleting assigned location erases location in event", func(t *testing.T) {
+		locID := events[3].LocationID
+		evID := events[3].ID
+
+		t.Run("soft delete", func(t *testing.T) {
+			require.NoError(t, db.LocationHandler.DeleteByID(ctx, *locID))
+
+			ev, err := db.EventHandler.Get(ctx, event.ByID(evID))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.NotNil(t, ev[0].LocationID)
+			assert.Equal(t, locID, ev[0].LocationID)
+
+			_, err = db.LocationHandler.Get(ctx, location.ByID(*locID))
+			require.ErrorIs(t, err, core.ErrNotFound)
+		})
+
+		t.Run("hard delete", func(t *testing.T) {
+			stmt := fmt.Sprintf(`DELETE FROM %s WHERE id=$1`, core.TableLocations)
+			_, err := conn.Exec(ctx, stmt, locID)
+			require.NoError(t, err)
+
+			_, err = db.LocationHandler.Get(ctx, location.ByID(*locID))
+			require.ErrorIs(t, err, core.ErrNotFound)
+
+			ev, err := db.EventHandler.Get(ctx, event.ByID(evID))
+			require.NoError(t, err)
+
+			require.Len(t, ev, 1)
+			assert.Nil(t, ev[0].LocationID)
+		})
 	})
 }

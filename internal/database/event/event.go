@@ -4,28 +4,27 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
-	"github.com/obitech/artist-db/internal/database/location"
 )
 
 type Event struct {
-	ID        string
-	Name      string
-	StartTime time.Time
-	Location  *location.Location
+	ID         string
+	Name       string
+	StartTime  *time.Time
+	LocationID *string
 }
 
 type Option func(*Event)
 
-func WithLocation(loc *location.Location) Option {
+func WithLocationID(id string) Option {
 	return func(e *Event) {
-		e.Location = loc
+		e.LocationID = &id
 	}
 }
 
 func WithStartTime(startTime time.Time) Option {
 	return func(e *Event) {
-		e.StartTime = startTime
+		t := startTime.UTC()
+		e.StartTime = &t
 	}
 }
 

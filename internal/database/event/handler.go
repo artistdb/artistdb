@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
+	"go.opentelemetry.io/otel/attribute"
 	otelTrace "go.opentelemetry.io/otel/trace"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -75,18 +76,7 @@ func (h *Handler) Upsert(ctx context.Context, events ...*Event) error {
 }
 
 func (h *Handler) upsertEvents(ctx context.Context, tx pgx.Tx, event *Event) error {
-	var (
-		start      = time.Now().UTC()
-		locationID *string
-	)
-
-	if loc := event.Location; loc != nil {
-		if loc.ID == "" {
-			return fmt.Errorf("location ID is empty")
-		}
-
-		locationID = &loc.ID
-	}
+	start := time.Now().UTC()
 
 	stmt := fmt.Sprintf(`
 		INSERT INTO "%s"
@@ -108,16 +98,107 @@ func (h *Handler) upsertEvents(ctx context.Context, tx pgx.Tx, event *Event) err
 			location_id=$6,
 			deleted_at=NULL`, core.TableEvents)
 
+	if event.StartTime != nil {
+		t := *event.StartTime
+		t = t.UTC()
+		event.StartTime = &t
+	}
+
 	if _, err := tx.Exec(ctx, stmt,
 		event.ID,
 		start,
 		start,
 		event.Name,
-		event.StartTime.UTC(),
-		locationID,
+		event.StartTime,
+		event.LocationID,
 	); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// GetRequest specifies the input for an Event query against the database.
+type GetRequest func() (string, string, string)
+
+// ByID requests an Event by ID.
+func ByID(id string) GetRequest {
+	return func() (string, string, string) {
+		return id, "id=$1", "id"
+	}
+}
+
+// ByName requests an Event by name.
+func ByName(name string) GetRequest {
+	return func() (string, string, string) {
+		return name, "name=$1", "name"
+	}
+}
+
+func (h *Handler) Get(ctx context.Context, req GetRequest) ([]*Event, error) {
+	input, whereClause, reqType := req()
+
+	spanCtx, span := h.tracer.Tracer(core.TracingInstrumentationName).Start(ctx, "artist.get", otelTrace.WithAttributes(attribute.String("type", reqType)))
+	defer span.End()
+
+	stmt := fmt.Sprintf(`
+		SELECT 
+			id,
+			name,
+			start_time,
+			location_id
+		FROM "%s"
+		WHERE 
+			deleted_at IS NULL AND `, core.TableEvents) + whereClause
+
+	rows, err := h.conn.Query(spanCtx, stmt, input)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, core.ErrNotFound
+		}
+
+		observability.Metrics.TrackObjectError(entityEvent, "get")
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+
+	defer rows.Close()
+
+	var events []*Event
+
+	for rows.Next() {
+		var (
+			id         string
+			name       string
+			startTime  *time.Time
+			locationID *string
+		)
+
+		if err := rows.Scan(&id, &name, &startTime, &locationID); err != nil {
+			span.RecordError(err)
+			observability.Metrics.TrackObjectError(entityEvent, "get")
+			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+
+		if startTime != nil {
+			var t time.Time
+			t = *startTime
+			t = t.UTC()
+			startTime = &t
+		}
+
+		events = append(events, &Event{
+			ID:         id,
+			Name:       name,
+			StartTime:  startTime,
+			LocationID: locationID,
+		})
+	}
+
+	if len(events) == 0 {
+		return nil, core.ErrNotFound
+	}
+
+	observability.Metrics.TrackObjectsRetrieved(len(events), entityEvent)
+
+	return events, nil
 }
