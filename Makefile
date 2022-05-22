@@ -43,6 +43,7 @@ start-api: stop
 start-frontend: stop
 	$(DC) up frontend
 
+# TODO: we need to pin this or else we won't get deterministic results.
 .PHONY: gen-graph
 gen-graph:
 	$(GO) run github.com/99designs/gqlgen generate
