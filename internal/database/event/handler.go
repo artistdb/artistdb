@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"go.opentelemetry.io/otel/attribute"
 	otelTrace "go.opentelemetry.io/otel/trace"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
+	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database/core"
 	"github.com/obitech/artist-db/internal/observability"
 )
@@ -201,4 +203,43 @@ func (h *Handler) Get(ctx context.Context, req GetRequest) ([]*Event, error) {
 	observability.Metrics.TrackObjectsRetrieved(len(events), entityEvent)
 
 	return events, nil
+}
+
+func (h *Handler) DeleteByID(ctx context.Context, id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return core.ErrInvalidUUID
+	}
+
+	spanCtx, span := h.tracer.Tracer(core.TracingInstrumentationName).Start(ctx, "event.delete")
+	defer span.End()
+
+	stmt := fmt.Sprintf(`
+		UPDATE 
+			"%s" 
+		SET 
+			deleted_at=$1,
+			updated_at=$1
+		WHERE 
+			id=$2 
+		RETURNING 
+			id`, core.TableEvents)
+
+	var deletedID string
+	if err := h.conn.QueryRow(spanCtx, stmt, conversion.TimeP(time.Now().UTC()), id).Scan(&deletedID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return core.ErrNotFound
+		}
+
+		observability.Metrics.TrackObjectError(entityEvent, "delete")
+		span.RecordError(err)
+		return err
+	}
+
+	if deletedID == "" {
+		return core.ErrNotFound
+	}
+
+	observability.Metrics.TrackObjectsChanged(1, entityEvent, "delete")
+
+	return nil
 }

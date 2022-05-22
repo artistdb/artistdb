@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -71,17 +72,12 @@ func Test_EventsIntegration(t *testing.T) {
 			})
 		})
 
-		t.Run("cleanup", func(t *testing.T) {
-			stmt := fmt.Sprintf(`DELETE FROM %s WHERE id=$1`, core.TableEvents)
+		t.Run("deleting event works", func(t *testing.T) {
+			require.NoError(t, db.EventHandler.DeleteByID(ctx, events[0].ID))
 
-			_, err := conn.Exec(ctx, stmt, events[0].ID)
-			require.NoError(t, err)
-
-			stmt = fmt.Sprintf(`SELECT id from %s WHERE id=$1`, core.TableEvents)
-
-			var id string
-			require.Error(t, conn.QueryRow(ctx, stmt, events[0].ID).Scan(&id))
-			assert.Empty(t, id, "")
+			res, err := db.EventHandler.Get(ctx, event.ByID(events[0].ID))
+			require.ErrorIs(t, err, core.ErrNotFound)
+			require.Nil(t, res)
 		})
 	})
 
@@ -192,6 +188,16 @@ func Test_EventsIntegration(t *testing.T) {
 
 			require.Len(t, ev, 1)
 			assert.Nil(t, ev[0].LocationID)
+		})
+	})
+
+	t.Run("deletiing invalid event throws error", func(t *testing.T) {
+		t.Run("invalid UUID", func(t *testing.T) {
+			require.ErrorIs(t, db.EventHandler.DeleteByID(ctx, "foo"), core.ErrInvalidUUID)
+		})
+
+		t.Run("unknown event", func(t *testing.T) {
+			require.ErrorIs(t, db.EventHandler.DeleteByID(ctx, uuid.New().String()), core.ErrNotFound)
 		})
 	})
 }
