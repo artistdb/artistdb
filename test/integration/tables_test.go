@@ -41,6 +41,13 @@ func Test_TablesExistsIntegration(t *testing.T) {
 		assert.True(t, exists)
 	})
 
+	t.Run("artist_events exists", func(t *testing.T) {
+		var exists bool
+		require.NoError(t, conn.QueryRow(ctx, stmt, core.TableInvitedArtists).Scan(&exists))
+
+		assert.True(t, exists)
+	})
+
 	// t.Run("artworks exists", func(t *testing.T) {
 	// 	var exists bool
 	// 	require.NoError(t, conn.QueryRow(ctx, stmt, database.TableArtworks).Scan(&exists))

@@ -42,14 +42,14 @@ CREATE TABLE IF NOT EXISTS events (
                                             REFERENCES locations(id)
                                             ON DELETE SET NULL
 );
---
--- CREATE TABLE IF NOT EXISTS invited_artists (
---                                              artist_id       UUID REFERENCES artists,
---                                              event_id        UUID REFERENCES events,
---                                              travel_expenses MONEY,
---                                              confirmation    TEXT
--- );
---
+
+CREATE TABLE IF NOT EXISTS artist_event (
+                                            artist_id   UUID REFERENCES artists ON UPDATE CASCADE ON DELETE CASCADE,
+                                            event_id    UUID REFERENCES events ON UPDATE CASCADE ON DELETE CASCADE,
+                                            confirmed   BOOL DEFAULT false,
+                                            CONSTRAINT  artist_event_pk PRIMARY KEY (artist_id, event_id)
+);
+
 -- CREATE TABLE IF NOT EXISTS artworks (
 --                                        id                  UUID PRIMARY KEY,
 --                                        title               TEXT,

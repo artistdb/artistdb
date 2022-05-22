@@ -56,7 +56,7 @@ func (h *Handler) Upsert(ctx context.Context, events ...*Event) error {
 		eventsChanged int
 	)
 	for _, event := range events {
-		if err := h.upsertEvents(spanCtx, tx, event); err != nil {
+		if err := h.upsertEvent(spanCtx, tx, event); err != nil {
 			if errors.Is(err, pgx.ErrTxClosed) {
 				return fmt.Errorf("insert aborted, tx cancelled: %w", err)
 			}
@@ -77,7 +77,7 @@ func (h *Handler) Upsert(ctx context.Context, events ...*Event) error {
 	return mErr
 }
 
-func (h *Handler) upsertEvents(ctx context.Context, tx pgx.Tx, event *Event) error {
+func (h *Handler) upsertEvent(ctx context.Context, tx pgx.Tx, event *Event) error {
 	start := time.Now().UTC()
 
 	stmt := fmt.Sprintf(`
@@ -114,6 +114,38 @@ func (h *Handler) upsertEvents(ctx context.Context, tx pgx.Tx, event *Event) err
 		event.StartTime,
 		event.LocationID,
 	); err != nil {
+		return fmt.Errorf("upserting event: %w", err)
+	}
+
+	for _, invitedArtist := range event.InvitedArtists {
+		if err := h.inviteArtist(ctx, tx, event.ID, invitedArtist); err != nil {
+			return fmt.Errorf("upsert invited artist: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (h *Handler) inviteArtist(ctx context.Context, tx pgx.Tx, eventID string, invitedArtist InvitedArtist) error {
+	stmt := fmt.Sprintf(`
+		INSERT INTO %q
+			(
+				artist_id,
+				event_id,
+				confirmed
+			)
+		VALUES
+			($1, $2, $3)
+		ON CONFLICT
+			(artist_id, event_id)
+		DO UPDATE SET
+			confirmed=$3`, core.TableInvitedArtists)
+
+	if _, err := tx.Exec(ctx, stmt,
+		invitedArtist.ID,
+		eventID,
+		invitedArtist.Confirmed,
+	); err != nil {
 		return err
 	}
 
@@ -126,14 +158,14 @@ type GetRequest func() (string, string, string)
 // ByID requests an Event by ID.
 func ByID(id string) GetRequest {
 	return func() (string, string, string) {
-		return id, "id=$1", "id"
+		return id, fmt.Sprintf("%s.id=$1", core.TableEvents), "id"
 	}
 }
 
 // ByName requests an Event by name.
 func ByName(name string) GetRequest {
 	return func() (string, string, string) {
-		return name, "name=$1", "name"
+		return name, fmt.Sprintf("%s.name=$1", core.TableEvents), "name"
 	}
 }
 
@@ -188,11 +220,17 @@ func (h *Handler) Get(ctx context.Context, req GetRequest) ([]*Event, error) {
 			startTime = &t
 		}
 
+		invited, err := h.invitedArtists(ctx, id)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("retrieving invtied artists: %w", err)
+		}
+
 		events = append(events, &Event{
-			ID:         id,
-			Name:       name,
-			StartTime:  startTime,
-			LocationID: locationID,
+			ID:             id,
+			Name:           name,
+			StartTime:      startTime,
+			LocationID:     locationID,
+			InvitedArtists: invited,
 		})
 	}
 
@@ -242,4 +280,40 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 	observability.Metrics.TrackObjectsChanged(1, entityEvent, "delete")
 
 	return nil
+}
+
+func (h *Handler) invitedArtists(ctx context.Context, eventID string) ([]InvitedArtist, error) {
+	stmt := fmt.Sprintf(`
+		SELECT
+			artist_id, confirmed
+		FROM
+			%q
+		WHERE
+			event_id=$1`, core.TableInvitedArtists)
+
+	rows, err := h.conn.Query(ctx, stmt, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	defer rows.Close()
+
+	var invited []InvitedArtist
+	for rows.Next() {
+		var (
+			id        string
+			confirmed bool
+		)
+
+		if err := rows.Scan(&id, &confirmed); err != nil {
+			return nil, fmt.Errorf("scan: %w", err)
+		}
+
+		invited = append(invited, InvitedArtist{
+			ID:        id,
+			Confirmed: confirmed,
+		})
+	}
+
+	return invited, nil
 }
