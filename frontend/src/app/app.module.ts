@@ -15,6 +15,7 @@ import { environment } from 'src/environments/environment';
 import { LocationComponent } from './location/location.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dynamic-form-field.component';
+import { NavbarComponent } from './navbar/navbar.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dyn
     ArtistFormComponent,
     LocationComponent,
     DynamicFormComponent,
-    DynamicFormFieldComponent
+    DynamicFormFieldComponent,
+    NavbarComponent
   ],
   imports: [
     BrowserModule,
