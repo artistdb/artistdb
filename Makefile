@@ -5,6 +5,7 @@ FN := frontend/
 TEST_DB_CONN_STRING ?= postgres://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable
 GIT_REF    := $(shell git describe --all | sed  -e  's%tags/%%g'  -e 's%/%.%g' )
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
+TEST_FLAGS=
 
 go_packages = $(GO) list ./... | grep -v /test | xargs
 
@@ -62,7 +63,7 @@ clean:
 .PHONY: test-integration
 test-integration:
 	TEST_DB_CONN_STRING="$(TEST_DB_CONN_STRING)" \
-	$(GO) test -count=1 -v ./test/integration
+	$(GO) test -count=1 -v ./test/integration $(TEST_FLAGS)
 
 .PHONY: test-e2e
 test-e2e:

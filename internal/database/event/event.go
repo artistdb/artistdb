@@ -7,10 +7,16 @@ import (
 )
 
 type Event struct {
-	ID         string
-	Name       string
-	StartTime  *time.Time
-	LocationID *string
+	ID             string
+	Name           string
+	StartTime      *time.Time
+	LocationID     *string
+	InvitedArtists []InvitedArtist
+}
+
+type InvitedArtist struct {
+	ID        string
+	Confirmed bool
 }
 
 type Option func(*Event)
@@ -25,6 +31,13 @@ func WithStartTime(startTime time.Time) Option {
 	return func(e *Event) {
 		t := startTime.UTC()
 		e.StartTime = &t
+	}
+}
+
+// WithInvitedArtistIDs allows assigning artists to an event.
+func WithInvitedArtistIDs(artists ...InvitedArtist) Option {
+	return func(e *Event) {
+		e.InvitedArtists = append(e.InvitedArtists, artists...)
 	}
 }
 

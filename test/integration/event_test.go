@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/database/core"
 	"github.com/obitech/artist-db/internal/database/event"
 	"github.com/obitech/artist-db/internal/database/location"
@@ -25,15 +26,30 @@ func Test_EventsIntegration(t *testing.T) {
 	loc1 := location.New()
 	loc2 := location.New()
 
+	artist1 := artist.New()
+	artist2 := artist.New()
+
 	events := []*event.Event{
 		event.New("onlyName"),
 		event.New("withTime", event.WithStartTime(time.Time{}.UTC())),
 		event.New("withLocation", event.WithLocationID(loc1.ID)),
-		event.New("withTimeLocation", event.WithStartTime(time.Time{}), event.WithLocationID(loc2.ID)),
+		event.New("withEverything",
+			event.WithStartTime(time.Time{}),
+			event.WithLocationID(loc2.ID),
+			event.WithInvitedArtistIDs(
+				event.InvitedArtist{ID: artist1.ID},
+				event.InvitedArtist{ID: artist2.ID, Confirmed: true},
+			),
+		),
+		event.New("withInvitedArtist", event.WithInvitedArtistIDs(event.InvitedArtist{ID: artist1.ID})),
 	}
 
 	t.Run("inserting event without existing location throws error", func(t *testing.T) {
 		require.Error(t, db.EventHandler.Upsert(ctx, events[2]))
+	})
+
+	t.Run("inserting event without existing artist throws error", func(t *testing.T) {
+		require.Error(t, db.EventHandler.Upsert(ctx, events[3]))
 	})
 
 	t.Run("inserting and retrieving single event without location works", func(t *testing.T) {
@@ -84,6 +100,7 @@ func Test_EventsIntegration(t *testing.T) {
 	t.Run("inserting multiple events work", func(t *testing.T) {
 		t.Run("insert", func(t *testing.T) {
 			require.NoError(t, db.LocationHandler.Upsert(ctx, loc1, loc2))
+			require.NoError(t, db.ArtistHandler.Upsert(ctx, artist1, artist2))
 			require.NoError(t, db.EventHandler.Upsert(ctx, events...))
 		})
 
