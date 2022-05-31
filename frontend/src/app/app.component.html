@@ -1,6 +1,9 @@
-<p>HELLO ARTIST-DB</p>
+<app-navbar (categoryUpdate)="changeCategory($event)"></app-navbar>
 
-<p>
-    <app-artist></app-artist>
+<div *ngIf="category=='Artists'">
+    <app-artist ></app-artist>
+</div>
+
+<div *ngIf="category=='Locations'">
     <app-location></app-location>
-</p>
+</div>
