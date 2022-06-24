@@ -253,13 +253,28 @@ func TestServerIntegration(t *testing.T) {
 
 	t.Run("test events endpoints", func(t *testing.T) {
 		t.Run("insertion of single, simple event works", func(t *testing.T) {
-			str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\"}]) { id name }}"}`
+			str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\", startTime:1637830936}]) { id name }}"}`
 			result := graphQuery(t, ctx, str)
 			require.Len(t, result.Errors, 0, result.Errors)
 
 			require.Len(t, result.Data.UpsertEvents, 1)
 			assert.NotEmpty(t, result.Data.UpsertEvents[0].ID)
 			assert.Equal(t, "Ballern", result.Data.UpsertEvents[0].Name)
+		})
+
+		t.Run("insertion of single event+location without locationID throws error", func(t *testing.T) {
+		})
+
+		t.Run("insertion of single event+location works", func(t *testing.T) {
+		})
+
+		t.Run("insertion of single event+invited artist without artistID throws error", func(t *testing.T) {
+		})
+
+		t.Run("insertion of single event+invited artist works", func(t *testing.T) {
+		})
+
+		t.Run("insertion of single event+location+artist works", func(t *testing.T) {
 		})
 	})
 

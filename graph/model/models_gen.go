@@ -83,7 +83,7 @@ type Event struct {
 type EventInput struct {
 	ID             *string               `json:"id"`
 	Name           string                `json:"name"`
-	StartTime      *string               `json:"startTime"`
+	StartTime      *int                  `json:"startTime"`
 	Location       *LocationInput        `json:"location"`
 	InvitedArtists []*InvitedArtistInput `json:"invitedArtists"`
 }
@@ -101,7 +101,7 @@ type GetLocationInput struct {
 
 type InvitedArtist struct {
 	Artist    *Artist `json:"artist"`
-	Confirmed *bool   `json:"confirmed"`
+	Confirmed bool    `json:"confirmed"`
 }
 
 type InvitedArtistInput struct {

@@ -95,7 +95,7 @@ func (r *mutationResolver) UpsertEvents(ctx context.Context, input []*model.Even
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
-	ret, err := modelEvents(dbEvents...)
+	ret, err := r.modelEvents(ctx, dbEvents...)
 	if err != nil {
 		msg := "conversion failed"
 

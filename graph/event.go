@@ -1,11 +1,16 @@
 package graph
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/conversion"
+	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/database/event"
+	"github.com/obitech/artist-db/internal/database/location"
 )
 
 // databaseEvents takes EventInput as defined in the GraphQL models and
@@ -22,6 +27,10 @@ func databaseEvents(events ...*model.EventInput) ([]*event.Event, error) {
 		}
 
 		var opts []event.Option
+
+		if ev.StartTime != nil {
+			opts = append(opts, event.WithStartTime(time.Unix(int64(*ev.StartTime), 0).UTC()))
+		}
 
 		if l := ev.Location; l != nil {
 			if l.ID == nil {
@@ -55,19 +64,44 @@ func databaseEvents(events ...*model.EventInput) ([]*event.Event, error) {
 
 // modelEvents takes Events returned from the database and converts them to
 // Events defined in the GraphQL model.
-func modelEvents(events ...*event.Event) ([]*model.Event, error) {
+func (r *mutationResolver) modelEvents(ctx context.Context, events ...*event.Event) ([]*model.Event, error) {
 	var out []*model.Event
 
 	for _, ev := range events {
 		var loc *model.Location
 		if ev.LocationID != nil {
-			// TODO: fetch location
+			dbLocs, err := r.db.LocationHandler.Get(ctx, location.ByID(*ev.LocationID))
+			if err != nil {
+				return nil, fmt.Errorf("fetching location %q: %w", *ev.LocationID, err)
+			}
+
+			l, err := modelLocations(dbLocs...)
+			if err != nil {
+				return nil, fmt.Errorf("convertion location: %w", err)
+			}
+
+			loc = l[0]
 		}
 
 		var artists []*model.InvitedArtist
 		for _, a := range ev.InvitedArtists {
-			// TODO: fetch artists
-			_ = a
+			dbArtists, err := r.db.ArtistHandler.Get(ctx, artist.ByID(a.ID))
+			if err != nil {
+				return nil, fmt.Errorf("fetching artist %q: %w", a.ID, err)
+			}
+
+			convertedArtists, err := modelArtists(dbArtists...)
+			if err != nil {
+				return nil, fmt.Errorf("converting artist: %w", err)
+			}
+
+			for _, ca := range convertedArtists {
+				artists = append(artists, &model.InvitedArtist{
+					Artist:    ca,
+					Confirmed: a.Confirmed,
+				})
+			}
+
 		}
 
 		out = append(out, &model.Event{

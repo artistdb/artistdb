@@ -38,8 +38,8 @@ type Event {
 }
 
 type InvitedArtist {
-  artist:         Artist
-  confirmed:      Boolean
+  artist:         Artist!
+  confirmed:      Boolean!
 }
 
 input InvitedArtistInput {
@@ -84,7 +84,7 @@ type ArtworkEventLocation {
 input EventInput {
   id: ID
   name: String!
-  startTime: String
+  startTime: Int
   location: LocationInput
   invitedArtists: [InvitedArtistInput]
 }

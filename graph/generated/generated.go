@@ -780,8 +780,8 @@ type Event {
 }
 
 type InvitedArtist {
-  artist:         Artist
-  confirmed:      Boolean
+  artist:         Artist!
+  confirmed:      Boolean!
 }
 
 input InvitedArtistInput {
@@ -826,7 +826,7 @@ type ArtworkEventLocation {
 input EventInput {
   id: ID
   name: String!
-  startTime: String
+  startTime: Int
   location: LocationInput
   invitedArtists: [InvitedArtistInput]
 }
@@ -3195,11 +3195,14 @@ func (ec *executionContext) _InvitedArtist_artist(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Artist)
 	fc.Result = res
-	return ec.marshalOArtist2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtist(ctx, field.Selections, res)
+	return ec.marshalNArtist2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtist(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvitedArtist_artist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3268,11 +3271,14 @@ func (ec *executionContext) _InvitedArtist_confirmed(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvitedArtist_confirmed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6260,7 +6266,7 @@ func (ec *executionContext) unmarshalInputEventInput(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
-			it.StartTime, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.StartTime, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6734,10 +6740,16 @@ func (ec *executionContext) _InvitedArtist(ctx context.Context, sel ast.Selectio
 
 			out.Values[i] = ec._InvitedArtist_artist(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "confirmed":
 
 			out.Values[i] = ec._InvitedArtist_confirmed(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
