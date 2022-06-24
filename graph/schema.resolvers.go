@@ -7,12 +7,13 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
 	"github.com/obitech/artist-db/internal/database/location"
 	"github.com/obitech/artist-db/internal/observability"
-	"go.uber.org/zap"
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
@@ -79,6 +80,30 @@ func (r *mutationResolver) DeleteLocationByID(ctx context.Context, input string)
 	}
 
 	return true, nil
+}
+
+func (r *mutationResolver) UpsertEvents(ctx context.Context, input []*model.EventInput) ([]*model.Event, error) {
+	dbEvents, err := databaseEvents(input...)
+	if err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
+	if err := r.db.EventHandler.Upsert(ctx, dbEvents...); err != nil {
+		msg := "upsert failed"
+
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+		return nil, fmt.Errorf("%s: %w", msg, err)
+	}
+
+	ret, err := modelEvents(dbEvents...)
+	if err != nil {
+		msg := "conversion failed"
+
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+		return nil, fmt.Errorf("%s: %w", msg, err)
+	}
+
+	return ret, nil
 }
 
 func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error) {
@@ -157,5 +182,7 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
+type (
+	mutationResolver struct{ *Resolver }
+	queryResolver    struct{ *Resolver }
+)

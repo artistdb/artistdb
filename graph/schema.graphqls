@@ -31,7 +31,7 @@ type Location {
 
 type Event {
   id:           ID!
-  name:         String
+  name:         String!
   startTime:    String
   location:     Location
   artists:      [InvitedArtist]
@@ -39,9 +39,12 @@ type Event {
 
 type InvitedArtist {
   artist:         Artist
-  event:          Event
-  travelExpenses: String
-  confirmation:   String
+  confirmed:      Boolean
+}
+
+input InvitedArtistInput {
+  artist: ArtistInput!
+  confirmed: Boolean!
 }
 
 type Artwork {
@@ -76,6 +79,14 @@ type ArtworkEventLocation {
   noPieces:                     Int
   size:                         Float
   pubAgreement:                 String
+}
+
+input EventInput {
+  id: ID
+  name: String!
+  startTime: String
+  location: LocationInput
+  invitedArtists: [InvitedArtistInput]
 }
 
 input ArtistInput {
@@ -122,4 +133,5 @@ type Mutation {
   deleteArtistByID(id: ID!): Boolean!
   upsertLocations(input: [LocationInput!]): [Location!]
   deleteLocationByID(input: ID!): Boolean!
+  upsertEvents(input: [EventInput!]): [Event!]
 }

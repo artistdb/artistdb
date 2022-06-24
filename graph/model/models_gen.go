@@ -74,10 +74,18 @@ type ArtworkEventLocation struct {
 
 type Event struct {
 	ID        string           `json:"id"`
-	Name      *string          `json:"name"`
+	Name      string           `json:"name"`
 	StartTime *string          `json:"startTime"`
 	Location  *Location        `json:"location"`
 	Artists   []*InvitedArtist `json:"artists"`
+}
+
+type EventInput struct {
+	ID             *string               `json:"id"`
+	Name           string                `json:"name"`
+	StartTime      *string               `json:"startTime"`
+	Location       *LocationInput        `json:"location"`
+	InvitedArtists []*InvitedArtistInput `json:"invitedArtists"`
 }
 
 type GetArtistInput struct {
@@ -92,10 +100,13 @@ type GetLocationInput struct {
 }
 
 type InvitedArtist struct {
-	Artist         *Artist `json:"artist"`
-	Event          *Event  `json:"event"`
-	TravelExpenses *string `json:"travelExpenses"`
-	Confirmation   *string `json:"confirmation"`
+	Artist    *Artist `json:"artist"`
+	Confirmed *bool   `json:"confirmed"`
+}
+
+type InvitedArtistInput struct {
+	Artist    *ArtistInput `json:"artist"`
+	Confirmed bool         `json:"confirmed"`
 }
 
 type Location struct {

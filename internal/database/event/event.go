@@ -34,8 +34,8 @@ func WithStartTime(startTime time.Time) Option {
 	}
 }
 
-// WithInvitedArtistIDs allows assigning artists to an event.
-func WithInvitedArtistIDs(artists ...InvitedArtist) Option {
+// WithInvitedArtists allows assigning artists to an event.
+func WithInvitedArtists(artists ...InvitedArtist) Option {
 	return func(e *Event) {
 		e.InvitedArtists = append(e.InvitedArtists, artists...)
 	}

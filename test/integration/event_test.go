@@ -36,12 +36,12 @@ func Test_EventsIntegration(t *testing.T) {
 		event.New("withEverything",
 			event.WithStartTime(time.Time{}),
 			event.WithLocationID(loc2.ID),
-			event.WithInvitedArtistIDs(
+			event.WithInvitedArtists(
 				event.InvitedArtist{ID: artist1.ID},
 				event.InvitedArtist{ID: artist2.ID, Confirmed: true},
 			),
 		),
-		event.New("withInvitedArtist", event.WithInvitedArtistIDs(event.InvitedArtist{ID: artist1.ID})),
+		event.New("withInvitedArtist", event.WithInvitedArtists(event.InvitedArtist{ID: artist1.ID})),
 	}
 
 	t.Run("inserting event without existing location throws error", func(t *testing.T) {
