@@ -105,8 +105,8 @@ type InvitedArtist struct {
 }
 
 type InvitedArtistInput struct {
-	Artist    *ArtistInput `json:"artist"`
-	Confirmed bool         `json:"confirmed"`
+	ID        string `json:"id"`
+	Confirmed bool   `json:"confirmed"`
 }
 
 type Location struct {

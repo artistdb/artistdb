@@ -61,7 +61,14 @@ func WithStartTime(startTime time.Time) Option {
 // WithInvitedArtists allows assigning artists to an event.
 func WithInvitedArtists(artists ...InvitedArtist) Option {
 	return func(e *Event) error {
-		e.InvitedArtists = append(e.InvitedArtists, artists...)
+		for _, a := range artists {
+			if _, err := uuid.Parse(a.ID); err != nil {
+				return fmt.Errorf("invalid UUID %q: %w", a.ID, err)
+			}
+
+			e.InvitedArtists = append(e.InvitedArtists, a)
+		}
+
 		return nil
 	}
 }

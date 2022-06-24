@@ -39,12 +39,8 @@ func databaseEvents(events ...*model.EventInput) ([]*event.Event, error) {
 		}
 
 		for _, ia := range ev.InvitedArtists {
-			if a := ia.Artist; a == nil || a.ID == nil {
-				return nil, errors.New("artist ID is empty")
-			}
-
 			opts = append(opts, event.WithInvitedArtists(event.InvitedArtist{
-				ID:        *ia.Artist.ID,
+				ID:        ia.ID,
 				Confirmed: ia.Confirmed,
 			}))
 		}

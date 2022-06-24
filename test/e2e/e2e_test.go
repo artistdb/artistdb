@@ -265,6 +265,8 @@ func TestServerIntegration(t *testing.T) {
 
 			_, err := uuid.Parse(result.Data.UpsertEvents[0])
 			require.NoError(t, err)
+
+			// TODO: test get
 		})
 
 		t.Run("insertion of single event+location works", func(t *testing.T) {
@@ -304,15 +306,45 @@ func TestServerIntegration(t *testing.T) {
 				_, err := uuid.Parse(result.Data.UpsertEvents[0])
 				require.NoError(t, err)
 			})
-		})
 
-		t.Run("insertion of single event+invited artist without artistID throws error", func(t *testing.T) {
+			// TODO: test get
 		})
 
 		t.Run("insertion of single event+invited artist works", func(t *testing.T) {
-		})
+			var artistID string
 
-		t.Run("insertion of single event+location+artist works", func(t *testing.T) {
+			t.Run("insertion of single event+artist without artistID throws error", func(t *testing.T) {
+				str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern 3\", startTime:1637830936, invitedArtists: [{ id: \"foo\", confirmed: false}]}])}"}`
+				result := graphQuery(t, ctx, str)
+				require.Len(t, result.Errors, 1, result.Errors)
+				assert.Contains(t, result.Errors[0].Message, "invalid UUID")
+			})
+
+			t.Run("create new artist", func(t *testing.T) {
+				str := `{"query": "mutation { upsertArtists(input: [{firstName:\"Foo\",lastName:\"Bar\"}]) {id} }"}`
+
+				result := graphQuery(t, ctx, str)
+				require.Len(t, result.Errors, 0, result.Errors)
+
+				require.Len(t, result.Data.UpsertArtists, 1)
+				assert.NotEmpty(t, result.Data.UpsertArtists[0].ID)
+
+				artistID = result.Data.UpsertArtists[0].ID
+			})
+
+			t.Run("create event+artist", func(t *testing.T) {
+				str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"Ballern 3\", startTime:1637830936, invitedArtists: [{ id: \"%s\", confirmed: false}]}])}"}`, artistID)
+				result := graphQuery(t, ctx, str)
+				require.Len(t, result.Errors, 0, result.Errors)
+
+				require.Len(t, result.Data.UpsertEvents, 1)
+				assert.NotEmpty(t, result.Data.UpsertEvents[0])
+
+				_, err := uuid.Parse(result.Data.UpsertEvents[0])
+				require.NoError(t, err)
+			})
+
+			// TODO: retrieve
 		})
 	})
 

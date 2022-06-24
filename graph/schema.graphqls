@@ -43,7 +43,7 @@ type InvitedArtist {
 }
 
 input InvitedArtistInput {
-  artist: ArtistInput!
+  id: String!
   confirmed: Boolean!
 }
 

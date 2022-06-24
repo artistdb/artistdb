@@ -785,7 +785,7 @@ type InvitedArtist {
 }
 
 input InvitedArtistInput {
-  artist: ArtistInput!
+  id: String!
   confirmed: Boolean!
 }
 
@@ -6337,11 +6337,11 @@ func (ec *executionContext) unmarshalInputInvitedArtistInput(ctx context.Context
 
 	for k, v := range asMap {
 		switch k {
-		case "artist":
+		case "id":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("artist"))
-			it.Artist, err = ec.unmarshalNArtistInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐArtistInput(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
