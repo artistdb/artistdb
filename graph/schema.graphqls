@@ -133,5 +133,5 @@ type Mutation {
   deleteArtistByID(id: ID!): Boolean!
   upsertLocations(input: [LocationInput!]): [Location!]
   deleteLocationByID(input: ID!): Boolean!
-  upsertEvents(input: [EventInput!]): [Event!]
+  upsertEvents(input: [EventInput!]): [String!]
 }

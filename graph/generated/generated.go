@@ -140,7 +140,7 @@ type MutationResolver interface {
 	DeleteArtistByID(ctx context.Context, id string) (bool, error)
 	UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]*model.Location, error)
 	DeleteLocationByID(ctx context.Context, input string) (bool, error)
-	UpsertEvents(ctx context.Context, input []*model.EventInput) ([]*model.Event, error)
+	UpsertEvents(ctx context.Context, input []*model.EventInput) ([]string, error)
 }
 type QueryResolver interface {
 	GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error)
@@ -875,7 +875,7 @@ type Mutation {
   deleteArtistByID(id: ID!): Boolean!
   upsertLocations(input: [LocationInput!]): [Location!]
   deleteLocationByID(input: ID!): Boolean!
-  upsertEvents(input: [EventInput!]): [Event!]
+  upsertEvents(input: [EventInput!]): [String!]
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -4001,9 +4001,9 @@ func (ec *executionContext) _Mutation_upsertEvents(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Event)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalOEvent2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEventᚄ(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_upsertEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4013,19 +4013,7 @@ func (ec *executionContext) fieldContext_Mutation_upsertEvents(ctx context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Event_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Event_name(ctx, field)
-			case "startTime":
-				return ec.fieldContext_Event_startTime(ctx, field)
-			case "location":
-				return ec.fieldContext_Event_location(ctx, field)
-			case "artists":
-				return ec.fieldContext_Event_artists(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -7324,16 +7312,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNEvent2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx context.Context, sel ast.SelectionSet, v *model.Event) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Event(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNEventInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEventInput(ctx context.Context, v interface{}) (*model.EventInput, error) {
 	res, err := ec.unmarshalInputEventInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -7795,53 +7773,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOEvent2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Event) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNEvent2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) marshalOEvent2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx context.Context, sel ast.SelectionSet, v *model.Event) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -8146,6 +8077,44 @@ func (ec *executionContext) unmarshalOLocationInput2ᚕᚖgithubᚗcomᚋobitech
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
