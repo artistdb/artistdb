@@ -5,7 +5,8 @@ FN := frontend/
 TEST_DB_CONN_STRING ?= postgres://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable
 GIT_REF    := $(shell git describe --all | sed  -e  's%tags/%%g'  -e 's%/%.%g' )
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
-TEST_FLAGS=
+TEST_FLAGS =
+BUILD_FLAGS =
 
 go_packages = $(GO) list ./... | grep -v /test | xargs
 
@@ -54,8 +55,20 @@ test:
 	$(GO) test -v -race -short $(shell $(call go_packages))
 
 .PHONY: build
-build: clean
-	CGO_ENABLED=0  $(GO) build -o bin/api -a -ldflags '-X $(GO_MODULE)/internal.Version=$(GITHUB_REF)'
+build: clean build-frontend build-api build-container
+
+.PHONY: build-api
+build-api:
+	${BUILD_FLAGS} $(GO) build -o bin/api -a -ldflags '-X $(GO_MODULE)/internal.Version=$(GITHUB_REF)'
+
+.PHONY: build-frontend
+build-frontend:
+	cd frontend && ng build
+
+.PHONY: build-container
+build-container:
+	$(D) build -t obitech/artist-db-api:latest -f Dockerfile.api .
+	$(D) build -t obitech/artist-db-frontend:latest -f Dockerfile.frontend .
 
 .PHONY: clean
 clean:
