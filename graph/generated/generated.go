@@ -827,7 +827,7 @@ input EventInput {
   id: ID
   name: String!
   startTime: Int
-  location: LocationInput
+  locationID: String
   invitedArtists: [InvitedArtistInput]
 }
 
@@ -6270,11 +6270,11 @@ func (ec *executionContext) unmarshalInputEventInput(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
-		case "location":
+		case "locationID":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("location"))
-			it.Location, err = ec.unmarshalOLocationInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐLocationInput(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("locationID"))
+			it.LocationID, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8146,14 +8146,6 @@ func (ec *executionContext) unmarshalOLocationInput2ᚕᚖgithubᚗcomᚋobitech
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalOLocationInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐLocationInput(ctx context.Context, v interface{}) (*model.LocationInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputLocationInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {

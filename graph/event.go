@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database/artist"
@@ -32,12 +34,8 @@ func databaseEvents(events ...*model.EventInput) ([]*event.Event, error) {
 			opts = append(opts, event.WithStartTime(time.Unix(int64(*ev.StartTime), 0).UTC()))
 		}
 
-		if l := ev.Location; l != nil {
-			if l.ID == nil {
-				return nil, errors.New("location ID is empty")
-			}
-
-			opts = append(opts, event.WithLocationID(*ev.Location.ID))
+		if ev.LocationID != nil {
+			opts = append(opts, event.WithLocationID(*ev.LocationID))
 		}
 
 		for _, ia := range ev.InvitedArtists {
@@ -51,8 +49,16 @@ func databaseEvents(events ...*model.EventInput) ([]*event.Event, error) {
 			}))
 		}
 
-		dbEv := event.New(ev.Name, opts...)
+		dbEv, err := event.New(ev.Name, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("creating event: %w", err)
+		}
+
 		if ev.ID != nil {
+			if _, err := uuid.Parse(*ev.ID); err != nil {
+				return nil, fmt.Errorf("invalid event ID %q: %w", *ev.ID, err)
+			}
+
 			dbEv.ID = *ev.ID
 		}
 

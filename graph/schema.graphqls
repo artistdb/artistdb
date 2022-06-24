@@ -85,7 +85,7 @@ input EventInput {
   id: ID
   name: String!
   startTime: Int
-  location: LocationInput
+  locationID: String
   invitedArtists: [InvitedArtistInput]
 }
 

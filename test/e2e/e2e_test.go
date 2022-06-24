@@ -263,6 +263,10 @@ func TestServerIntegration(t *testing.T) {
 		})
 
 		t.Run("insertion of single event+location without locationID throws error", func(t *testing.T) {
+			str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\", startTime:1637830936, locationID: \"foo\"}]) { id name }}"}`
+			result := graphQuery(t, ctx, str)
+			require.Len(t, result.Errors, 1, result.Errors)
+			assert.Contains(t, result.Errors[0].Message, "invalid UUID")
 		})
 
 		t.Run("insertion of single event+location works", func(t *testing.T) {

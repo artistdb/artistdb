@@ -84,7 +84,7 @@ type EventInput struct {
 	ID             *string               `json:"id"`
 	Name           string                `json:"name"`
 	StartTime      *int                  `json:"startTime"`
-	Location       *LocationInput        `json:"location"`
+	LocationID     *string               `json:"locationID"`
 	InvitedArtists []*InvitedArtistInput `json:"invitedArtists"`
 }
 
