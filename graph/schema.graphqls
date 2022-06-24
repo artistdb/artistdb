@@ -131,7 +131,7 @@ type Query {
 type Mutation {
   upsertArtists(input: [ArtistInput!]): [Artist!]
   deleteArtistByID(id: ID!): Boolean!
-  upsertLocations(input: [LocationInput!]): [Location!]
+  upsertLocations(input: [LocationInput!]): [String!]
   deleteLocationByID(input: ID!): Boolean!
   upsertEvents(input: [EventInput!]): [String!]
 }

@@ -29,7 +29,7 @@ type data struct {
 	DeleteArtistByID bool           `json:"deleteArtistByID"`
 
 	GetLocations       []model.Location `json:"getLocations"`
-	UpsertLocations    []model.Location `json:"upsertLocations"`
+	UpsertLocations    []string         `json:"upsertLocations"`
 	DeleteLocationByID bool             `json:"deleteLocationByID"`
 
 	UpsertEvents []string `json:"upsertEvents"`
@@ -200,16 +200,18 @@ func TestServerIntegration(t *testing.T) {
 
 		t.Run("insertion of single location works", func(t *testing.T) {
 			str := `{"query": 
-			"mutation { upsertLocations(input: [{name: \"Tille\"}]) { id name }}"}`
+			"mutation { upsertLocations(input: [{name: \"Tille\"}])}"}`
 
 			result := graphQuery(t, ctx, str)
 			require.Len(t, result.Errors, 0, result.Errors)
 
 			require.Len(t, result.Data.UpsertLocations, 1)
-			assert.NotEmpty(t, result.Data.UpsertLocations[0].ID)
-			assert.Equal(t, "Tille", result.Data.UpsertLocations[0].Name)
+			assert.NotEmpty(t, result.Data.UpsertLocations[0])
 
-			testID = result.Data.UpsertLocations[0].ID
+			_, err := uuid.Parse(result.Data.UpsertLocations[0])
+			require.NoError(t, err)
+
+			testID = result.Data.UpsertLocations[0]
 		})
 
 		t.Run("retrieval of single location by ID works", func(t *testing.T) {

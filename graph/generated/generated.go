@@ -138,7 +138,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error)
 	DeleteArtistByID(ctx context.Context, id string) (bool, error)
-	UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]*model.Location, error)
+	UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]string, error)
 	DeleteLocationByID(ctx context.Context, input string) (bool, error)
 	UpsertEvents(ctx context.Context, input []*model.EventInput) ([]string, error)
 }
@@ -873,7 +873,7 @@ type Query {
 type Mutation {
   upsertArtists(input: [ArtistInput!]): [Artist!]
   deleteArtistByID(id: ID!): Boolean!
-  upsertLocations(input: [LocationInput!]): [Location!]
+  upsertLocations(input: [LocationInput!]): [String!]
   deleteLocationByID(input: ID!): Boolean!
   upsertEvents(input: [EventInput!]): [String!]
 }`, BuiltIn: false},
@@ -3872,9 +3872,9 @@ func (ec *executionContext) _Mutation_upsertLocations(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Location)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalOLocation2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_upsertLocations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3884,29 +3884,7 @@ func (ec *executionContext) fieldContext_Mutation_upsertLocations(ctx context.Co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Location_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Location_name(ctx, field)
-			case "country":
-				return ec.fieldContext_Location_country(ctx, field)
-			case "zip":
-				return ec.fieldContext_Location_zip(ctx, field)
-			case "city":
-				return ec.fieldContext_Location_city(ctx, field)
-			case "street":
-				return ec.fieldContext_Location_street(ctx, field)
-			case "picture":
-				return ec.fieldContext_Location_picture(ctx, field)
-			case "description":
-				return ec.fieldContext_Location_description(ctx, field)
-			case "lat":
-				return ec.fieldContext_Location_lat(ctx, field)
-			case "lon":
-				return ec.fieldContext_Location_lon(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -7342,16 +7320,6 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Location(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNLocationInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐLocationInput(ctx context.Context, v interface{}) (*model.LocationInput, error) {
 	res, err := ec.unmarshalInputLocationInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -8001,53 +7969,6 @@ func (ec *executionContext) marshalOLocation2ᚕᚖgithubᚗcomᚋobitechᚋarti
 
 	}
 	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalOLocation2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐLocationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Location) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNLocation2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐLocation(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
 
 	return ret
 }
