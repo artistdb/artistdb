@@ -23,12 +23,15 @@ type graphQLResponse struct {
 }
 
 type data struct {
-	GetArtists         []model.Artist   `json:"getArtists"`
-	UpsertArtists      []model.Artist   `json:"upsertArtists"`
-	DeleteArtistByID   bool             `json:"deleteArtistByID"`
+	GetArtists       []model.Artist `json:"getArtists"`
+	UpsertArtists    []model.Artist `json:"upsertArtists"`
+	DeleteArtistByID bool           `json:"deleteArtistByID"`
+
 	GetLocations       []model.Location `json:"getLocations"`
 	UpsertLocations    []model.Location `json:"upsertLocations"`
 	DeleteLocationByID bool             `json:"deleteLocationByID"`
+
+	UpsertEvents []model.Event `json:"upsertEvents"`
 }
 
 type graphQLError struct {
@@ -245,6 +248,18 @@ func TestServerIntegration(t *testing.T) {
 			require.Len(t, result.Errors, 0, result.Errors)
 
 			assert.Equal(t, true, result.Data.DeleteLocationByID)
+		})
+	})
+
+	t.Run("test events endpoints", func(t *testing.T) {
+		t.Run("insertion of single, simple event works", func(t *testing.T) {
+			str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\"}]) { id name }}"}`
+			result := graphQuery(t, ctx, str)
+			require.Len(t, result.Errors, 0, result.Errors)
+
+			require.Len(t, result.Data.UpsertEvents, 1)
+			assert.NotEmpty(t, result.Data.UpsertEvents[0].ID)
+			assert.Equal(t, "Ballern", result.Data.UpsertEvents[0].Name)
 		})
 	})
 
