@@ -267,14 +267,43 @@ func TestServerIntegration(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		t.Run("insertion of single event+location without locationID throws error", func(t *testing.T) {
-			str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\", startTime:1637830936, locationID: \"foo\"}])}"}`
-			result := graphQuery(t, ctx, str)
-			require.Len(t, result.Errors, 1, result.Errors)
-			assert.Contains(t, result.Errors[0].Message, "invalid UUID")
-		})
-
 		t.Run("insertion of single event+location works", func(t *testing.T) {
+			var locID string
+
+			t.Run("insertion of single event+location without locationID throws error", func(t *testing.T) {
+				str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\", startTime:1637830936, locationID: \"foo\"}])}"}`
+				result := graphQuery(t, ctx, str)
+				require.Len(t, result.Errors, 1, result.Errors)
+				assert.Contains(t, result.Errors[0].Message, "invalid UUID")
+			})
+
+			t.Run("create new location", func(t *testing.T) {
+				str := `{"query": "mutation { upsertLocations(input: [{name: \"Bierkönig\"}])}"}`
+
+				result := graphQuery(t, ctx, str)
+				require.Len(t, result.Errors, 0, result.Errors)
+
+				require.Len(t, result.Data.UpsertLocations, 1)
+				assert.NotEmpty(t, result.Data.UpsertLocations[0])
+
+				_, err := uuid.Parse(result.Data.UpsertLocations[0])
+				require.NoError(t, err)
+
+				locID = result.Data.UpsertLocations[0]
+			})
+
+			t.Run("create event+location", func(t *testing.T) {
+				str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"Ballern 2\", startTime:1637830936, locationID: \"%s\"}])}"}`, locID)
+				result := graphQuery(t, ctx, str)
+
+				require.Len(t, result.Errors, 0, result.Errors)
+
+				require.Len(t, result.Data.UpsertEvents, 1)
+				assert.NotEmpty(t, result.Data.UpsertEvents[0])
+
+				_, err := uuid.Parse(result.Data.UpsertEvents[0])
+				require.NoError(t, err)
+			})
 		})
 
 		t.Run("insertion of single event+invited artist without artistID throws error", func(t *testing.T) {

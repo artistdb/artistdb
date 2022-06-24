@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap/zapcore"
 )
 
 type Event struct {
@@ -13,6 +14,21 @@ type Event struct {
 	StartTime      *time.Time
 	LocationID     *string
 	InvitedArtists []InvitedArtist
+}
+
+func (e *Event) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	enc.AddString("id", e.ID)
+	enc.AddString("name", e.Name)
+
+	if e.StartTime != nil {
+		enc.AddTime("startTime", *e.StartTime)
+	}
+
+	if e.LocationID != nil {
+		enc.AddString("locationID", *e.LocationID)
+	}
+
+	return nil
 }
 
 type InvitedArtist struct {
