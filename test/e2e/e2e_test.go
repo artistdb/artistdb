@@ -32,8 +32,9 @@ type data struct {
 	UpsertLocations    []string         `json:"upsertLocations"`
 	DeleteLocationByID bool             `json:"deleteLocationByID"`
 
-	UpsertEvents []string      `json:"upsertEvents"`
-	GetEvents    []model.Event `json:"getEvents"`
+	UpsertEvents    []string      `json:"upsertEvents"`
+	GetEvents       []model.Event `json:"getEvents"`
+	DeleteEventByID bool          `json:"deleteEventByID"`
 }
 
 type graphQLError struct {
@@ -342,6 +343,32 @@ func TestServerIntegration(t *testing.T) {
 
 					assert.Equal(t, locID, result.Data.GetEvents[0].Location.ID)
 					assert.Equal(t, locName, result.Data.GetEvents[0].Location.Name)
+				})
+
+				t.Run("delete works", func(t *testing.T) {
+					str := fmt.Sprintf(`{"query": "mutation { deleteEventByID(input: \"%s\")}"}`, id)
+
+					result := graphQuery(t, ctx, str)
+					require.Len(t, result.Errors, 0)
+
+					assert.Equal(t, true, result.Data.DeleteEventByID)
+
+					t.Run("verify event is deleted", func(t *testing.T) {
+						str := fmt.Sprintf(`{"query": "{getEvents(input: [{id: \"%s\"}]){ id, name, startTime, location {id, name}}}"}`, id)
+						result := graphQuery(t, ctx, str)
+						require.Len(t, result.Errors, 1, result.Errors)
+						require.Contains(t, result.Errors[0].Message, "resource not found")
+					})
+
+					t.Run("location should still exist", func(t *testing.T) {
+						str := fmt.Sprintf(`{"query": "{getLocations(input: [{id: \"%s\"}]){id}}"}`, locID)
+
+						result := graphQuery(t, ctx, str)
+						require.Len(t, result.Errors, 0, result.Errors)
+
+						require.Len(t, result.Data.GetLocations, 1)
+						assert.Equal(t, locID, result.Data.GetLocations[0].ID)
+					})
 				})
 			})
 		})
