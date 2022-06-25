@@ -16,6 +16,7 @@ import { LocationComponent } from './location/location.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dynamic-form-field.component';
 import { NavbarComponent } from './navbar/navbar.component';
+import { EventComponent } from './event/event.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,8 @@ import { NavbarComponent } from './navbar/navbar.component';
     LocationComponent,
     DynamicFormComponent,
     DynamicFormFieldComponent,
-    NavbarComponent
+    NavbarComponent,
+    EventComponent
   ],
   imports: [
     BrowserModule,

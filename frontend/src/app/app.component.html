@@ -4,6 +4,10 @@
     <app-artist ></app-artist>
 </div>
 
+<div *ngIf="category=='Events'">
+    <app-event ></app-event>
+</div>
+
 <div *ngIf="category=='Locations'">
     <app-location></app-location>
 </div>
