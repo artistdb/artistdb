@@ -20,10 +20,6 @@ func (e *Event) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	enc.AddString("id", e.ID)
 	enc.AddString("name", e.Name)
 
-	if e.StartTime != nil {
-		enc.AddTime("startTime", *e.StartTime)
-	}
-
 	if e.LocationID != nil {
 		enc.AddString("locationID", *e.LocationID)
 	}
@@ -50,7 +46,6 @@ func (ia InvitedArtists) MarshalLogArray(enc zapcore.ArrayEncoder) error {
 
 func (i InvitedArtist) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	enc.AddString("id", i.ID)
-	enc.AddBool("confirmed", i.Confirmed)
 
 	return nil
 }

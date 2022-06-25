@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap/zapcore"
 )
 
 // New returns an artist with an initialized ID.
@@ -25,6 +26,12 @@ type Artist struct {
 	BioGerman  string
 	BioEnglish string
 	Email      string
+}
+
+func (a Artist) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	enc.AddString("id", a.ID)
+
+	return nil
 }
 
 // Socials holds information about social media presences.
