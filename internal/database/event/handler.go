@@ -65,6 +65,7 @@ func (h *Handler) Upsert(ctx context.Context, events ...*Event) error {
 			mErr = multierr.Append(mErr, err)
 		} else {
 			eventsChanged++
+			h.logger.Info("tuple created", zap.String("entity", entityEvent), zap.Object("event", event))
 		}
 	}
 

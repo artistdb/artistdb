@@ -31,17 +31,20 @@ type Location {
 
 type Event {
   id:           ID!
-  name:         String
+  name:         String!
   startTime:    String
   location:     Location
   artists:      [InvitedArtist]
 }
 
 type InvitedArtist {
-  artist:         Artist
-  event:          Event
-  travelExpenses: String
-  confirmation:   String
+  artist:         Artist!
+  confirmed:      Boolean!
+}
+
+input InvitedArtistInput {
+  id: String!
+  confirmed: Boolean!
 }
 
 type Artwork {
@@ -76,6 +79,14 @@ type ArtworkEventLocation {
   noPieces:                     Int
   size:                         Float
   pubAgreement:                 String
+}
+
+input EventInput {
+  id: ID
+  name: String!
+  startTime: Int
+  locationID: String
+  invitedArtists: [InvitedArtistInput]
 }
 
 input ArtistInput {
@@ -120,6 +131,7 @@ type Query {
 type Mutation {
   upsertArtists(input: [ArtistInput!]): [Artist!]
   deleteArtistByID(id: ID!): Boolean!
-  upsertLocations(input: [LocationInput!]): [Location!]
+  upsertLocations(input: [LocationInput!]): [String!]
   deleteLocationByID(input: ID!): Boolean!
+  upsertEvents(input: [EventInput!]): [String!]
 }

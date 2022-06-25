@@ -48,7 +48,7 @@ func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (boo
 	return true, nil
 }
 
-func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]*model.Location, error) {
+func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]string, error) {
 	dbLocations, err := databaseLocations(input...)
 	if err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
@@ -61,12 +61,9 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
-	ret, err := modelLocations(dbLocations...)
-	if err != nil {
-		msg := "conversion failed"
-
-		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
-		return nil, fmt.Errorf("%s: %w", msg, err)
+	var ret []string
+	for _, loc := range dbLocations {
+		ret = append(ret, loc.ID)
 	}
 
 	return ret, nil
@@ -79,6 +76,27 @@ func (r *mutationResolver) DeleteLocationByID(ctx context.Context, input string)
 	}
 
 	return true, nil
+}
+
+func (r *mutationResolver) UpsertEvents(ctx context.Context, input []*model.EventInput) ([]string, error) {
+	dbEvents, err := databaseEvents(input...)
+	if err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
+	if err := r.db.EventHandler.Upsert(ctx, dbEvents...); err != nil {
+		msg := "upsert failed"
+
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+		return nil, fmt.Errorf("%s: %w", msg, err)
+	}
+
+	var ret []string
+	for _, ev := range dbEvents {
+		ret = append(ret, ev.ID)
+	}
+
+	return ret, nil
 }
 
 func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error) {
