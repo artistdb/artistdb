@@ -13,7 +13,7 @@ type Event struct {
 	Name           string
 	StartTime      *time.Time
 	LocationID     *string
-	InvitedArtists []InvitedArtist
+	InvitedArtists InvitedArtists
 }
 
 func (e *Event) MarshalLogObject(enc zapcore.ObjectEncoder) error {
@@ -28,12 +28,31 @@ func (e *Event) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 		enc.AddString("locationID", *e.LocationID)
 	}
 
-	return nil
+	return enc.AddArray("invitedArtists", e.InvitedArtists)
 }
+
+type InvitedArtists []InvitedArtist
 
 type InvitedArtist struct {
 	ID        string
 	Confirmed bool
+}
+
+func (ia InvitedArtists) MarshalLogArray(enc zapcore.ArrayEncoder) error {
+	for _, a := range ia {
+		if err := enc.AppendObject(a); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (i InvitedArtist) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	enc.AddString("id", i.ID)
+	enc.AddBool("confirmed", i.Confirmed)
+
+	return nil
 }
 
 type Option func(*Event) error

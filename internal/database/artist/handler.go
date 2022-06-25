@@ -330,6 +330,11 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 	}
 
 	observability.Metrics.TrackObjectsChanged(1, entityArtist, "delete")
+	h.logger.Info("tuple modified",
+		zap.String("action", "upsert"),
+		zap.String("entity", entityArtist),
+		zap.String("id", id),
+	)
 
 	return nil
 }
