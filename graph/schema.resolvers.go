@@ -10,6 +10,7 @@ import (
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
+	"github.com/obitech/artist-db/internal/database/event"
 	"github.com/obitech/artist-db/internal/database/location"
 	"github.com/obitech/artist-db/internal/observability"
 	"go.uber.org/zap"
@@ -167,6 +168,39 @@ func (r *queryResolver) GetLocations(ctx context.Context, input []*model.GetLoca
 	}
 
 	return locations, nil
+}
+
+func (r *queryResolver) GetEvents(ctx context.Context, input []*model.GetEventInput) ([]*model.Event, error) {
+	var events []*model.Event
+
+	for _, ev := range input {
+		var req event.GetRequest
+
+		switch {
+		case ev.ID != nil:
+			req = event.ByID(*ev.ID)
+		case ev.Name != nil:
+			req = event.ByName(*ev.Name)
+		}
+
+		dbEvents, err := r.db.EventHandler.Get(ctx, req)
+		if err != nil {
+			msg := "get failed"
+			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+			return nil, fmt.Errorf("%s: %w", msg, err)
+		}
+
+		e, err := r.modelEvents(ctx, dbEvents...)
+		if err != nil {
+			msg := "conversion failed"
+			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+			return nil, fmt.Errorf("%s: %w", msg, err)
+		}
+
+		events = append(events, e...)
+	}
+
+	return events, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

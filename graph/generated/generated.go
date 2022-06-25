@@ -131,6 +131,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetArtists   func(childComplexity int, input []*model.GetArtistInput) int
+		GetEvents    func(childComplexity int, input []*model.GetEventInput) int
 		GetLocations func(childComplexity int, input []*model.GetLocationInput) int
 	}
 }
@@ -145,6 +146,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error)
 	GetLocations(ctx context.Context, input []*model.GetLocationInput) ([]*model.Location, error)
+	GetEvents(ctx context.Context, input []*model.GetEventInput) ([]*model.Event, error)
 }
 
 type executableSchema struct {
@@ -654,6 +656,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetArtists(childComplexity, args["input"].([]*model.GetArtistInput)), true
 
+	case "Query.getEvents":
+		if e.complexity.Query.GetEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetEvents(childComplexity, args["input"].([]*model.GetEventInput)), true
+
 	case "Query.getLocations":
 		if e.complexity.Query.GetLocations == nil {
 			break
@@ -677,6 +691,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputArtistInput,
 		ec.unmarshalInputEventInput,
 		ec.unmarshalInputGetArtistInput,
+		ec.unmarshalInputGetEventInput,
 		ec.unmarshalInputGetLocationInput,
 		ec.unmarshalInputInvitedArtistInput,
 		ec.unmarshalInputLocationInput,
@@ -774,7 +789,7 @@ type Location {
 type Event {
   id:           ID!
   name:         String!
-  startTime:    String
+  startTime:    Int
   location:     Location
   artists:      [InvitedArtist]
 }
@@ -865,9 +880,15 @@ input GetLocationInput {
   name: String
 }
 
+input GetEventInput {
+  id: ID
+  name: String
+}
+
 type Query {
   getArtists(input: [GetArtistInput!]): [Artist]
   getLocations(input: [GetLocationInput!]): [Location]
+  getEvents(input: [GetEventInput!]): [Event]
 }
 
 type Mutation {
@@ -981,6 +1002,21 @@ func (ec *executionContext) field_Query_getArtists_args(ctx context.Context, raw
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOGetArtistInput2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetArtistInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.GetEventInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOGetEventInput2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetEventInputᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3046,9 +3082,9 @@ func (ec *executionContext) _Event_startTime(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Event_startTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3058,7 +3094,7 @@ func (ec *executionContext) fieldContext_Event_startTime(ctx context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4160,6 +4196,70 @@ func (ec *executionContext) fieldContext_Query_getLocations(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getLocations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getEvents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getEvents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetEvents(rctx, fc.Args["input"].([]*model.GetEventInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Event)
+	fc.Result = res
+	return ec.marshalOEvent2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Event_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Event_name(ctx, field)
+			case "startTime":
+				return ec.fieldContext_Event_startTime(ctx, field)
+			case "location":
+				return ec.fieldContext_Event_location(ctx, field)
+			case "artists":
+				return ec.fieldContext_Event_artists(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -6297,6 +6397,37 @@ func (ec *executionContext) unmarshalInputGetArtistInput(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputGetEventInput(ctx context.Context, obj interface{}) (model.GetEventInput, error) {
+	var it model.GetEventInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputGetLocationInput(ctx context.Context, obj interface{}) (model.GetLocationInput, error) {
 	var it model.GetLocationInput
 	asMap := map[string]interface{}{}
@@ -6919,6 +7050,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "getEvents":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getEvents(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -7297,6 +7448,11 @@ func (ec *executionContext) unmarshalNEventInput2ᚖgithubᚗcomᚋobitechᚋart
 
 func (ec *executionContext) unmarshalNGetArtistInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetArtistInput(ctx context.Context, v interface{}) (*model.GetArtistInput, error) {
 	res, err := ec.unmarshalInputGetArtistInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNGetEventInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetEventInput(ctx context.Context, v interface{}) (*model.GetEventInput, error) {
+	res, err := ec.unmarshalInputGetEventInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -7741,6 +7897,47 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOEvent2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx context.Context, sel ast.SelectionSet, v []*model.Event) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOEvent2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalOEvent2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐEvent(ctx context.Context, sel ast.SelectionSet, v *model.Event) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -7797,6 +7994,26 @@ func (ec *executionContext) unmarshalOGetArtistInput2ᚕᚖgithubᚗcomᚋobitec
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
 		res[i], err = ec.unmarshalNGetArtistInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetArtistInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOGetEventInput2ᚕᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetEventInputᚄ(ctx context.Context, v interface{}) ([]*model.GetEventInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.GetEventInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNGetEventInput2ᚖgithubᚗcomᚋobitechᚋartistᚑdbᚋgraphᚋmodelᚐGetEventInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}

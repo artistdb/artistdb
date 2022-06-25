@@ -32,7 +32,8 @@ type data struct {
 	UpsertLocations    []string         `json:"upsertLocations"`
 	DeleteLocationByID bool             `json:"deleteLocationByID"`
 
-	UpsertEvents []string `json:"upsertEvents"`
+	UpsertEvents []string      `json:"upsertEvents"`
+	GetEvents    []model.Event `json:"getEvents"`
 }
 
 type graphQLError struct {
@@ -256,17 +257,32 @@ func TestServerIntegration(t *testing.T) {
 
 	t.Run("test events endpoints", func(t *testing.T) {
 		t.Run("insertion of single, simple event works", func(t *testing.T) {
-			str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\", startTime:1637830936}])}"}`
+			var (
+				id        string
+				name      = "Ballern"
+				startTime = 1637830936
+			)
+
+			str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"%s\", startTime:%d}])}"}`, name, startTime)
 			result := graphQuery(t, ctx, str)
 			require.Len(t, result.Errors, 0, result.Errors)
 
 			require.Len(t, result.Data.UpsertEvents, 1)
-			assert.NotEmpty(t, result.Data.UpsertEvents[0])
+			id = result.Data.UpsertEvents[0]
+			assert.NotEmpty(t, id)
 
-			_, err := uuid.Parse(result.Data.UpsertEvents[0])
+			_, err := uuid.Parse(id)
 			require.NoError(t, err)
 
-			// TODO: test get
+			t.Run("retrieval works", func(t *testing.T) {
+				str := fmt.Sprintf(`{"query": "{getEvents(input: [{id: \"%s\"}]){ id, name, startTime}}"}`, id)
+				result := graphQuery(t, ctx, str)
+				require.Len(t, result.Errors, 0, result.Errors)
+
+				assert.Len(t, result.Data.GetEvents, 1)
+				assert.Equal(t, name, result.Data.GetEvents[0].Name)
+				assert.Equal(t, startTime, *result.Data.GetEvents[0].StartTime)
+			})
 		})
 
 		t.Run("insertion of single event+location works", func(t *testing.T) {
