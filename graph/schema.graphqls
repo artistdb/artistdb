@@ -32,7 +32,7 @@ type Location {
 type Event {
   id:           ID!
   name:         String!
-  startTime:    String
+  startTime:    Int
   location:     Location
   artists:      [InvitedArtist]
 }
@@ -123,9 +123,15 @@ input GetLocationInput {
   name: String
 }
 
+input GetEventInput {
+  id: ID
+  name: String
+}
+
 type Query {
   getArtists(input: [GetArtistInput!]): [Artist]
   getLocations(input: [GetLocationInput!]): [Location]
+  getEvents(input: [GetEventInput!]): [Event]
 }
 
 type Mutation {

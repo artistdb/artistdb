@@ -66,7 +66,7 @@ func databaseEvents(events ...*model.EventInput) ([]*event.Event, error) {
 
 // modelEvents takes Events returned from the database and converts them to
 // Events defined in the GraphQL model.
-func (r *mutationResolver) modelEvents(ctx context.Context, events ...*event.Event) ([]*model.Event, error) {
+func (r *queryResolver) modelEvents(ctx context.Context, events ...*event.Event) ([]*model.Event, error) {
 	var out []*model.Event
 
 	for _, ev := range events {
@@ -106,10 +106,11 @@ func (r *mutationResolver) modelEvents(ctx context.Context, events ...*event.Eve
 
 		}
 
+		t := int(conversion.Time(ev.StartTime).Unix())
 		out = append(out, &model.Event{
 			ID:        ev.ID,
 			Name:      ev.Name,
-			StartTime: conversion.RFC3339P(conversion.Time(ev.StartTime)),
+			StartTime: &t,
 			Location:  loc,
 			Artists:   artists,
 		})

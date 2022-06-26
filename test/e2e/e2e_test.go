@@ -32,7 +32,8 @@ type data struct {
 	UpsertLocations    []string         `json:"upsertLocations"`
 	DeleteLocationByID bool             `json:"deleteLocationByID"`
 
-	UpsertEvents []string `json:"upsertEvents"`
+	UpsertEvents []string      `json:"upsertEvents"`
+	GetEvents    []model.Event `json:"getEvents"`
 }
 
 type graphQLError struct {
@@ -256,21 +257,39 @@ func TestServerIntegration(t *testing.T) {
 
 	t.Run("test events endpoints", func(t *testing.T) {
 		t.Run("insertion of single, simple event works", func(t *testing.T) {
-			str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\", startTime:1637830936}])}"}`
+			var (
+				id        string
+				name      = "Ballern"
+				startTime = 1637830936
+			)
+
+			str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"%s\", startTime:%d}])}"}`, name, startTime)
 			result := graphQuery(t, ctx, str)
 			require.Len(t, result.Errors, 0, result.Errors)
 
 			require.Len(t, result.Data.UpsertEvents, 1)
-			assert.NotEmpty(t, result.Data.UpsertEvents[0])
+			id = result.Data.UpsertEvents[0]
+			assert.NotEmpty(t, id)
 
-			_, err := uuid.Parse(result.Data.UpsertEvents[0])
+			_, err := uuid.Parse(id)
 			require.NoError(t, err)
 
-			// TODO: test get
+			t.Run("retrieval works", func(t *testing.T) {
+				str := fmt.Sprintf(`{"query": "{getEvents(input: [{id: \"%s\"}]){ id, name, startTime}}"}`, id)
+				result := graphQuery(t, ctx, str)
+				require.Len(t, result.Errors, 0, result.Errors)
+
+				assert.Len(t, result.Data.GetEvents, 1)
+				assert.Equal(t, name, result.Data.GetEvents[0].Name)
+				assert.Equal(t, startTime, *result.Data.GetEvents[0].StartTime)
+			})
 		})
 
 		t.Run("insertion of single event+location works", func(t *testing.T) {
-			var locID string
+			var (
+				locID   string
+				locName = "Bierkönig"
+			)
 
 			t.Run("insertion of single event+location without locationID throws error", func(t *testing.T) {
 				str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern\", startTime:1637830936, locationID: \"foo\"}])}"}`
@@ -280,7 +299,7 @@ func TestServerIntegration(t *testing.T) {
 			})
 
 			t.Run("create new location", func(t *testing.T) {
-				str := `{"query": "mutation { upsertLocations(input: [{name: \"Bierkönig\"}])}"}`
+				str := fmt.Sprintf(`{"query": "mutation { upsertLocations(input: [{name: \"%s\"}])}"}`, locName)
 
 				result := graphQuery(t, ctx, str)
 				require.Len(t, result.Errors, 0, result.Errors)
@@ -295,23 +314,44 @@ func TestServerIntegration(t *testing.T) {
 			})
 
 			t.Run("create event+location", func(t *testing.T) {
-				str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"Ballern 2\", startTime:1637830936, locationID: \"%s\"}])}"}`, locID)
+				var (
+					id        string
+					name      = "Ballern 2"
+					startTime = 1637830936
+				)
+				str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"%s\", startTime:%d, locationID: \"%s\"}])}"}`, name, startTime, locID)
 				result := graphQuery(t, ctx, str)
 
 				require.Len(t, result.Errors, 0, result.Errors)
 
 				require.Len(t, result.Data.UpsertEvents, 1)
-				assert.NotEmpty(t, result.Data.UpsertEvents[0])
+				id = result.Data.UpsertEvents[0]
+				assert.NotEmpty(t, id)
 
-				_, err := uuid.Parse(result.Data.UpsertEvents[0])
+				_, err := uuid.Parse(id)
 				require.NoError(t, err)
-			})
 
-			// TODO: test get
+				t.Run("retrieval works", func(t *testing.T) {
+					str := fmt.Sprintf(`{"query": "{getEvents(input: [{id: \"%s\"}]){ id, name, startTime, location {id, name}}}"}`, id)
+					result := graphQuery(t, ctx, str)
+					require.Len(t, result.Errors, 0, result.Errors)
+
+					assert.Len(t, result.Data.GetEvents, 1)
+					assert.Equal(t, name, result.Data.GetEvents[0].Name)
+					assert.Equal(t, startTime, *result.Data.GetEvents[0].StartTime)
+
+					assert.Equal(t, locID, result.Data.GetEvents[0].Location.ID)
+					assert.Equal(t, locName, result.Data.GetEvents[0].Location.Name)
+				})
+			})
 		})
 
 		t.Run("insertion of single event+invited artist works", func(t *testing.T) {
-			var artistID string
+			var (
+				artistID        string
+				artistFirstName = "DJ"
+				artistLastName  = "Robin"
+			)
 
 			t.Run("insertion of single event+artist without artistID throws error", func(t *testing.T) {
 				str := `{"query": "mutation { upsertEvents(input: [{name: \"Ballern 3\", startTime:1637830936, invitedArtists: [{ id: \"foo\", confirmed: false}]}])}"}`
@@ -321,7 +361,7 @@ func TestServerIntegration(t *testing.T) {
 			})
 
 			t.Run("create new artist", func(t *testing.T) {
-				str := `{"query": "mutation { upsertArtists(input: [{firstName:\"Foo\",lastName:\"Bar\"}]) {id} }"}`
+				str := fmt.Sprintf(`{"query": "mutation { upsertArtists(input: [{firstName:\"%s\",lastName:\"%s\"}]) {id} }"}`, artistFirstName, artistLastName)
 
 				result := graphQuery(t, ctx, str)
 				require.Len(t, result.Errors, 0, result.Errors)
@@ -333,18 +373,39 @@ func TestServerIntegration(t *testing.T) {
 			})
 
 			t.Run("create event+artist", func(t *testing.T) {
-				str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"Ballern 3\", startTime:1637830936, invitedArtists: [{ id: \"%s\", confirmed: false}]}])}"}`, artistID)
+				var (
+					id              string
+					eventName       = "Ballern 3"
+					eventStart      = 1637830936
+					artistConfirmed = false
+				)
+				str := fmt.Sprintf(`{"query": "mutation { upsertEvents(input: [{name: \"%s\", startTime:%d, invitedArtists: [{ id: \"%s\", confirmed: %t}]}])}"}`, eventName, eventStart, artistID, artistConfirmed)
 				result := graphQuery(t, ctx, str)
 				require.Len(t, result.Errors, 0, result.Errors)
 
 				require.Len(t, result.Data.UpsertEvents, 1)
-				assert.NotEmpty(t, result.Data.UpsertEvents[0])
+				id = result.Data.UpsertEvents[0]
+				assert.NotEmpty(t, id)
 
-				_, err := uuid.Parse(result.Data.UpsertEvents[0])
+				_, err := uuid.Parse(id)
 				require.NoError(t, err)
-			})
 
-			// TODO: retrieve
+				t.Run("retrieval works", func(t *testing.T) {
+					str := fmt.Sprintf(`{"query": "{getEvents(input: [{id: \"%s\"}]){ id, name, startTime, artists {artist {id, firstName, lastName}, confirmed}}}"}`, id)
+					result := graphQuery(t, ctx, str)
+					require.Len(t, result.Errors, 0, result.Errors)
+
+					assert.Len(t, result.Data.GetEvents, 1)
+					assert.Equal(t, eventName, result.Data.GetEvents[0].Name)
+					assert.Equal(t, eventStart, *result.Data.GetEvents[0].StartTime)
+
+					assert.Len(t, result.Data.GetEvents[0].Artists, 1)
+					assert.Equal(t, artistID, result.Data.GetEvents[0].Artists[0].Artist.ID)
+					assert.Equal(t, artistFirstName, result.Data.GetEvents[0].Artists[0].Artist.FirstName)
+					assert.Equal(t, artistLastName, result.Data.GetEvents[0].Artists[0].Artist.LastName)
+					assert.Equal(t, artistConfirmed, result.Data.GetEvents[0].Artists[0].Confirmed)
+				})
+			})
 		})
 	})
 
