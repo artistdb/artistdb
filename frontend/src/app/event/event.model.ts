@@ -1,7 +1,7 @@
 export const EVENT_FIELDS = `{
     "data": [
         {
-            "key": "name", 
+            "key": "Name", 
             "required": true,
             "controlType": "textbox",
             "type": ""
