@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
@@ -16,6 +16,13 @@ import { LocationComponent } from './location/location.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dynamic-form-field.component';
 import { NavbarComponent } from './navbar/navbar.component';
+import { AppConfigService } from './app-config.service';
+
+const appInitializerFn = (appConfig: AppConfigService) => {
+  return () => {
+    return appConfig.loadAppConfig();
+  };
+};
 
 @NgModule({
   declarations: [
@@ -35,6 +42,7 @@ import { NavbarComponent } from './navbar/navbar.component';
     HttpClientModule
   ],
   providers: [
+    AppConfigService,
     {
       provide: APOLLO_OPTIONS,
       useFactory: (httpLink: HttpLink) => {
@@ -46,6 +54,12 @@ import { NavbarComponent } from './navbar/navbar.component';
         };
       },
       deps: [HttpLink],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: appInitializerFn,
+      multi: true,
+      deps: [AppConfigService]
     },
   ],
   bootstrap: [AppComponent]
