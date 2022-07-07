@@ -50,8 +50,12 @@ start-frontend: stop
 gen-graph:
 	$(GO) run github.com/99designs/gqlgen generate
 
+.PHONY: vet
+vet:
+	$(GO) vet ./...
+
 .PHONY: test
-test:
+test: vet
 	$(GO) test -v -race -short $(shell $(call go_packages))
 
 .PHONY: build
