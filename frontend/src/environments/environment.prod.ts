@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  graphQLUri: '',
+  graphQLUri: 'http://api:8080/query',
 };
