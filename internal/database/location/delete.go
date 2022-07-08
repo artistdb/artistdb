@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
-	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/internal/conversion"
 	"github.com/obitech/artist-db/internal/database/core"
@@ -51,11 +50,6 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 	}
 
 	observability.Metrics.TrackObjectsChanged(1, entityLocation, "delete")
-	h.logger.Info("tuple modified",
-		zap.String("action", "delete"),
-		zap.String("entity", entityLocation),
-		zap.String("id", id),
-	)
 
 	return nil
 }

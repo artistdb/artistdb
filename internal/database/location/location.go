@@ -1,19 +1,10 @@
 package location
 
-import (
-	"github.com/google/uuid"
-	"go.uber.org/zap/zapcore"
-)
+import "github.com/google/uuid"
 
 type Location struct {
 	ID   string
 	Name string
-}
-
-func (l Location) MarshalLogObject(enc zapcore.ObjectEncoder) error {
-	enc.AddString("id", l.ID)
-
-	return nil
 }
 
 func New() *Location {

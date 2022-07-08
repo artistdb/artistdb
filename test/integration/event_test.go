@@ -29,25 +29,19 @@ func Test_EventsIntegration(t *testing.T) {
 	artist1 := artist.New()
 	artist2 := artist.New()
 
-	onlyName, _ := event.New("onlyName")
-	withTime, _ := event.New("withTime", event.WithStartTime(time.Time{}.UTC()))
-	withLoc, _ := event.New("withLocation", event.WithLocationID(loc1.ID))
-	withArtist, _ := event.New("withInvitedArtist", event.WithInvitedArtists(event.InvitedArtist{ID: artist1.ID}))
-	withAll, _ := event.New("withEverything",
-		event.WithStartTime(time.Time{}),
-		event.WithLocationID(loc2.ID),
-		event.WithInvitedArtists(
-			event.InvitedArtist{ID: artist1.ID},
-			event.InvitedArtist{ID: artist2.ID, Confirmed: true},
-		),
-	)
-
 	events := []*event.Event{
-		onlyName,
-		withTime,
-		withLoc,
-		withAll,
-		withArtist,
+		event.New("onlyName"),
+		event.New("withTime", event.WithStartTime(time.Time{}.UTC())),
+		event.New("withLocation", event.WithLocationID(loc1.ID)),
+		event.New("withEverything",
+			event.WithStartTime(time.Time{}),
+			event.WithLocationID(loc2.ID),
+			event.WithInvitedArtistIDs(
+				event.InvitedArtist{ID: artist1.ID},
+				event.InvitedArtist{ID: artist2.ID, Confirmed: true},
+			),
+		),
+		event.New("withInvitedArtist", event.WithInvitedArtistIDs(event.InvitedArtist{ID: artist1.ID})),
 	}
 
 	t.Run("inserting event without existing location throws error", func(t *testing.T) {
@@ -176,10 +170,7 @@ func Test_EventsIntegration(t *testing.T) {
 	})
 
 	t.Run("inserting event with existing, assigned location ID works", func(t *testing.T) {
-		e, err := event.New("withDuplicateLocation", event.WithLocationID(loc1.ID))
-		require.NoError(t, err)
-
-		events = append(events, e)
+		events = append(events, event.New("withDuplicateLocation", event.WithLocationID(loc1.ID)))
 		require.NoError(t, db.EventHandler.Upsert(ctx, events[4]))
 	})
 

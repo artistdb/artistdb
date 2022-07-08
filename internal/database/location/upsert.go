@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/multierr"
-	"go.uber.org/zap"
 
 	"github.com/obitech/artist-db/internal/database/core"
 	"github.com/obitech/artist-db/internal/observability"
@@ -38,11 +37,6 @@ func (h *Handler) Upsert(ctx context.Context, locations ...*Location) error {
 			mErr = multierr.Append(mErr, err)
 		}
 		changed++
-		h.logger.Info("tuple modified",
-			zap.String("action", "upsert"),
-			zap.String("entity", entityLocation),
-			zap.Object("location", location),
-		)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

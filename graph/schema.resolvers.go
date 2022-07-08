@@ -7,14 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/zap"
-
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
-	"github.com/obitech/artist-db/internal/database/event"
 	"github.com/obitech/artist-db/internal/database/location"
 	"github.com/obitech/artist-db/internal/observability"
+	"go.uber.org/zap"
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
@@ -50,7 +48,7 @@ func (r *mutationResolver) DeleteArtistByID(ctx context.Context, id string) (boo
 	return true, nil
 }
 
-func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]string, error) {
+func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.LocationInput) ([]*model.Location, error) {
 	dbLocations, err := databaseLocations(input...)
 	if err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
@@ -63,9 +61,12 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
-	var ret []string
-	for _, loc := range dbLocations {
-		ret = append(ret, loc.ID)
+	ret, err := modelLocations(dbLocations...)
+	if err != nil {
+		msg := "conversion failed"
+
+		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+		return nil, fmt.Errorf("%s: %w", msg, err)
 	}
 
 	return ret, nil
@@ -74,36 +75,6 @@ func (r *mutationResolver) UpsertLocations(ctx context.Context, input []*model.L
 func (r *mutationResolver) DeleteLocationByID(ctx context.Context, input string) (bool, error) {
 	if err := r.db.LocationHandler.DeleteByID(ctx, input); err != nil {
 		r.logger.Error("delete failed", zap.Error(err), zap.String("id", input), observability.TraceField(ctx))
-		return false, err
-	}
-
-	return true, nil
-}
-
-func (r *mutationResolver) UpsertEvents(ctx context.Context, input []*model.EventInput) ([]string, error) {
-	dbEvents, err := databaseEvents(input...)
-	if err != nil {
-		return nil, fmt.Errorf("invalid input: %w", err)
-	}
-
-	if err := r.db.EventHandler.Upsert(ctx, dbEvents...); err != nil {
-		msg := "upsert failed"
-
-		r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
-		return nil, fmt.Errorf("%s: %w", msg, err)
-	}
-
-	var ret []string
-	for _, ev := range dbEvents {
-		ret = append(ret, ev.ID)
-	}
-
-	return ret, nil
-}
-
-func (r *mutationResolver) DeleteEventByID(ctx context.Context, id string) (bool, error) {
-	if err := r.db.EventHandler.DeleteByID(ctx, id); err != nil {
-		r.logger.Error("delete failed", zap.Error(err), zap.String("id", id), observability.TraceField(ctx))
 		return false, err
 	}
 
@@ -180,46 +151,11 @@ func (r *queryResolver) GetLocations(ctx context.Context, input []*model.GetLoca
 	return locations, nil
 }
 
-func (r *queryResolver) GetEvents(ctx context.Context, input []*model.GetEventInput) ([]*model.Event, error) {
-	var events []*model.Event
-
-	for _, ev := range input {
-		var req event.GetRequest
-
-		switch {
-		case ev.ID != nil:
-			req = event.ByID(*ev.ID)
-		case ev.Name != nil:
-			req = event.ByName(*ev.Name)
-		}
-
-		dbEvents, err := r.db.EventHandler.Get(ctx, req)
-		if err != nil {
-			msg := "get failed"
-			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
-			return nil, fmt.Errorf("%s: %w", msg, err)
-		}
-
-		e, err := r.modelEvents(ctx, dbEvents...)
-		if err != nil {
-			msg := "conversion failed"
-			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
-			return nil, fmt.Errorf("%s: %w", msg, err)
-		}
-
-		events = append(events, e...)
-	}
-
-	return events, nil
-}
-
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type (
-	mutationResolver struct{ *Resolver }
-	queryResolver    struct{ *Resolver }
-)
+type mutationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

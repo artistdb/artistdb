@@ -65,11 +65,6 @@ func (h *Handler) Upsert(ctx context.Context, artists ...*Artist) error {
 			mErr = multierr.Append(mErr, err)
 		} else {
 			artistsChanged++
-			h.logger.Info("tuple modified",
-				zap.String("action", "upsert"),
-				zap.String("entity", entityArtist),
-				zap.Object("artist", artist),
-			)
 		}
 	}
 
@@ -335,11 +330,6 @@ func (h *Handler) DeleteByID(ctx context.Context, id string) error {
 	}
 
 	observability.Metrics.TrackObjectsChanged(1, entityArtist, "delete")
-	h.logger.Info("tuple modified",
-		zap.String("action", "delete"),
-		zap.String("entity", entityArtist),
-		zap.String("id", id),
-	)
 
 	return nil
 }
