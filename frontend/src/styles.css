@@ -77,7 +77,8 @@ html {
 .content {
     background-color: white;
     border-radius: 10px;
-    margin: 2%;
+    margin-top: 2%;
+    margin-bottom: 2%;
     padding: 1%;
     min-height: calc(100vh - 70px);
 }

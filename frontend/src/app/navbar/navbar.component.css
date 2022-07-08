@@ -1,0 +1,14 @@
+/***NavBar***/
+.navbar {
+    background-color: #dbdbdb;
+}
+
+.navitemlist {
+    padding-left: 10px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.navitem {
+    padding-right: 10px;
+}
