@@ -115,6 +115,13 @@ html {
     font-size: 22px;
  }
 
+ .subpagetitle {
+    font-size: 30px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    color: #6720FF;
+ }
+
  /* FORMS */
 
  .ctrl {
@@ -134,8 +141,6 @@ html {
  }
 
  .display {
-     font-size: 40px;
-     color: #6720FF;
  }
 
  /* BUTTONS */
@@ -150,9 +155,9 @@ html {
     font-size: 20px;
 
     opacity: 1;
-    transition: opacity 1s;
+    transition: background-color 1s;
  }
 
  button:hover {
-     opacity: 0.75;
+    background-color: #BDFF00;
  }
