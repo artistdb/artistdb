@@ -1,28 +1,34 @@
-import { NgModule, APP_INITIALIZER } from '@angular/core';
+import { NgModule, APP_INITIALIZER, Injector } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { APOLLO_OPTIONS } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
-import { InMemoryCache } from '@apollo/client/core';
+import { ApolloClientOptions, InMemoryCache } from '@apollo/client/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ArtistComponent } from './artist/artist.component';
 import { ArtistDashboardComponent } from './artist/artist-dashboard/artist-dashboard.component';
 import { ArtistFormComponent } from './artist/artist-form/artist-form.component';
-import { environment } from 'src/environments/environment';
 import { LocationComponent } from './location/location.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dynamic-form-field.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { AppConfigService } from './app-config.service';
 
-const appInitializerFn = (appConfig: AppConfigService) => {
+const appInitializerFn = (config: AppConfigService) => {
   return () => {
-    return appConfig.loadAppConfig();
+    return config.loadAppConfig();
   };
 };
+
+const apolloInitializerFn = (httpLink: HttpLink, appConfigService: AppConfigService): ApolloClientOptions<any> => {
+  return {
+    link: httpLink.create({uri: appConfigService.getConfig().apiUri}),
+    cache: new InMemoryCache(),
+  };
+}
 
 @NgModule({
   declarations: [
@@ -45,15 +51,8 @@ const appInitializerFn = (appConfig: AppConfigService) => {
     AppConfigService,
     {
       provide: APOLLO_OPTIONS,
-      useFactory: (httpLink: HttpLink) => {
-        return {
-          cache: new InMemoryCache(),
-          link: httpLink.create({
-            uri: environment.graphQLUri,
-          }),
-        };
-      },
-      deps: [HttpLink],
+      useFactory: apolloInitializerFn,
+      deps: [HttpLink, AppConfigService],
     },
     {
       provide: APP_INITIALIZER,
