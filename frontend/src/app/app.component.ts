@@ -1,4 +1,4 @@
-import { Component, Input} from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -11,11 +11,9 @@ export class AppComponent {
 
   changeCategory (c: string) {
     this.category = c;
-    console.log(c);
   };
 
   show(): void {
     console.log(this.category);
-
   }
 }
