@@ -10,6 +10,7 @@ export class NavbarComponent {
   @Output() categoryUpdate = new EventEmitter<string>(); 
   categories = [
     "Artists",
+    "Events",
     "Locations"
   ];
 

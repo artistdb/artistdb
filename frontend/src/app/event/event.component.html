@@ -1,0 +1,10 @@
+<h2>EVENTS</h2>
+
+<div>
+    <button class="--new-event" (click)="showEventForm()">Create New Event</button>
+</div>
+
+<div *ngIf="newEvent">
+    <p>Event Input Form</p>
+    <app-dynamic-form [fields]="fields$ | async"></app-dynamic-form>
+</div>

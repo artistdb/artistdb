@@ -15,6 +15,9 @@ import { LocationComponent } from './location/location.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dynamic-form-field.component';
 import { NavbarComponent } from './navbar/navbar.component';
+
+import { EventComponent } from './event/event.component';
+
 import { AppConfigService } from './app-config.service';
 
 const appInitializerFn = (config: AppConfigService) => {
@@ -30,6 +33,7 @@ const apolloInitializerFn = (httpLink: HttpLink, appConfigService: AppConfigServ
   };
 }
 
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -39,7 +43,8 @@ const apolloInitializerFn = (httpLink: HttpLink, appConfigService: AppConfigServ
     LocationComponent,
     DynamicFormComponent,
     DynamicFormFieldComponent,
-    NavbarComponent
+    NavbarComponent,
+    EventComponent
   ],
   imports: [
     BrowserModule,
