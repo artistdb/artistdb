@@ -1,59 +1,83 @@
-<h2>Artist Dashboard</h2>
-<ul>
-  <div class="artist" *ngFor="let artist of artists" (click)="onSelect(artist)">
-    {{artist.firstName}} {{artist.lastName}} {{artist.artistName}}
+<h2>All Artists</h2>
+<ul class="artistlist">
+  <div class="artistlist_item" *ngFor="let artist of artists" (click)="onSelect(artist)">
+    {{artist.firstName}} {{artist.lastName}} <!--{{artist.artistName}}-->
   </div>
 </ul>
 
-<div *ngIf="selectedArtist">
-  <h2>{{selectedArtist.artistName | uppercase}}</h2>
-  <div class="display --first-name">
-    <label for="first-name">First Name: </label> {{selectedArtist.firstName}}
-  </div>
+<div *ngIf="selectedArtist" class="artistinfo">
+  <h2>{{selectedArtist.artistName}}</h2>
 
-  <div class="display --last-name">
-    <label for="last-name">Last Name: </label> {{selectedArtist.lastName}}
-  </div>
+    <div class="display --first-name">
+      <p class="artistinfo_text">
+        <label for="first-name">First Name: </label> {{selectedArtist.firstName}}
+      </p>
+    </div>
 
-  <div class="display --pronouns">
-    <label for="pronouns">Pronouns: </label> {{selectedArtist.pronouns}}
-  </div>
+    <div class="display --last-name">
+      <p class="artistinfo_text">
+        <label for="last-name">Last Name: </label> {{selectedArtist.lastName}}
+      </p>
+    </div>
 
-  <!--<div>
-    <label for="first-name">First Name: </label> {{selectedArtist.firstName}}
-  </div>-->
+    <div class="display --pronouns">
+      <p class="artistinfo_text">
+        <label for="pronouns">Pronouns: </label> {{selectedArtist.pronouns}}
+      </p>
+    </div>
 
-  <div class="display --place-of-birth">
-    <label for="place-of-birth">Place of Birth: </label> {{selectedArtist.placeOfBirth}}
-  </div>
+    <!--<div>
+      <label for="first-name">First Name: </label> {{selectedArtist.firstName}}
+    </div>-->
 
-  <div class="display --nationality">
-    <label for="nationality">Nationality: </label> {{selectedArtist.nationality}}
-  </div>
+    <div class="display --place-of-birth">
+      <p class="artistinfo_text">
+        <label for="place-of-birth">Place of Birth: </label> {{selectedArtist.placeOfBirth}}
+      </p>
+    </div>
 
-  <div class="display --language">
-    <label for="language">Language: </label> {{selectedArtist.language}}
-  </div>
+    <div class="display --nationality">
+      <p class="artistinfo_text">
+        <label for="nationality">Nationality: </label> {{selectedArtist.nationality}}
+      </p>
+    </div>
 
-  <div class="display --facebook">
-    <label for="facebook">Facebook: </label> {{selectedArtist.facebook}}
-  </div>
+    <div class="display --language">
+      <p class="artistinfo_text">
+        <label for="language">Language: </label> {{selectedArtist.language}}
+      </p>
+    </div>
 
-  <div class="display --instagram">
-    <label for="instagram">Instagram: </label> {{selectedArtist.instagram}}
-  </div>
-  
-  <div class="display --bandcamp">
-  <label for="bandcamp">Bandcamp: </label> {{selectedArtist.bandcamp}}
-  </div>
+    <div class="display --facebook">
+      <p class="artistinfo_text">
+        <label for="facebook">Facebook: </label> {{selectedArtist.facebook}}
+      </p>
+    </div>
 
-  <div class="display --bio-german">
-    <label for="bio-german">Bio (German): </label> {{selectedArtist.bioGer}}
-  </div>
+    <div class="display --instagram">
+      <p class="artistinfo_text">
+        <label for="instagram">Instagram: </label> {{selectedArtist.instagram}}
+      </p>
+    </div>
+    
+    <div class="display --bandcamp">
+      <p class="artistinfo_text">
+        <label for="bandcamp">Bandcamp: </label> {{selectedArtist.bandcamp}}
+      </p>
+    </div>
 
-  <div class="display --bio-english">
-    <label for="bio-english">Bio (English): </label> {{selectedArtist.bioEn}}
-  </div>
+    <div class="display --bio-german">
+      <p class="artistinfo_text">
+        <label for="bio-german">Bio (German): </label> {{selectedArtist.bioGer}}
+      </p>
+    </div>
+
+    <div class="display --bio-english">
+      <p class="artistinfo_text">
+        <label for="bio-english">Bio (English): </label> {{selectedArtist.bioEn}}
+      </p>
+    </div>
+
 
   <div class="--delete-artist">
     <button>Delete Artist</button>

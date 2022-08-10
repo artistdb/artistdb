@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/obitech/artist-db/graph/generated"
 	"github.com/obitech/artist-db/graph/model"
 	"github.com/obitech/artist-db/internal/database/artist"
+	"github.com/obitech/artist-db/internal/database/event"
 	"github.com/obitech/artist-db/internal/database/location"
 	"github.com/obitech/artist-db/internal/observability"
-	"go.uber.org/zap"
 )
 
 func (r *mutationResolver) UpsertArtists(ctx context.Context, input []*model.ArtistInput) ([]*model.Artist, error) {
@@ -99,6 +101,15 @@ func (r *mutationResolver) UpsertEvents(ctx context.Context, input []*model.Even
 	return ret, nil
 }
 
+func (r *mutationResolver) DeleteEventByID(ctx context.Context, id string) (bool, error) {
+	if err := r.db.EventHandler.DeleteByID(ctx, id); err != nil {
+		r.logger.Error("delete failed", zap.Error(err), zap.String("id", id), observability.TraceField(ctx))
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *queryResolver) GetArtists(ctx context.Context, input []*model.GetArtistInput) ([]*model.Artist, error) {
 	var artists []*model.Artist
 
@@ -169,11 +180,46 @@ func (r *queryResolver) GetLocations(ctx context.Context, input []*model.GetLoca
 	return locations, nil
 }
 
+func (r *queryResolver) GetEvents(ctx context.Context, input []*model.GetEventInput) ([]*model.Event, error) {
+	var events []*model.Event
+
+	for _, ev := range input {
+		var req event.GetRequest
+
+		switch {
+		case ev.ID != nil:
+			req = event.ByID(*ev.ID)
+		case ev.Name != nil:
+			req = event.ByName(*ev.Name)
+		}
+
+		dbEvents, err := r.db.EventHandler.Get(ctx, req)
+		if err != nil {
+			msg := "get failed"
+			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+			return nil, fmt.Errorf("%s: %w", msg, err)
+		}
+
+		e, err := r.modelEvents(ctx, dbEvents...)
+		if err != nil {
+			msg := "conversion failed"
+			r.logger.Error(msg, zap.Error(err), observability.TraceField(ctx))
+			return nil, fmt.Errorf("%s: %w", msg, err)
+		}
+
+		events = append(events, e...)
+	}
+
+	return events, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
+type (
+	mutationResolver struct{ *Resolver }
+	queryResolver    struct{ *Resolver }
+)

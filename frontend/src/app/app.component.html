@@ -1,8 +1,12 @@
-<app-navbar (categoryUpdate)="changeCategory($event)"></app-navbar>
-
-<div *ngIf="category=='Artists'">
-    <app-artist ></app-artist>
+<div class="header">
+    <div class="logo"><a href="index.html">artist_db</a></div>
+    <div class="claim">managing tool for events.</div>
 </div>
+
+<div class="navbar">
+    <app-navbar (categoryUpdate)="changeCategory($event)"></app-navbar>
+</div>
+
 
 <div *ngIf="category=='Events'">
     <app-event ></app-event>
@@ -10,4 +14,14 @@
 
 <div *ngIf="category=='Locations'">
     <app-location></app-location>
+</div>
+
+<div class="content">
+    <div *ngIf="category=='Artists'"><app-artist ></app-artist></div>
+    <div *ngIf="category=='Locations'"><app-location></app-location></div>
+</div>
+
+<div class="footer">
+    <a class="f_gap" href="#">Legal Information</a>
+    <a class="f_gap" href="#">Privacy</a>
 </div>
