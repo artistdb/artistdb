@@ -17,7 +17,76 @@ export interface ArtistInput {
 export const ARTIST_FIELDS = `{
     "data": [
         {
-            
+            "key": "First Name", 
+            "required": true,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Last Name", 
+            "required": true,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Artist Name", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Pronouns", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Place Of Birth", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Nationality", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Language", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Facebook", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Instagram", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Bandcamp", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Bio (German)", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
+        },
+        {
+            "key": "Bio (English)", 
+            "required": false,
+            "controlType": "textbox",
+            "type": ""
         }
     ]
 }`
