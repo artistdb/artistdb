@@ -14,6 +14,14 @@ export interface ArtistInput {
     bioEn?: string;
 }
 
+export const ARTIST_FIELDS = `{
+    "data": [
+        {
+            
+        }
+    ]
+}`
+
 export const MOCK_ARTISTS: ArtistInput[] = [
     {
         firstName: "Jens",
