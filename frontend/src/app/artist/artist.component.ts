@@ -1,22 +1,24 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
 
-import { UpsertArtists } from '../graphql/artist.service';
-import { MOCK_ARTISTS } from './artist.model.component';
+import { FieldBase } from '../dynamic-form/field-base';
+import { FieldService } from '../dynamic-form/field.service';
+import { ARTIST_FIELDS, MOCK_ARTISTS } from './artist.model';
 
 @Component({
   selector: 'app-artist',
   templateUrl: './artist.component.html',
-  styleUrls: ['./artist.component.css']
+  styleUrls: ['./artist.component.css'],
+  providers: [FieldService]
 })
-export class ArtistComponent implements OnInit {
-
+export class ArtistComponent {
+  fields$: Observable<FieldBase<any>[]>;
   xartists = MOCK_ARTISTS;
   newArtist = false;
 
-  constructor() { }
-
-  ngOnInit(): void {
-  }
+  constructor(service: FieldService) {
+    this.fields$ = service.getFields(ARTIST_FIELDS);
+   }
 
   showArtistForm(): void {
     this.newArtist = true;

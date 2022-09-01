@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ArtistInput } from '../artist.model.component';
+import { ArtistInput } from '../artist.model';
 
 @Component({
   selector: 'app-artist-dashboard',

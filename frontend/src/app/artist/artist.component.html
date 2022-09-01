@@ -1,10 +1,14 @@
 <h2 class="subpagetitle">Artists</h2>
+
 <div>
     <button class="--new-artist" (click)="showArtistForm()">Create New Artist</button>
 </div>
+
 <div>
     <app-artist-dashboard [artists]="xartists"></app-artist-dashboard>
 </div>
+
 <div *ngIf="newArtist">
-    <app-artist-form></app-artist-form>
+    <p>Artist Input Form</p>
+    <app-dynamic-form [fields]="fields$ | async"></app-dynamic-form>
 </div>
