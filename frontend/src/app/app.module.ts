@@ -10,7 +10,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ArtistComponent } from './artist/artist.component';
 import { ArtistDashboardComponent } from './artist/artist-dashboard/artist-dashboard.component';
-import { ArtistFormComponent } from './artist/artist-form/artist-form.component';
 import { LocationComponent } from './location/location.component';
 import { DynamicFormComponent } from './dynamic-form/dynamic-form.component';
 import { DynamicFormFieldComponent } from './dynamic-form/dynamic-form-field/dynamic-form-field.component';
@@ -39,7 +38,6 @@ const apolloInitializerFn = (httpLink: HttpLink, appConfigService: AppConfigServ
     AppComponent,
     ArtistComponent,
     ArtistDashboardComponent,
-    ArtistFormComponent,
     LocationComponent,
     DynamicFormComponent,
     DynamicFormFieldComponent,
