@@ -7,17 +7,9 @@
     <app-navbar (categoryUpdate)="changeCategory($event)"></app-navbar>
 </div>
 
-
-<div *ngIf="category=='Events'">
-    <app-event ></app-event>
-</div>
-
-<div *ngIf="category=='Locations'">
-    <app-location></app-location>
-</div>
-
 <div class="content">
     <div *ngIf="category=='Artists'"><app-artist ></app-artist></div>
+    <div *ngIf="category=='Events'"><app-event ></app-event></div>
     <div *ngIf="category=='Locations'"><app-location></app-location></div>
 </div>
 
