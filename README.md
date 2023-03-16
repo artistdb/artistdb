@@ -38,3 +38,9 @@ Alternatively you can run the whole test suite locally with:
 ```shell
 make test-local
 ```
+
+## Configuration 
+
+### Frontend Configuration
+
+You need a `config.json` at `./frontend/src/assets/data`. You'll find an example file at this location holding the variables that need to be set.
